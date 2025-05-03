@@ -1,0 +1,40 @@
+-- Roblox Chaos Hub Style GUI sem Key
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local FlyButton = Instance.new("TextButton")
+local SpeedButton = Instance.new("TextButton")
+local ESPButton = Instance.new("TextButton")
+
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 200, 0, 250)
+Frame.Position = UDim2.new(0, 50, 0, 50)
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+local function makeButton(btn, text, position)
+	btn.Parent = Frame
+	btn.Size = UDim2.new(0, 180, 0, 40)
+	btn.Position = position
+	btn.Text = text
+	btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 18
+end
+
+makeButton(FlyButton, "Fly", UDim2.new(0, 10, 0, 10))
+makeButton(SpeedButton, "Speed", UDim2.new(0, 10, 0, 60))
+makeButton(ESPButton, "ESP", UDim2.new(0, 10, 0, 110))
+
+-- Funções
+FlyButton.MouseButton1Click:Connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Butterisgood/butter-hub/main/Fly.lua"))()
+end)
+
+SpeedButton.MouseButton1Click:Connect(function()
+	game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
+end)
+
+ESPButton.MouseButton1Click:Connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/Roblox-Cheat/main/ESP.lua"))()
+end)
