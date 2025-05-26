@@ -1,0 +1,74 @@
+-- Carrega a UI Rayfield
+loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Brookhaven -- Carrega a UI Rayfield
+loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Brookhaven Hub",
+    LoadingTitle = "Brookhaven Hub",
+    LoadingSubtitle = "By SeuNome",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
+})
+
+-- Primeira aba
+local MainTab = Window:CreateTab("Principal", 4483362458)
+
+-- Teleporte rápido
+MainTab:CreateButton({
+    Name = "Ir para o Cofre do Banco",
+    Callback = function()
+        game.Players.LocalPlayer.Character:MoveTo(Vector3.new(-507, 22, -285))
+    end,
+})
+
+-- Ganhar velocidade
+MainTab:CreateSlider({
+    Name = "Velocidade do Jogador",
+    Range = {16, 100},
+    Increment = 1,
+    CurrentValue = 16,
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end,
+})
+
+-- Super pulo
+MainTab:CreateSlider({
+    Name = "Altura do Pulo",
+    Range = {50, 150},
+    Increment = 1,
+    CurrentValue = 50,
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end,
+})
+
+-- Invencibilidade falsa (anti-ragdoll)
+MainTab:CreateToggle({
+    Name = "Anti-Ragdoll (anti queda)",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            local char = game.Players.LocalPlayer.Character
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("Motor6D") and v.Name == "RagdollConstraint" then
+                    v:Destroy()
+                end
+            end
+        end
+    end,
+})
+
+-- Créditos
+Window:CreateTab("Créditos", 4483362458):CreateParagraph({
+    Title = "Feito por",
+    Content = "SeuNome - Hub para Brookhaven sem chave!"
+})
