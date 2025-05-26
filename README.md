@@ -1,4 +1,4 @@
--- SpiderHub
+-- Night Hub
 
 -- Painel
 local ScreenGui = Instance.new("ScreenGui")
@@ -58,3 +58,47 @@ botaoFechar.Position = UDim2.new(0, 10, 0, 240)
 
 -- Abrir painel
 ScreenGui.Enabled = true
+-- Fling Boat
+local function flingBoat()
+    local boat = game.Workspace:FindFirstChild("Boat")
+    if boat then
+        boat.HumanoidRootPart.Anchored = false
+        boat.HumanoidRootPart.Velocity = Vector3.new(0, 1000, 0)
+    end
+end
+
+-- Fling Ball
+local function flingBall()
+    local ball = Instance.new("Part")
+    ball.Parent = game.Workspace
+    ball.Shape = Enum.PartType.Ball
+    ball.Size = Vector3.new(5, 5, 5)
+    ball.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+    ball.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 1000
+end
+
+-- Botões
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
+
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+Frame.Size = UDim2.new(0, 200, 0, 100)
+
+local botaoFlingBoat = Instance.new("TextButton")
+botaoFlingBoat.Parent = Frame
+botaoFlingBoat.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+botaoFlingBoat.Position = UDim2.new(0, 10, 0, 10)
+botaoFlingBoat.Size = UDim2.new(0, 180, 0, 30)
+botaoFlingBoat.Text = "Fling Boat"
+botaoFlingBoat.MouseButton1Click:Connect(flingBoat)
+
+local botaoFlingBall = Instance.new("TextButton")
+botaoFlingBall.Parent = Frame
+botaoFlingBall.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+botaoFlingBall.Position = UDim2.new(0, 10, 0, 50)
+botaoFlingBall.Size = UDim2.new(0, 180, 0, 30)
+botaoFlingBall.Text = "Fling Ball"
+botaoFlingBall.MouseButton1Click:Connect(flingBall)
