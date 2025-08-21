@@ -1,0 +1,137 @@
+-- This script is open-source, this is the official Nytherune Hub page made by Wx.
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
+workspace.FallenPartsDestroyHeight = -math.huge
+
+local Window = Library:MakeWindow({
+    Title = "VenomX hub",
+    SubTitle = "by: Developers (Doggeblox studios)",
+    LoadText = "nitro Developers",
+    Flags = "Broookhaven"
+})
+
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://1120738435", BackgroundTransparency = 0 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
+})
+
+local InfoTab = Window:MakeTab({ Title = "info", Icon = "rbxassetid://10723415903" })
+
+InfoTab:AddSection({ "Informações do Script" })
+InfoTab:AddParagraph({ "Owner / Developer:", "wolfpaqy" })
+InfoTab:AddParagraph({ "Colaborações:", "wolfpaqy" })
+InfoTab:AddParagraph({ "Você está usando:", "DoggeBlox studios" })
+InfoTab:AddParagraph({"This script is open-source, just check our GitHub page!"})
+InfoTab:AddParagraph({"Novidades:", "+4 áudios novos na tab Audio All! (adicionado por thenada)"})
+
+InfoTab:AddSection({ "Rejoin" })
+InfoTab:AddButton({
+    Name = "Rejoin",
+    Callback = function()
+        local TeleportService = game:GetService("TeleportService")
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+    end
+})
+
+local TrollTab = Window:MakeTab({ Title = "Scripts Trolls", Icon = "rbxassetid://13364900349" })
+
+TrollTab:AddSection({ "Black Hole" })
+TrollTab:AddButton({
+    Name = "Black Hole",
+    Description = "Ativando isso você puxa Parts até o seu personagem",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local LocalPlayer = Players.LocalPlayer
+        local Workspace = game:GetService("Workspace")
+
+        local blackHoleActive = true
+
+        local function setupPlayer()
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+            local Folder = Instance.new("Folder", Workspace)
+            local Part = Instance.new("Part", Folder)
+            local Attachment1 = Instance.new("Attachment", Part)
+            Part.Anchored = true
+            Part.CanCollide = false
+            Part.Transparency = 1
+
+            return humanoidRootPart, Attachment1
+        end
+
+        local humanoidRootPart, Attachment1 = setupPlayer()
+
+        if not getgenv().Network then
+            getgenv().Network = {
+                BaseParts = {},
+                Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
+            }
+
+            Network.RetainPart = function(part)
+                if typeof(part) == "Instance" and part:IsA("BasePart") and part:IsDescendantOf(Workspace) then
+                    table.insert(Network.BaseParts, part)
+                    part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                    part.CanCollide = false
+                end
+            end
+
+            local function EnablePartControl()
+                LocalPlayer.ReplicationFocus = Workspace
+                RunService.Heartbeat:Connect(function()
+                    sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+                    for _, part in pairs(Network.BaseParts) do
+                        if part:IsDescendantOf(Workspace) then
+                            part.Velocity = Network.Velocity
+                        end
+                    end
+                end)
+            end
+
+            EnablePartControl()
+        end
+
+        local function ForcePart(v)
+            if v:IsA("Part") and not v.Anchored and not v.Parent:FindFirstChild("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
+                for _, x in next, v:GetChildren() do
+                    if x:IsA("BodyAngularVelocity") or x:IsA("BodyForce") or x:IsA("BodyGyro") or x:IsA("BodyPosition") or x:IsA("BodyThrust") or x:IsA("BodyVelocity") or x:IsA("RocketPropulsion") then
+                        x:Destroy()
+                    end
+                end
+                if v:FindFirstChild("Attachment") then
+                    v:FindFirstChild("Attachment"):Destroy()
+                end
+                if v:FindFirstChild("AlignPosition") then
+                    v:FindFirstChild("AlignPosition"):Destroy()
+                end
+                
+                Network.RetainPart(v)
+                
+                local BodyPosition = Instance.new("BodyPosition", v)
+                BodyPosition.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                BodyPosition.P = 1250
+                
+                RunService.Heartbeat:Connect(function()
+                    if blackHoleActive and humanoidRootPart then
+                        BodyPosition.Position = humanoidRootPart.Position
+                    end
+                end)
+            end
+        end
+
+        for _, v in pairs(Workspace:GetDescendants()) do
+            ForcePart(v)
+        end
+
+        Workspace.DescendantAdded:Connect(ForcePart)
+        
+        -- Adicionar botão para desativar o black hole
+        TrollTab:AddButton({
+            Name = "Desativar Black Hole",
+            Callback = function()
+                blackHoleActive = false
+            end
+        })
+    end
+})
