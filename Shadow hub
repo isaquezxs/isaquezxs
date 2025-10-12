@@ -1,0 +1,603 @@
+-- Tela de Carregamento Shadow Hub Brookhaven - Estilizada
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Criando a ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Shadowloading"
+screenGui.Parent = playerGui
+
+-- Fundo da tela
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1,0,1,0)
+background.Position = UDim2.new(0,0,0,0)
+background.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Título SHADOW HUB
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,100)
+title.Position = UDim2.new(0,0,0.25,0)
+title.BackgroundTransparency = 1
+title.Text = "SHADOW SCRIPTS"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 60
+title.TextColor3 = Color3.fromRGB(255,85,0)
+title.Parent = background
+title.TextScaled = true
+
+-- Barra de carregamento com fundo
+local barBackground = Instance.new("Frame")
+barBackground.Size = UDim2.new(0.6,0,0,30)
+barBackground.Position = UDim2.new(0.2,0,0.55,0)
+barBackground.BackgroundColor3 = Color3.fromRGB(50,50,50)
+barBackground.BorderSizePixel = 0
+barBackground.Parent = background
+
+-- Barra de preenchimento
+local barFill = Instance.new("Frame")
+barFill.Size = UDim2.new(0,0,1,0)
+barFill.BackgroundColor3 = Color3.fromRGB(255,85,0)
+barFill.BorderSizePixel = 0
+barFill.Parent = barBackground
+
+-- Gradiente na barra
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,85,0)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,180,0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,85,0))
+}
+gradient.Rotation = 45
+gradient.Parent = barFill
+
+-- Texto de carregamento
+local loadingText = Instance.new("TextLabel")
+loadingText.Size = UDim2.new(1,0,0,30)
+loadingText.Position = UDim2.new(0,0,0.62,0)
+loadingText.BackgroundTransparency = 1
+loadingText.Text = "Carregando..."
+loadingText.Font = Enum.Font.Gotham
+loadingText.TextSize = 28
+loadingText.TextColor3 = Color3.fromRGB(255,255,255)
+loadingText.Parent = background
+
+-- Função para animar a barra
+local function animateBar(duration)
+    local startTime = tick()
+    while tick() - startTime < duration do
+        local progress = (tick() - startTime) / duration
+        barFill.Size = UDim2.new(progress,0,1,0)
+        wait(0.03)
+    end
+    barFill.Size = UDim2.new(1,0,1,0)
+end
+
+-- Função para piscar o texto
+spawn(function()
+    while screenGui.Parent do
+        loadingText.TextTransparency = 0.3
+        wait(0.5)
+        loadingText.TextTransparency = 0
+        wait(0.5)
+    end
+end)
+
+-- Executa animação por 3 segundos
+animateBar(3)
+
+-- Remove tela após carregar
+wait(0.5)
+screenGui:Destroy()
+
+-- Carrega a biblioteca UI
+local success, redzlib = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
+end)
+
+if not success then
+    -- Fallback para outra biblioteca
+    redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/uwalware"))()
+end
+
+local Window = redzlib:MakeWindow({
+    Title = "Shadow hub TESTE | Brookhaven 🏡",
+    SubTitle = "Isaquexsz 👑",
+    SaveFolder = "ShadowHubBrookhaven"
+})
+
+-- Tab1: Credits
+local Tab1 = Window:MakeTab({"Credits", "info"})
+
+Tab1:AddDiscordInvite({
+    Name = "Shadow Hub",
+    Description = "Join server",
+    Logo = "rbxassetid://8652665149",
+    Invite = "https://discord.gg/tsxKumHC",
+})
+
+local Section = Tab1:AddSection({"Créditos"})
+Tab1:AddParagraph({"Criador", "isaquexsz 👑"})
+Tab1:AddParagraph({"Versão", "BETA"})
+Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
+Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
+
+-- Tab2: Funções Principais
+local Tab2 = Window:MakeTab({"Main", "Home"})
+
+Tab2:AddSection({"Administração"})
+
+Tab2:AddButton({"Painel Admin", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/fatesc/fates-admin/main/main.lua"))()
+end})
+
+Tab2:AddButton({"Infinite Yield", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end})
+
+Tab2:AddSection({"Teleportes"})
+
+Tab2:AddButton({"TP para Spawn", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(100, 50, 100)
+    end
+end})
+
+Tab2:AddButton({"TP para Casa", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(300, 50, 300)
+    end
+end})
+
+-- Tab3: Troll Básico
+local Tab3 = Window:MakeTab({"Troll", "skull"})
+
+Tab3:AddSection({"Ferramentas de Trollagem"})
+
+-- Sistema de seleção de jogador
+local selectedPlayer = nil
+local playerNames = {}
+
+-- Atualizar lista de jogadores
+local function updatePlayerList()
+    playerNames = {}
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+end
+
+updatePlayerList()
+
+Tab3:AddDropdown({
+    Name = "Selecionar Jogador",
+    Description = "Escolha um jogador para trollar",
+    Default = "",
+    Options = playerNames,
+    Callback = function(value)
+        selectedPlayer = game.Players:FindFirstChild(value)
+    end
+})
+
+Tab3:AddButton({"Atualizar Lista", function()
+    updatePlayerList()
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Lista Atualizada",
+        Text = "Lista de jogadores atualizada!",
+        Duration = 3
+    })
+end})
+
+Tab3:AddSection({"Ações Básicas"})
+
+Tab3:AddButton({"TP até o Jogador", function()
+    if selectedPlayer and selectedPlayer.Character then
+        local targetHRP = selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local localHRP = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if targetHRP and localHRP then
+            localHRP.CFrame = targetHRP.CFrame
+        end
+    end
+end})
+
+Tab3:AddButton({"Spectar Jogador", function()
+    if selectedPlayer and selectedPlayer.Character then
+        workspace.CurrentCamera.CameraSubject = selectedPlayer.Character.Humanoid
+    end
+end})
+
+Tab3:AddButton({"Parar Spectar", function()
+    local player = game.Players.LocalPlayer
+    if player.Character then
+        workspace.CurrentCamera.CameraSubject = player.Character.Humanoid
+    end
+end})
+
+-- Tab4: Scripts Trolls Avançados
+local Tab4 = Window:MakeTab({"Scripts Trolls", "fire"})
+
+Tab4:AddSection({"Black Hole"})
+
+Tab4:AddButton({"Ativar Black Hole", function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local LocalPlayer = Players.LocalPlayer
+    
+    local blackHoleActive = true
+    local connection
+    
+    connection = RunService.Heartbeat:Connect(function()
+        if not blackHoleActive then
+            connection:Disconnect()
+            return
+        end
+        
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = character.HumanoidRootPart
+            
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") and not part.Anchored and part ~= rootPart then
+                    local direction = (rootPart.Position - part.Position).Unit
+                    part.Velocity = direction * 50
+                end
+            end
+        end
+    end)
+    
+    Tab4:AddButton({"Desativar Black Hole", function()
+        blackHoleActive = false
+        if connection then
+            connection:Disconnect()
+        end
+    end})
+end})
+
+Tab4:AddSection({"Invisibilidade"})
+
+Tab4:AddButton({"Ficar Invisível", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 1
+            end
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Invisibilidade",
+            Text = "Você está invisível!",
+            Duration = 5
+        })
+    end
+end})
+
+Tab4:AddButton({"Voltar ao Normal", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+            end
+        end
+    end
+end})
+
+-- Tab5: Sistema RGB
+local Tab5 = Window:MakeTab({"RGB", "brush"})
+
+local rgbSpeed = 3
+Tab5:AddSlider({
+    Name = "Velocidade RGB",
+    Description = "Controla a velocidade do efeito",
+    Min = 1,
+    Max = 10,
+    Default = 3,
+    Callback = function(value)
+        rgbSpeed = value
+    end
+})
+
+-- Função para gerar cor RGB
+local function getRainbowColor()
+    local tickTime = tick() * rgbSpeed
+    local r = math.sin(tickTime) * 0.5 + 0.5
+    local g = math.sin(tickTime + 2) * 0.5 + 0.5
+    local b = math.sin(tickTime + 4) * 0.5 + 0.5
+    return Color3.new(r, g, b)
+end
+
+Tab5:AddSection({"RGB Personal"})
+
+local bodyRgb = false
+Tab5:AddToggle({
+    Name = "RGB Corpo",
+    Description = "Efeito RGB no corpo",
+    Default = false,
+    Callback = function(value)
+        bodyRgb = value
+        if value then
+            spawn(function()
+                while bodyRgb do
+                    pcall(function()
+                        local color = getRainbowColor()
+                        game:GetService("ReplicatedStorage").Remotes.ChangeBodyColor:FireServer(color)
+                    end)
+                    wait(0.1)
+                end
+            end)
+        end
+    end
+})
+
+local nameRgb = false
+Tab5:AddToggle({
+    Name = "RGB Nome RP",
+    Description = "Efeito RGB no nome",
+    Default = false,
+    Callback = function(value)
+        nameRgb = value
+        if value then
+            spawn(function()
+                while nameRgb do
+                    pcall(function()
+                        local color = getRainbowColor()
+                        game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer("PickingRPNameColor", color)
+                    end)
+                    wait(0.1)
+                end
+            end)
+        end
+    end
+})
+
+-- Tab6: Sistema de Áudio
+local Tab6 = Window:MakeTab({"Audio", "radio"})
+
+local loopAtivo = false
+local InputID = ""
+
+Tab6:AddTextBox({
+    Name = "ID do Áudio",
+    Description = "Digite o ID do som",
+    Default = "",
+    PlaceholderText = "Exemplo: 6832470734",
+    ClearTextOnFocus = true,
+    Callback = function(text)
+        InputID = text
+    end
+})
+
+local function playSound(soundId)
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Gu1nSound1s"]:FireServer(workspace, tonumber(soundId), 1)
+    end)
+end
+
+Tab6:AddButton({
+    Name = "Tocar Som",
+    Description = "Toca o som inserido",
+    Callback = function()
+        if InputID and InputID ~= "" then
+            playSound(InputID)
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Áudio",
+                Text = "Som tocando: " .. InputID,
+                Duration = 3
+            })
+        end
+    end
+})
+
+Tab6:AddToggle({
+    Name = "Loop do Som",
+    Description = "Toca em loop",
+    Default = false,
+    Callback = function(value)
+        loopAtivo = value
+        if value then
+            spawn(function()
+                while loopAtivo do
+                    if InputID and InputID ~= "" then
+                        playSound(InputID)
+                    end
+                    wait(3)
+                end
+            end)
+        end
+    end
+})
+
+Tab6:AddSection({"Sons Pré-definidos"})
+
+local sounds = {
+    {"Skibidi", "128771670035179"},
+    {"Receba", "94142662616215"},
+    {"Oh My God", "73349649774476"},
+    {"Miau", "131804436682424"},
+    {"Alarme", "9067330158"},
+    {"Grito", "91784486966761"},
+    {"Risada", "79191730206814"}
+}
+
+for _, sound in ipairs(sounds) do
+    Tab6:AddButton({
+        Name = sound[1],
+        Description = "Tocar " .. sound[1],
+        Callback = function()
+            playSound(sound[2])
+        end
+    })
+end
+
+-- Tab7: Veículos
+local Tab7 = Window:MakeTab({"Veículos", "car"})
+
+Tab7:AddSection({"Spawnar Veículos"})
+
+Tab7:AddButton({"Carro Esportivo", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer("PickingCar", "SportsCar")
+    end)
+end})
+
+Tab7:AddButton({"Helicóptero", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer("PickingHeli", "Helicopter")
+    end)
+end})
+
+Tab7:AddButton({"Ônibus", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer("PickingCar", "SchoolBus")
+    end)
+end})
+
+Tab7:AddButton({"Barco", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer("PickingBoat", "MilitaryBoatFree")
+    end)
+end})
+
+Tab7:AddSection({"Controle"})
+
+Tab7:AddButton({"Deletar Todos Veículos", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer("DeleteAllVehicles")
+    end)
+end})
+
+-- Tab8: Casas
+local Tab8 = Window:MakeTab({"Casas", "home"})
+
+Tab8:AddSection({"Funções de Casa"})
+
+Tab8:AddButton({"Comprar Casa Grátis", function()
+    local houses = workspace:FindFirstChild("001_Lots")
+    if houses then
+        for _, house in pairs(houses:GetChildren()) do
+            if house.Name == "For Sale" then
+                local buyPart = house:FindFirstChild("BuyHouse")
+                if buyPart and buyPart:FindFirstChild("ClickDetector") then
+                    fireclickdetector(buyPart.ClickDetector)
+                    break
+                end
+            end
+        end
+    end
+end})
+
+Tab8:AddButton({"Remover Bans", function()
+    local successCount = 0
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name:lower():find("ban") then
+            pcall(function()
+                obj:Destroy()
+                successCount = successCount + 1
+            end)
+        end
+    end
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Bans Removidos",
+        Text = "Removidos: " .. successCount .. " bans",
+        Duration = 5
+    })
+end})
+
+-- Tab9: Ferramentas
+local Tab9 = Window:MakeTab({"Ferramentas", "tools"})
+
+Tab9:AddSection({"Ferramentas Úteis"})
+
+Tab9:AddButton({"Sofa", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
+    end)
+end})
+
+Tab9:AddButton({"Bola de Futebol", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "SoccerBall")
+    end)
+end})
+
+Tab9:AddButton({"Megafone", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Megaphone")
+    end)
+end})
+
+Tab9:AddButton({"Limpar Ferramentas", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("ClearAllTools")
+    end)
+end})
+
+-- Tab10: Troll Avançado
+local Tab10 = Window:MakeTab({"Troll Avançado", "bomb"})
+
+Tab10:AddSection({"Métodos de Fling"})
+
+Tab10:AddButton({"Fling com Sofá", function()
+    if selectedPlayer then
+        -- Implementação básica de fling
+        local targetChar = selectedPlayer.Character
+        local localChar = game.Players.LocalPlayer.Character
+        
+        if targetChar and localChar then
+            local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+            local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+            
+            if targetHRP and localHRP then
+                -- Spawna um sofá
+                pcall(function()
+                    game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
+                    wait(1)
+                    
+                    -- Fling básico
+                    local bodyVelocity = Instance.new("BodyVelocity")
+                    bodyVelocity.Velocity = Vector3.new(0, 100, 0)
+                    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                    bodyVelocity.Parent = targetHRP
+                    
+                    wait(2)
+                    bodyVelocity:Destroy()
+                end)
+            end
+        end
+    end
+end})
+
+Tab10:AddButton({"Fling com Bola", function()
+    if selectedPlayer then
+        local targetChar = selectedPlayer.Character
+        if targetChar then
+            local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.Velocity = Vector3.new(math.random(-100,100), 150, math.random(-100,100))
+                bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bodyVelocity.Parent = targetHRP
+                
+                wait(3)
+                bodyVelocity:Destroy()
+            end
+        end
+    end
+end})
+
+-- Sistema de notificação inicial
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Shadow Scripts Carregado!",
+    Text = 
+"Menu completo carregado com sucesso!",
+    Duration = 5
+})
