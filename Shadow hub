@@ -136,6 +136,59 @@ Tab2:AddButton({"Infinite Yield", function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end})
 
+-- SISTEMA DE VERIFICAÇÃO
+Tab2:AddSection({"Verificação"})
+
+Tab2:AddButton({"Verifique", function()
+    local TextChatService = game:GetService("TextChatService")
+    local StarterGui = game:GetService("StarterGui")
+    
+    -- Função para enviar mensagem no chat
+    local function sendChatMessage(message)
+        local success, error = pcall(function()
+            -- Tenta usar o novo sistema de chat (TextChatService)
+            if TextChatService then
+                local channel = TextChatService.TextChannels.RBXGeneral
+                if channel then
+                    channel:SendAsync(message)
+                    return true
+                end
+            end
+            
+            -- Fallback para o sistema antigo
+            game.Players:Chat(message)
+            return true
+        end)
+        
+        if not success then
+            warn("Erro ao enviar mensagem: " .. tostring(error))
+            return false
+        end
+        return true
+    end
+    
+    -- Enviar "/Verifique" no chat
+    local success1 = sendChatMessage("/Verifique")
+    
+    -- Enviar "Shadow_###" no chat
+    local success2 = sendChatMessage("Shadow_###")
+    
+    -- Notificação de confirmação ou erro
+    if success1 and success2 then
+        StarterGui:SetCore("SendNotification", {
+            Title = "Verifique usuários Shadow",
+            Text = "Comandos '/Verifique e 'Shadow hub enviados no chat!",
+            Duration = 5
+        })
+    else
+        StarterGui:SetCore("SendNotification", {
+            Title = "Erro",
+            Text = "Falha ao enviar uma ou ambas as mensagens no chat!",
+            Duration = 5
+        })
+    end
+end})
+
 Tab2:AddSection({"Teleportes"})
 
 Tab2:AddButton({"TP para Spawn", function()
@@ -523,33 +576,9 @@ for _, sound in ipairs(terrorSounds) do
             Name = sound.name,
             Description = "Tocar " .. sound.name,
             Callback = function()
-                playSound(sound.id)
+             
+   playSound(sound.id)
             end
         })
     end
 end
-
--- Tab7: Troll Avançado
-local Tab7 = Window:MakeTab({"Troll Avançado", "bomb"})
-
-Tab7:AddSection({"Métodos de Fling"})
-
-Tab7:AddButton({"Fling com Bola", function()
-    if selectedPlayer then
-        local targetChar = selectedPlayer.Character
-        if targetChar then
-            local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-            if targetHRP then
-                pcall(function()
-                    local bodyVelocity = Instance.new("BodyVelocity")
-                    bodyVelocity.Velocity = Vector3.new(math.random(-100,100), 150, math.random(-100,100))
-                    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                    bodyVelocity.Parent = targetHRP
-                    
-                    wait(3)
-                    bodyVelocity:Destroy()
-                end)
-            end
-        end
-    end
-end})
