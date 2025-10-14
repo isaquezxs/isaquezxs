@@ -102,7 +102,7 @@ end
 
 local Window = redzlib:MakeWindow({
     Title = "Shadow hub TESTE | Brookhaven 🏡",
-    SubTitle = "by Isaquexsz",
+    SubTitle = "by isaquexz",
     SaveFolder = "ShadowHubBrookhaven"
 })
 
