@@ -180,23 +180,24 @@ Tab2:AddButton({"Verifique", function()
     end
 end})
 
-Tab2:AddSection({"Teleportes"})
+Tab2:AddSection({"Music"})
 
-Tab2:AddButton({"TP para Spawn", function()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(100, 50, 100)
+Tab2:AddButton({
+    Name = "Tocar Som",
+    Description = "Clique para tocar a música inserida",
+    Callback = function()
+        if InputID then
+            fireServer("1Gu1nSound1s", {Workspace, InputID, 1})
+            local globalSound = Instance.new("Sound", Workspace)
+            globalSound.SoundId = "rbxassetid://" .. InputID
+            globalSound.Looped = false
+            globalSound:Play()
+            task.wait(3)
+            globalSound:Destroy()
+        end
     end
-end})
+})
 
-Tab2:AddButton({"TP para Casa", function()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(300, 50, 300)
-    end
-end})
 -- Tab3: Troll
 local Tab3 = Window:MakeTab({"Troll", "skull"})
 
