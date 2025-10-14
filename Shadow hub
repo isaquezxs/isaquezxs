@@ -1433,7 +1433,7 @@ Tab4:AddButton({
     end
 })
 
--- Tab5: Sistema de Áudio
+-- Tab5: Áudio All
 local Tab5 = Window:MakeTab({"Audio", "radio"})
 
 local loopAtivo = false
@@ -1708,7 +1708,7 @@ for _, sound in ipairs(terrorSounds) do
     end
 end
 
--- Tab7: Sistema RGB Avançado
+-- Tab7: RGB
 local Tab7 = Window:MakeTab({"RGB", "rainbow"})
 
 local Section = Tab7:AddSection({""})
@@ -1786,51 +1786,6 @@ Tab7:AddToggle({
                         end)
                     end
                     task.wait(0.1)
-                end
-            end)
-        end
-    end
-})
-
--- RGB Cabelo
-local cabeloRGBActive = false
-Tab7:AddToggle({
-    Name = "RGB Cabelo",
-    Description = "RGB no cabelo",
-    Default = false,
-    Callback = function(state)
-        cabeloRGBActive = state
-        if state then
-            task.spawn(function()
-                while cabeloRGBActive do
-                    fireServer("1Max1y", {
-                        "ChangeHairColor2",
-                        getRainbowColor(rgbSpeed)
-                    })
-                    task.wait(0.5)
-                end
-            end)
-        end
-    end
-})
-
-
-local Section = Tab7:AddSection({"RGB para usar em você"})
-
--- Nome + Bio RGB juntos
-local nameBioRGBActive = false
-Tab7:AddToggle({
-    Name = "Nome + Bio RGB",
-    Default = false,
-    Callback = function(state)
-        nameBioRGBActive = state
-        if state then
-            task.spawn(function()
-                while nameBioRGBActive and LocalPlayer.Character do
-                    local color = getRainbowColor(rgbSpeed)
-                    fireServer("1RPNam1eColo1r", { "PickingRPNameColor", color })
-                    fireServer("1RPNam1eColo1r", { "PickingRPBioColor", color })
-                    task.wait(0.03)
                 end
             end)
         end
