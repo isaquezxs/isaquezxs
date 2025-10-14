@@ -93,12 +93,27 @@ screenGui:Destroy()
 
 -- Carrega a biblioteca UI
 local success, redzlib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
+end)
+
+if not success then
+    redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wall"))()
+end
 
 local Window = redzlib:MakeWindow({
-  Title = "Shadow hub V1 : Brookhaven RP🏡",
-  SubTitle = "by isaquexz",
-  SaveFolder = "testando | redz lib v5.lua"
+    Title = "Shadow hub | Brookhaven 🏡",
+    SubTitle = "by isaquexz",
+    SaveFolder = "ShadowHubBrookhaven"
+})
+
+-- Tab1: Credits
+local Tab1 = Window:MakeTab({"Credits", "info"})
+
+Tab1:AddDiscordInvite({
+    Name = "Shadow Hub",
+    Description = "Join server",
+    Logo = "rbxassetid://8652665149",
+    Invite = "https://discord.gg/tsxKumHC",
 })
 
 local Section = Tab1:AddSection({"Créditos"})
@@ -873,179 +888,6 @@ local function unequipItem(itemName)
     end
 end
 
-local function ActiveAutoFling(targetPlayer)
-    if not isItemInInventory("Couch") then
-        local args = { [1] = "PickingTools", [2] = "Couch" }
-        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
-    end
-
-    equipItem("Couch")
-    getgenv().flingloop = true
-
-    while getgenv().flingloop do
-        local function flingloopfix()
-            local Players = game:GetService("Players")
-            local Player = Players.LocalPlayer
-            local AllBool = false
-
-            local SkidFling = function(TargetPlayer)
-                local Character = Player.Character
-                local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-                local RootPart = Humanoid and Humanoid.RootPart
-                local TCharacter = TargetPlayer.Character
-                local THumanoid, TRootPart, THead, Accessory, Handle
-
-                if TCharacter:FindFirstChildOfClass("Humanoid") then
-                    THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
-                end
-                if THumanoid and THumanoid.RootPart then
-                    TRootPart = THumanoid.RootPart
-                end
-                if TCharacter:FindFirstChild("Head") then
-                    THead = TCharacter.Head
-                end
-                if TCharacter:FindFirstChildOfClass("Accessory") then
-                    Accessory = TCharacter:FindFirstChildOfClass("Accessory")
-                end
-                if Accessory and Accessory:FindFirstChild("Handle") then
-                    Handle = Accessory.Handle
-                end
-
-                if Character and Humanoid and RootPart then
-                    if RootPart.Velocity.Magnitude < 50 then
-                        getgenv().OldPos = RootPart.CFrame
-                    end
-                    if THumanoid and THumanoid.Sit and not AllBool then
-                        unequipItem("Couch")
-                        getgenv().flingloop = false
-                        return
-                    end
-                    if THead then
-                        workspace.CurrentCamera.CameraSubject = THead
-                    elseif not THead and Handle then
-                        workspace.CurrentCamera.CameraSubject = Handle
-                    elseif THumanoid and TRootPart then
-                        workspace.CurrentCamera.CameraSubject = THumanoid
-                    end
-
-                    if not TCharacter:FindFirstChildWhichIsA("BasePart") then
-                        return
-                    end
-
-                    local FPos = function(BasePart, Pos, Ang)
-                        RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
-                        Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
-                        RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
-                        RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
-                    end
-
-                    local SFBasePart = function(BasePart)
-                        local TimeToWait = 2
-                        local Time = tick()
-                        local Angle = 0
-                        repeat
-                            if RootPart and THumanoid then
-                                if BasePart.Velocity.Magnitude < 50 then
-                                    Angle = Angle + 100
-                                    FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
-                                    task.wait()
-                                else
-                                    FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, -TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(-90), 0, 0))
-                                    task.wait()
-                                    FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
-                                    task.wait()
-                                end
-                            else
-                                break
-                            end
-                        until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= Players or not TargetPlayer.Character == TCharacter or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait or getgenv().flingloop == false
-                    end
-
-                    workspace.FallenPartsDestroyHeight = 0/0
-                    local BV = Instance.new("BodyVelocity")
-                    BV.Name = "SpeedDoPai"
-                    BV.Parent = RootPart
-                    BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
-                    BV.MaxForce = Vector3.new(1/0, 1/0, 1/0)
-                    Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-
-                    if TRootPart and THead then
-                        if (TRootPart.CFrame.p - THead.CFrame.p).Magnitude > 5 then
-                            SFBasePart(THead)
-                        else
-                            SFBasePart(TRootPart)
-                        end
-                    elseif TRootPart and not THead then
-                        SFBasePart(TRootPart)
-                    elseif not TRootPart and THead then
-                        SFBasePart(THead)
-                    elseif not TRootPart and not THead and Accessory and Handle then
-                        SFBasePart(Handle)
-                    end
-                    BV:Destroy()
-                    Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                    workspace.CurrentCamera.CameraSubject = Humanoid
-
-                    repeat
-                        RootPart.CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
-                        Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, .5, 0))
-                        Humanoid:ChangeState("GettingUp")
-                        table.foreach(Character:GetChildren(), function(_, x)
-                            if x:IsA("BasePart") then
-                                x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new()
-                            end
-                        end)
-                        task.wait()
-                    until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25
-
-                    workspace.FallenPartsDestroyHeight = getgenv().FPDH
-                end
-            end
-
-            if AllBool then
-                for _, x in next, Players:GetPlayers() do
-                    SkidFling(x)
-                end
-            end
-
-            if targetPlayer then
-                SkidFling(targetPlayer)
-            end
-
-            task.wait()
-        end
-
-        wait()
-        pcall(flingloopfix)
-    end
-end
-
 -- Seção Fling Avançado
 Tab3:AddSection({Name = "Fling Avançado"})
 
@@ -1064,101 +906,122 @@ Tab3:AddButton({
     end
 })
 
-Tab3:AddButton({
+-- Variável para controlar o Auto Fling
+local autoFlingActive = false
+
+-- Toggle para Auto Fling All
+Tab3:AddToggle({
     Name = "Auto Fling All",
-    Callback = function()
-        local Players = game:GetService("Players")
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local LocalPlayer = Players.LocalPlayer
-        local cam = workspace.CurrentCamera
-
-        local function ProcessPlayer(target)
-            if not target or not target.Character or target == LocalPlayer then return end
+    Default = false,
+    Callback = function(value)
+        autoFlingActive = value
+        if value then
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Auto Fling",
+                Text = "Auto Fling Ativado! Atacando todos os jogadores...",
+                Duration = 5
+            })
             
-            local flingActive = true
-            local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            local tRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-            if not root or not tRoot then return end
-            
-            local char = LocalPlayer.Character
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            local original = root.CFrame
+            -- Iniciar Auto Fling
+            local Players = game:GetService("Players")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local LocalPlayer = Players.LocalPlayer
+            local cam = workspace.CurrentCamera
 
-            ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Clea1rTool1s"):FireServer("ClearAllTools")
-            task.wait(0.2)
+            local function ProcessPlayer(target)
+                if not target or not target.Character or target == LocalPlayer then return end
+                
+                local flingActive = true
+                local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local tRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+                if not root or not tRoot then return end
+                
+                local char = LocalPlayer.Character
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local original = root.CFrame
 
-            ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
-            task.wait(0.3)
+                ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Clea1rTool1s"):FireServer("ClearAllTools")
+                task.wait(0.2)
 
-            local tool = LocalPlayer.Backpack:FindFirstChild("Couch")
-            if tool then
-                tool.Parent = char
-            end
-            
-            task.wait(0.1)
-            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
-            task.wait(0.25)
+                ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+                task.wait(0.3)
 
-            workspace.FallenPartsDestroyHeight = 0/0
+                local tool = LocalPlayer.Backpack:FindFirstChild("Couch")
+                if tool then
+                    tool.Parent = char
+                end
+                
+                task.wait(0.1)
+                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                task.wait(0.25)
 
-            local bv = Instance.new("BodyVelocity")
-            bv.Name = "FlingForce"
-            bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
-            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            bv.Parent = root
+                workspace.FallenPartsDestroyHeight = 0/0
 
-            hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-            hum.PlatformStand = false
-            cam.CameraSubject = target.Character:FindFirstChild("Head") or tRoot or hum
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "FlingForce"
+                bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Parent = root
 
-            task.spawn(function()
-                local angle = 0
-                local parts = {root}
-                while flingActive and target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") do
-                    local tHum = target.Character:FindFirstChildOfClass("Humanoid")
-                    if tHum.Sit then break end
-                    angle += 50
+                hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                hum.PlatformStand = false
+                cam.CameraSubject = target.Character:FindFirstChild("Head") or tRoot or hum
 
-                    for _, part in ipairs(parts) do
-                        local hrp = target.Character.HumanoidRootPart
-                        local pos = hrp.Position + hrp.Velocity / 1.5
-                        root.CFrame = CFrame.new(pos) * CFrame.Angles(math.rad(angle), 0, 0)
+                task.spawn(function()
+                    local angle = 0
+                    local parts = {root}
+                    while flingActive and autoFlingActive and target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") do
+                        local tHum = target.Character:FindFirstChildOfClass("Humanoid")
+                        if tHum.Sit then break end
+                        angle += 50
+
+                        for _, part in ipairs(parts) do
+                            local hrp = target.Character.HumanoidRootPart
+                            local pos = hrp.Position + hrp.Velocity / 1.5
+                            root.CFrame = CFrame.new(pos) * CFrame.Angles(math.rad(angle), 0, 0)
+                        end
+
+                        root.Velocity = Vector3.new(9e8, 9e8, 9e8)
+                        root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+                        task.wait()
                     end
 
-                    root.Velocity = Vector3.new(9e8, 9e8, 9e8)
-                    root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+                    flingActive = false
+                    bv:Destroy()
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                    hum.PlatformStand = false
+                    root.CFrame = original
+                    cam.CameraSubject = hum
+
+                    for _, p in pairs(char:GetDescendants()) do
+                        if p:IsA("BasePart") then
+                            p.Velocity = Vector3.zero
+                            p.RotVelocity = Vector3.zero
+                        end
+                    end
+
+                    hum:UnequipTools()
+                    ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+                end)
+               
+                while flingActive do
                     task.wait()
                 end
+            end
 
-                flingActive = false
-                bv:Destroy()
-                hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                hum.PlatformStand = false
-                root.CFrame = original
-                cam.CameraSubject = hum
-
-                for _, p in pairs(char:GetDescendants()) do
-                    if p:IsA("BasePart") then
-                        p.Velocity = Vector3.zero
-                        p.RotVelocity = Vector3.zero
-                    end
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    spawn(function()
+                        ProcessPlayer(player)
+                    end)
                 end
-
-                hum:UnequipTools()
-                ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
-            end)
-           
-            while flingActive do
-                task.wait()
             end
-        end
-
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                spawn(function()
-                    ProcessPlayer(player)
-                end)
-            end
+        else
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Auto Fling",
+                Text = "Auto Fling Desativado!",
+                Duration = 3
+            })
         end
     end
 })
