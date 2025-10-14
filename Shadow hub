@@ -318,9 +318,6 @@ Tab3:AddButton({
         end
     end
 })
-
-Tab3:AddSection({"Troll"})
-
 -- Dropdown para selecionar jogador
 local killDropdown = Tab3:AddDropdown({
     Name = "Selecionar Jogador",
@@ -339,7 +336,57 @@ local killDropdown = Tab3:AddDropdown({
     end
 })
 
--- Botão para atualizar lista de jogadores
+-- Função Spectar Jogador
+Tab3:AddToggle({
+    Name = "Spectar Player",
+    Default = false,
+    Callback = function(value)
+        local Camera = workspace.CurrentCamera
+
+        local function UpdateCamera()
+            if value then
+                local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+                if targetPlayer and targetPlayer.Character then
+                    local humanoid = targetPlayer.Character:FindFirstChild("Humanoid")
+                    if humanoid then
+                        Camera.CameraSubject = humanoid
+                    end
+                end
+            else
+                if LocalPlayer.Character then
+                    local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+                    if humanoid then
+                        Camera.CameraSubject = humanoid
+                    end
+                end
+            end
+        end
+
+        if value then
+            if not getgenv().CameraConnection then
+                getgenv().CameraConnection = RunService.Heartbeat:Connect(UpdateCamera)
+            end
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Spectando",
+                Text = "Spectando " .. (selectedPlayerName or "jogador"),
+                Duration = 3
+            })
+        else
+            if getgenv().CameraConnection then
+                getgenv().CameraConnection:Disconnect()
+                getgenv().CameraConnection = nil
+            end
+            UpdateCamera()
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Spectar Parado",
+                Text = "Parou de spectar",
+                Duration = 3
+            })
+        end
+    end
+})
+
+-- BOTÃO ATUALIZAR PLAYER LIST (AGORA EMBAIXO DO SPECTAR)
 Tab3:AddButton({
     Name = "Atualizar Player List",
     Callback = function()
@@ -370,10 +417,7 @@ Tab3:AddButton({
     end
 })
 
-Tab3:AddSection({"Troll"})
-
-
--- Botão para teleportar até o jogador
+-- BOTÃO TELEPORTAR ATÉ O PLAYER (EMBAIXO DO ATUALIZAR)
 Tab3:AddButton({
     Name = "Teleportar até o Player",
     Callback = function()
@@ -406,6 +450,9 @@ Tab3:AddButton({
         end
     end
 })
+
+-- AQUI COMEÇA A SEÇÃO "TROLL" (sem os elementos duplicados)
+Tab3:AddSection({"Troll"})
 
 -- FUNÇÃO KILLWITHCOUCH
 local function KillWithCouch()
