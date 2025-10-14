@@ -101,7 +101,7 @@ if not success then
 end
 
 local Window = redzlib:MakeWindow({
-    Title = "Shadow hub | Brookhaven 🏡",
+    Title = "Shadow hub V1| Brookhaven 🏡",
     SubTitle = "by isaquexz",
     SaveFolder = "ShadowHubBrookhaven"
 })
@@ -1585,7 +1585,7 @@ Tab4:AddButton({
     end
 })
 
--- Tab5: Sistema de Áudio
+-- Tab5: Audio all 
 local Tab5 = Window:MakeTab({"Audio", "radio"})
 
 local loopAtivo = false
