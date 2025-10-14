@@ -103,7 +103,7 @@ end
 
 local Window = redzlib:MakeWindow({
     Title = "Shadow hub TESTE | Brookhaven 🏡",
-    SubTitle = "Isaquexsz 👑",
+    SubTitle = "by Isaquexsz",
     SaveFolder = "ShadowHubBrookhaven"
 })
 
@@ -118,7 +118,7 @@ Tab1:AddDiscordInvite({
 })
 
 local Section = Tab1:AddSection({"Créditos"})
-Tab1:AddParagraph({"Criador", "isaquexsz 👑"})
+Tab1:AddParagraph({"Criador", "isaquexsz"})
 Tab1:AddParagraph({"Versão", "BETA"})
 Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
 Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
