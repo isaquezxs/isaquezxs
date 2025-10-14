@@ -95,24 +95,10 @@ screenGui:Destroy()
 local success, redzlib = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
-if not success then
-    redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wall"))()
-end
-
 local Window = redzlib:MakeWindow({
-    Title = "Shadow hub | Brookhaven 🏡",
-    SubTitle = "by isaquexz",
-    SaveFolder = "ShadowHubBrookhaven"
-})
-
--- Tab1: Credits
-local Tab1 = Window:MakeTab({"Credits", "info"})
-
-Tab1:AddDiscordInvite({
-    Name = "Shadow Hub",
-    Description = "Join server",
-    Logo = "rbxassetid://8652665149",
-    Invite = "https://discord.gg/tsxKumHC",
+  Title = "Shadow hub V1 : Brookhaven RP🏡",
+  SubTitle = "by isaquexz",
+  SaveFolder = "testando | redz lib v5.lua"
 })
 
 local Section = Tab1:AddSection({"Créditos"})
