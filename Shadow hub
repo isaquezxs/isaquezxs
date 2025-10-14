@@ -91,19 +91,18 @@ animateBar(3)
 wait(0.5)
 screenGui:Destroy()
 
--- Carrega a biblioteca UI
-local success, redzlib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
-end)
-
-if not success then
-    redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/uwalware"))()
-end
+-- Carrega a biblioteca UI Redz
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
 
 local Window = redzlib:MakeWindow({
-    Title = "Shadow hub TESTE | Brookhaven 🏡",
+    Title = "Shadow Hub | Brookhaven 🏡",
     SubTitle = "by isaquexz",
     SaveFolder = "ShadowHubBrookhaven"
+})
+
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://71014873973869", BackgroundTransparency = 0 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
 })
 
 -- Serviços
@@ -119,13 +118,16 @@ local Tab1 = Window:MakeTab({"Credits", "info"})
 Tab1:AddDiscordInvite({
     Name = "Shadow Hub",
     Description = "Join server",
-    Logo = "rbxassetid://8652665149",
+    Logo = "rbxassetid://18751483361",
     Invite = "https://discord.gg/tsxKumHC",
 })
 
+Window:SelectTab(Tab1)
+
 local Section = Tab1:AddSection({"Créditos"})
+
 Tab1:AddParagraph({"Criador", "isaquexsz"})
-Tab1:AddParagraph({"Versão", "BETA"})
+Tab1:AddParagraph({"Versão", "BETA V1"})
 Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
 Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 
@@ -742,7 +744,7 @@ Tab3:AddButton({
 })
 
 -- Seção Fling Boat
-local kill = Tab3:AddSection({Name = "Fling Boat"})
+Tab3:AddSection({Name = "Fling Boat"})
 
 Tab3:AddButton({
     Name = "Fling - Boat",
@@ -1358,3 +1360,14 @@ Tab7:AddToggle({
         end
     end
 })
+
+-- Adiciona o botão de minimizar
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://71014873973869", BackgroundTransparency = 0 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
+})
+
+-- Seleciona a primeira aba
+Window:SelectTab(Tab1)
+
+print("Shadow Hub V1 carregado com sucesso!")
