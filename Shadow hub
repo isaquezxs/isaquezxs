@@ -136,7 +136,7 @@ Tab2:AddButton({"Infinite Yield", function()
 end})
 
 -- SISTEMA DE VERIFICAÇÃO
-Tab2:AddSection({"Verificaçãode usuário shadow"})
+Tab2:AddSection({"Verificação de usuário shadow"})
 
 Tab2:AddButton({"Verifique", function()
     local TextChatService = game:GetService("TextChatService")
@@ -315,6 +315,40 @@ Tab3:AddToggle({
                 Text = "Parou de spectar",
                 Duration = 3
             })
+        end
+    end
+})
+
+-- BOTÃO TELEPORTAR ATÉ O PLAYER (EMBAIXO DO ATUALIZAR)
+Tab3:AddButton({
+    Name = "Teleportar até o Player",
+    Callback = function()
+        if not selectedPlayerName or not Players:FindFirstChild(selectedPlayerName) then
+            print("Erro: Player não selecionado ou não existe")
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Erro",
+                Text = "Selecione um jogador primeiro!",
+                Duration = 5
+            })
+            return
+        end
+        local character = LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then
+            warn("Erro: HumanoidRootPart do jogador local não encontrado")
+            return
+        end
+
+        local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            humanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "TP Concluído",
+                Text = "Teleportado até " .. selectedPlayerName,
+                Duration = 5
+            })
+        else
+            print("Erro: Player alvo não encontrado ou sem HumanoidRootPart")
         end
     end
 })
