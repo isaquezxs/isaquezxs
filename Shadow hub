@@ -180,9 +180,9 @@ Tab2:AddButton({"Verifique", function()
     end
 end})
 
-Tab2:AddSection({"Music"})
+Tab2:AddSection({"Music requer gamepass"})
 
-Tab2:AddButton({
+Tab2:AddButton({"Music"})
     Name = "Tocar Som",
     Description = "Clique para tocar a música inserida",
     Callback = function()
