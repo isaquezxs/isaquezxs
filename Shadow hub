@@ -93,15 +93,14 @@ screenGui:Destroy()
 
 -- Carrega a biblioteca UI
 local success, redzlib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
-end)
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 if not success then
     redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wall"))()
 end
 
 local Window = redzlib:MakeWindow({
-    Title = "Shadow hub V1| Brookhaven 🏡",
+    Title = "Shadow hub | Brookhaven 🏡",
     SubTitle = "by isaquexz",
     SaveFolder = "ShadowHubBrookhaven"
 })
@@ -1585,7 +1584,7 @@ Tab4:AddButton({
     end
 })
 
--- Tab5: Audio all 
+-- Tab5: Sistema de Áudio
 local Tab5 = Window:MakeTab({"Audio", "radio"})
 
 local loopAtivo = false
