@@ -1813,3 +1813,26 @@ Tab7:AddToggle({
         end
     end
 })
+
+
+local Section = Tab7:AddSection({"RGB para usar em você"})
+
+-- Nome + Bio RGB juntos
+local nameBioRGBActive = false
+Tab7:AddToggle({
+    Name = "Nome + Bio RGB",
+    Default = false,
+    Callback = function(state)
+        nameBioRGBActive = state
+        if state then
+            task.spawn(function()
+                while nameBioRGBActive and LocalPlayer.Character do
+                    local color = getRainbowColor(rgbSpeed)
+                    fireServer("1RPNam1eColo1r", { "PickingRPNameColor", color })
+                    fireServer("1RPNam1eColo1r", { "PickingRPBioColor", color })
+                    task.wait(0.03)
+                end
+            end)
+        end
+    end
+})
