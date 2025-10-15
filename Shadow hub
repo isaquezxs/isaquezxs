@@ -299,10 +299,10 @@ Tab3:AddButton({
     end
 })
 
-Tab3:AddSection({"fling e kill"})
+Tab3:AddSection({""})
 
 -- Seção Fling
-Tab3:AddSection({Name = "Fling"})
+Tab3:AddSection({Name = "Fling e kill"})
 
 -- Auto Fling otimizado
 Tab3:AddToggle({
