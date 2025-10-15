@@ -142,50 +142,41 @@ Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 -- Tab2: Funções Principais
 local Tab2 = Window:MakeTab({"Main", "Home"})
 
-Tab2:AddSection({"Administração"})
+Tab2:AddSection({"Verifique usuários Shadow"})
 
-Tab2:AddSection({"Verificação"})
-
-Tab2:AddButton({"Verifique", function()
-    local TextChatService = game:GetService("TextChatService")
+Tab2:AddButton({"/Verifique", function()
+    local TextChatService= game:GetService("TextChatService")
     local StarterGui = game:GetService("StarterGui")
     
-    local function sendChatMessage(message)
-        local success, error = pcall(function()
-            if TextChatService then
+    local function safeChat(message)
+        local success = pcall(function()
+            if TextChatService and TextChatService.TextChannels then
                 local channel = TextChatService.TextChannels.RBXGeneral
                 if channel then
                     channel:SendAsync(message)
-                    return true
                 end
+            else
+                game.Players:Chat(message)
             end
-            game.Players:Chat(message)
-            return true
         end)
-        
-        if not success then
-            warn("Erro ao enviar mensagem: " .. tostring(error))
-            return false
-        end
-        return true
+        return success
     end
     
-    local success1 = sendChatMessage("/Verifique")
-    local success2 = sendChatMessage("Shadow_###")
+    local results = {
+        safeChat("/Verifique"),
+        safeChat("Shadow_###")
+    }
     
-    if success1 and success2 then
-        StarterGui:SetCore("SendNotification", {
-            Title = "Verifique usuários Shadow",
-            Text = "Comandos enviados no chat!",
-            Duration = 5
-        })
-    else
-        StarterGui:SetCore("SendNotification", {
-            Title = "Erro",
-            Text = "Falha ao enviar mensagens!",
-            Duration = 5
-        })
+    local successCount = 0
+    for _, result in ipairs(results) do
+        if result then successCount = successCount + 1 end
     end
+    
+    StarterGui:SetCore("SendNotification", {
+        Title = "Verificação",
+        Text = string.format("%d/%d comandos enviados!", successCount, #results),
+        Duration = 5
+    })
 end})
 
 -- Tab3: Troll
@@ -592,61 +583,34 @@ Tab6:AddToggle({
 -- Nova Aba: House (simplificada)
 local Tab7 = Window:MakeTab({"House", "house"})
 
-Tab7:AddSection({"ser desbanido da casa"})
-
--- Botão para remover ban de todas as casas
-Tab4:AddButton({
+Tab7:AddButton({
     Name = "Remover Ban",
-    Description = "Tenta remover o ban de todas as casas ",
-    Callback = function()q
+    Description = "Remove banimento de todas as casas",
+    Callback = function()  -- ← CORRIGIDO: removido o "q"
         local successCount = 0
-        local failCount = 0
+        local housesChecked = 0
+        
         for i = 1, 37 do
             local bannedBlockName = "BannedBlock" .. i
             local bannedBlock = Workspace:FindFirstChild(bannedBlockName, true)
+            
             if bannedBlock then
-                local success, _ = pcall(function()
+                local success = pcall(function()
                     bannedBlock:Destroy()
                 end)
+                
                 if success then
                     successCount = successCount + 1
-                else
-                    failCount = failCount + 1
                 end
+                housesChecked = housesChecked + 1
             end
         end
-        for _, house in pairs(Workspace:GetDescendants()) do
-            if house.Name:match("BannedBlock") then
-                local success, _ = pcall(function()
-                    house:Destroy()
-                end)
-                if success then
-                    successCount = successCount + 1
-                else
-                    failCount = failCount + 1
-                end
-            end
-        end
-        if successCount > 0 then
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Sucesso",
-                Text = "Bans removidos de " .. successCount .. " casas!",
-                Duration = 5
-            })
-        end
-        if failCount > 0 then
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Aviso",
-                Text = "Falha ao remover bans de " .. failCount .. " casas.",
-                Duration = 5
-            })
-        end
-        if successCount == 0 and failCount == 0 then
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Aviso",
-                Text = "Nenhum ban encontrado para remover.",
-                Duration = 5
-            })
-        end
+        
+        -- Notificação de resultado
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Remoção de Ban",
+            Text = string.format("Sucesso em %d/%d casas", successCount, housesChecked),
+            Duration = 5
+        })
     end
 })
