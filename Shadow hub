@@ -111,6 +111,7 @@ local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local cam = workspace.CurrentCamera
 
 -- Tab1: Credits
 local Tab1 = Window:MakeTab({"Credits", "info"})
@@ -136,15 +137,7 @@ local Tab2 = Window:MakeTab({"Main", "Home"})
 
 Tab2:AddSection({"Administração"})
 
-Tab2:AddButton({"Painel Admin", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/fatesc/fates-admin/main/main.lua"))()
-end})
-
-Tab2:AddButton({"Infinite Yield", function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-end})
-
--- SISTEMA DE VERIFICAÇÃO
+-- SISTEMA DE Verifique usuário shadow 
 Tab2:AddSection({"Verificação"})
 
 Tab2:AddButton({"Verifique", function()
@@ -189,32 +182,17 @@ Tab2:AddButton({"Verifique", function()
     end
 end})
 
-Tab2:AddSection({"Teleportes"})
-
-Tab2:AddButton({"TP para Spawn", function()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(100, 50, 100)
-    end
-end})
-
-Tab2:AddButton({"TP para Casa", function()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(300, 50, 300)
-    end
-end})
-
--- Tab3: Troll Básico
+-- Tab3: Troll
 local Tab3 = Window:MakeTab({"Troll", "skull"})
 
-Tab3:AddSection({"Ferramentas de Trollagem"})
+Tab3:AddSection({"Troll"})
 
 -- Variáveis globais para as funções
 local selectedPlayerName = nil
 local methodKill = ""
+local flingBallActive = false
+local flingSofaActive = false
+local flingActive = false
 
 -- Função para obter lista de jogadores
 local function getPlayerList()
@@ -277,42 +255,6 @@ Tab3:AddButton({
     end
 })
 
-Tab3:AddSection({"Ações Básicas"})
-
--- Botão para teleportar até o jogador
-Tab3:AddButton({
-    Name = "Teleportar até o Player",
-    Callback = function()
-        if not selectedPlayerName or not Players:FindFirstChild(selectedPlayerName) then
-            print("Erro: Player não selecionado ou não existe")
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Erro",
-                Text = "Selecione um jogador primeiro!",
-                Duration = 5
-            })
-            return
-        end
-        local character = LocalPlayer.Character
-        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-        if not humanoidRootPart then
-            warn("Erro: HumanoidRootPart do jogador local não encontrado")
-            return
-        end
-
-        local targetPlayer = Players:FindFirstChild(selectedPlayerName)
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            humanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "TP Concluído",
-                Text = "Teleportado até " .. selectedPlayerName,
-                Duration = 5
-            })
-        else
-            print("Erro: Player alvo não encontrado ou sem HumanoidRootPart")
-        end
-    end
-})
-
 -- Função Spectar Jogador
 Tab3:AddToggle({
     Name = "Spectar Player",
@@ -359,6 +301,42 @@ Tab3:AddToggle({
                 Text = "Parou de spectar",
                 Duration = 3
             })
+        end
+    end
+})
+
+Tab3:AddSection({"Troll"})
+
+-- Botão para teleportar até o jogador
+Tab3:AddButton({
+    Name = "Teleportar até o Player",
+    Callback = function()
+        if not selectedPlayerName or not Players:FindFirstChild(selectedPlayerName) then
+            print("Erro: Player não selecionado ou não existe")
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Erro",
+                Text = "Selecione um jogador primeiro!",
+                Duration = 5
+            })
+            return
+        end
+        local character = LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then
+            warn("Erro: HumanoidRootPart do jogador local não encontrado")
+            return
+        end
+
+        local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            humanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "TP Concluído",
+                Text = "Teleportado até " .. selectedPlayerName,
+                Duration = 5
+            })
+        else
+            print("Erro: Player alvo não encontrado ou sem HumanoidRootPart")
         end
     end
 })
@@ -743,6 +721,288 @@ Tab3:AddButton({
     end
 })
 
+-- Seção Fling
+Tab3:AddSection({Name = "Fling"})
+
+-- Novo Auto Fling
+Tab3:AddToggle({
+    Name = "Auto Fling",
+    Default = false,
+    Callback = function(state)
+        flingActive = state
+        if state and selectedPlayerName then
+            local target = Players:FindFirstChild(selectedPlayerName)
+            if not target or not target.Character then return end
+            local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local tRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+            if not root or not tRoot then return end
+            local char = LocalPlayer.Character
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local original = root.CFrame
+
+            local args = {
+                "ClearAllTools"
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1Clea1rTool1s"):FireServer(unpack(args))
+
+            task.wait(0.2)
+
+            local args = {
+                [1] = "PickingTools",
+                [2] = "Couch"
+            }
+            game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+
+            task.wait(0.3)
+            local tool = LocalPlayer.Backpack:FindFirstChild("Couch")
+            if tool then
+                tool.Parent = char
+            end
+            task.wait(0.2)
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
+            task.wait(0.25)
+
+            workspace.FallenPartsDestroyHeight = 0/0
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "FlingForce"
+            bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
+            bv.MaxForce = Vector3.new(1/0, 1/0, 1/0)
+            bv.Parent = root
+            hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            hum.PlatformStand = false
+            cam.CameraSubject = target.Character:FindFirstChild("Head") or tRoot or hum
+
+            task.spawn(function()
+                local angle = 0
+                local parts = {root}
+                while flingActive and target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") do
+                    local tHum = target.Character:FindFirstChildOfClass("Humanoid")
+                    if tHum.Sit then break end
+                    angle += 50
+
+                    for _, part in ipairs(parts) do
+                        local pos_x = target.Character.HumanoidRootPart.Position.X
+                        local pos_y = target.Character.HumanoidRootPart.Position.Y
+                        local pos_z = target.Character.HumanoidRootPart.Position.Z
+                        pos_x = pos_x + (target.Character.HumanoidRootPart.Velocity.X / 1.5)
+                        pos_y = pos_y + (target.Character.HumanoidRootPart.Velocity.Y / 1.5)
+                        pos_z = pos_z + (target.Character.HumanoidRootPart.Velocity.Z / 1.5)
+                        root.CFrame = CFrame.new(pos_x, pos_y, pos_z) * CFrame.Angles(math.rad(angle), 0, 0)
+                    end
+
+                    root.Velocity = Vector3.new(9e8, 9e8, 9e8)
+                    root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+                    task.wait()
+                end
+                flingActive = false
+                bv:Destroy()
+                hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                hum.PlatformStand = false
+                root.CFrame = original
+                cam.CameraSubject = hum
+                for _, p in pairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.Velocity = Vector3.zero
+                        p.RotVelocity = Vector3.zero
+                    end
+                end
+                hum:UnequipTools()
+                game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+            end)
+        end
+    end
+})
+
+-- Função FlingBall (bola)
+local function FlingBall(target)
+    if not target or not flingBallActive then return end
+    
+    local players = game:GetService("Players")
+    local player = players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local backpack = player:WaitForChild("Backpack")
+    local ServerBalls = workspace:WaitForChild("WorkspaceCom"):WaitForChild("001_SoccerBalls")
+
+    local function GetBall()
+        if not backpack:FindFirstChild("SoccerBall") and not character:FindFirstChild("SoccerBall") then
+            game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "SoccerBall")
+        end
+
+        repeat task.wait() until backpack:FindFirstChild("SoccerBall") or character:FindFirstChild("SoccerBall")
+
+        local ballTool = backpack:FindFirstChild("SoccerBall")
+        if ballTool then
+            ballTool.Parent = character
+        end
+        repeat task.wait() until ServerBalls:FindFirstChild("Soccer" .. player.Name)
+
+        return ServerBalls:FindFirstChild("Soccer" .. player.Name)
+    end
+
+    local Ball = ServerBalls:FindFirstChild("Soccer" .. player.Name) or GetBall()
+    if Ball then
+        Ball.CanCollide = false
+        Ball.Massless = true
+        Ball.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0, 0)
+
+        if target ~= player then
+            local tchar = target.Character
+            if tchar and tchar:FindFirstChild("HumanoidRootPart") and tchar:FindFirstChild("Humanoid") then
+                local troot = tchar.HumanoidRootPart
+                local thum = tchar.Humanoid
+
+                if Ball:FindFirstChildWhichIsA("BodyVelocity") then
+                    Ball:FindFirstChildWhichIsA("BodyVelocity"):Destroy()
+                end
+
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "FlingPower"
+                bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.P = 9e900
+                bv.Parent = Ball
+
+                workspace.CurrentCamera.CameraSubject = thum
+
+                repeat
+                    if not flingBallActive then break end
+                    if troot.Velocity.Magnitude > 0 then
+                        local pos = troot.Position + (troot.Velocity / 1.5)
+                        Ball.CFrame = CFrame.new(pos)
+                        Ball.Orientation = Ball.Orientation + Vector3.new(45, 60, 30)
+                    else
+                        for i, v in pairs(tchar:GetChildren()) do
+                            if v:IsA("BasePart") and v.CanCollide and not v.Anchored then
+                                Ball.CFrame = v.CFrame
+                                task.wait(1/60)
+                            end
+                        end
+                    end
+                    task.wait(1/60)
+                until not troot or not troot.Parent or troot.Velocity.Magnitude > 1000 or (thum and thum.Health <= 0) or not tchar:IsDescendantOf(workspace) or target.Parent ~= players or not flingBallActive
+
+                workspace.CurrentCamera.CameraSubject = humanoid
+            end
+        end
+    end
+end
+
+-- Toggle Fling Ball
+Tab3:AddToggle({
+    Name = "Fling Ball",
+    Default = false,
+    Callback = function(value)
+        flingBallActive = value
+        if value and selectedPlayerName then
+            local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+            if targetPlayer then
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Fling Ball",
+                    Text = "Fling Ball ativado para " .. selectedPlayerName,
+                    Duration = 3
+                })
+                FlingBall(targetPlayer)
+            end
+        else
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Fling Ball",
+                Text = "Fling Ball desativado",
+                Duration = 3
+            })
+        end
+    end
+})
+
+-- Função Fling Sofa
+local function FlingSofa(target)
+    if not target or not flingSofaActive then return end
+    
+    local players = game:GetService("Players")
+    local player = players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+
+    local function spawnSofa()
+        ReplicatedStorage.RE["1Clea1rTool1s"]:FireServer("ClearAllTools")
+        task.wait(0.2)
+        ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+        task.wait(0.3)
+        
+        local sofa = player.Backpack:FindFirstChild("Couch")
+        if sofa then
+            sofa.Parent = character
+        end
+        return sofa
+    end
+
+    local sofa = spawnSofa()
+    if not sofa then return end
+
+    local seat1 = sofa:FindFirstChild("Seat1")
+    if not seat1 then return end
+
+    -- Desabilitar assento
+    seat1.Disabled = true
+
+    -- Adicionar velocidade
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new(0, 50, 0)
+    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bodyVelocity.Parent = seat1
+
+    while flingSofaActive and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") do
+        local targetRoot = target.Character.HumanoidRootPart
+        local targetHum = target.Character:FindFirstChildOfClass("Humanoid")
+        
+        if not targetHum or targetHum.Health <= 0 then break end
+        
+        -- Mover sofá em torno do jogador
+        local time = tick() * 10
+        local offset = Vector3.new(math.sin(time) * 5, 3, math.cos(time) * 5)
+        seat1.CFrame = targetRoot.CFrame + offset
+        
+        -- Girar o sofá
+        seat1.Orientation = seat1.Orientation + Vector3.new(0, 10, 0)
+        
+        task.wait()
+    end
+
+    -- Limpar
+    bodyVelocity:Destroy()
+    if sofa then
+        sofa.Parent = player.Backpack
+    end
+    ReplicatedStorage.RE["1Clea1rTool1s"]:FireServer("ClearAllTools")
+end
+
+-- Toggle Fling Sofa
+Tab3:AddToggle({
+    Name = "Fling Sofa",
+    Default = false,
+    Callback = function(value)
+        flingSofaActive = value
+        if value and selectedPlayerName then
+            local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+            if targetPlayer then
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Fling Sofa",
+                    Text = "Fling Sofa ativado para " .. selectedPlayerName,
+                    Duration = 3
+                })
+                FlingSofa(targetPlayer)
+            end
+        else
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Fling Sofa",
+                Text = "Fling Sofa desativado",
+                Duration = 3
+            })
+        end
+    end
+})
+
 -- Seção Fling Boat
 Tab3:AddSection({Name = "Fling Boat"})
 
@@ -910,6 +1170,148 @@ Tab3:AddButton({
     end
 })
 
+-- Função Click Fling Couch
+Tab3:AddButton({
+    Name = "Click Fling Couch (Tool)",
+    Callback = function()
+        local jogadores = game:GetService("Players")
+        local rep = game:GetService("ReplicatedStorage")
+        local entrada = game:GetService("UserInputService")
+        local eu = jogadores.LocalPlayer
+        local cam = workspace.CurrentCamera
+
+        local podeClicar = true
+        local ferramentaEquipada = false
+        local NOME_FERRAMENTA = "Click Fling Couch"
+
+        local mochila = eu:WaitForChild("Backpack")
+
+        if not mochila:FindFirstChild(NOME_FERRAMENTA) and not (eu.Character and eu.Character:FindFirstChild(NOME_FERRAMENTA)) then
+            local ferramenta = Instance.new("Tool")
+            ferramenta.Name = NOME_FERRAMENTA
+            ferramenta.RequiresHandle = false
+            ferramenta.CanBeDropped = false
+
+            ferramenta.Equipped:Connect(function()
+                ferramentaEquipada = true
+            end)
+
+            ferramenta.Unequipped:Connect(function()
+                ferramentaEquipada = false
+            end)
+
+            ferramenta.Parent = mochila
+        end
+
+        local function jogarComSofa(alvo)
+            if not ferramentaEquipada then return end
+            if not alvo or not alvo.Character or alvo == eu then return end
+
+            local jogando = true
+            local raiz = eu.Character and eu.Character:FindFirstChild("HumanoidRootPart")
+            local alvoRaiz = alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart")
+            if not raiz or not alvoRaiz then return end
+
+            local boneco = eu.Character
+            local humano = boneco:FindFirstChildOfClass("Humanoid")
+            local posOriginal = raiz.CFrame
+
+            rep:WaitForChild("RE"):WaitForChild("1Clea1rTool1s"):FireServer("ClearAllTools")
+            task.wait(0.2)
+
+            rep.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+            task.wait(0.3)
+
+            local sofa = eu.Backpack:FindFirstChild("Couch")
+            if sofa then
+                sofa.Parent = boneco
+            end
+            task.wait(0.1)
+
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
+            task.wait(0.25)
+
+            workspace.FallenPartsDestroyHeight = 0/0
+
+            local forca = Instance.new("BodyVelocity")
+            forca.Name = "ForcaJogada"
+            forca.Velocity = Vector3.new(9e8, 9e8, 9e8)
+            forca.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            forca.Parent = raiz
+
+            humano:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            humano.PlatformStand = false
+            cam.CameraSubject = alvo.Character:FindFirstChild("Head") or alvoRaiz or humano
+
+            task.spawn(function()
+                local angulo = 0
+                local partes = {raiz}
+                while jogando and alvo and alvo.Character and alvo.Character:FindFirstChildOfClass("Humanoid") do
+                    local alvoHum = alvo.Character:FindFirstChildOfClass("Humanoid")
+                    if alvoHum.Sit then break end
+                    angulo += 50
+
+                    for _, parte in ipairs(partes) do
+                        local hrp = alvo.Character.HumanoidRootPart
+                        local pos = hrp.Position + hrp.Velocity / 1.5
+                        raiz.CFrame = CFrame.new(pos) * CFrame.Angles(math.rad(angulo), 0, 0)
+                    end
+
+                    raiz.Velocity = Vector3.new(9e8, 9e8, 9e8)
+                    raiz.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+                    task.wait()
+                end
+
+                jogando = false
+                forca:Destroy()
+                humano:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                humano.PlatformStand = false
+                raiz.CFrame = posOriginal
+                cam.CameraSubject = humano
+
+                for _, p in pairs(boneco:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.Velocity = Vector3.zero
+                        p.RotVelocity = Vector3.zero
+                    end
+                end
+
+                humano:UnequipTools()
+                rep.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+            end)
+
+            while jogando do
+                task.wait()
+            end
+        end
+
+        entrada.TouchTap:Connect(function(toques, processado)
+            if processado or not podeClicar or not ferramentaEquipada then return end
+
+            local pos = toques[1]
+            local raio = cam:ScreenPointToRay(pos.X, pos.Y)
+            local acerto = workspace:Raycast(raio.Origin, raio.Direction * 1000)
+
+            if acerto and acerto.Instance then
+                local alvo = jogadores:GetPlayerFromCharacter(acerto.Instance:FindFirstAncestorOfClass("Model"))
+                if alvo and alvo ~= eu then
+                    podeClicar = false
+                    jogarComSofa(alvo)
+                    task.delay(2, function()
+                        podeClicar = true
+                    end)
+                end
+            end
+        end)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Click Fling Couch",
+            Text = "Ferramenta criada! Equipe na mochila.",
+            Duration = 5
+        })
+    end
+})
+
 -- Função House Ban Kill
 local function houseBanKill()
     if not selectedPlayerName then
@@ -957,7 +1359,7 @@ Tab3:AddButton({
     Callback = houseBanKill
 })
 
--- Tab4: Scripts Trolls Avançados
+-- Tab4: Scripts Trolls 
 local Tab4 = Window:MakeTab({"Scripts Trolls", "fire"})
 
 Tab4:AddSection({"Invisibilidade"})
@@ -1190,86 +1592,31 @@ for _, sound in ipairs(memeSounds) do
     end
 end
 
--- Tab6: Sons de Terror/Efeitos
-local Tab6 = Window:MakeTab({"Terror/Efeitos", "skull"})
+-- Tab6: RGB
+local Tab6 = Window:MakeTab({"RGB", "rainbow"})
 
-Tab6:AddSection({"Sons de Terror e Efeitos"})
+-- Configurações RGB
+local rgbSpeed = 0.1 -- Velocidade do RGB
 
-local terrorSounds = {
-    {name = "jumpscar", id = "91784486966761"},
-    {name = "n se preocupe", id = "87041057113780"},
-    {name = "eles estao todos mortos", id = "70605158718179"},
-    {name = "gritoestourado", id = "7520729342"},
-    {name = "gritomedo", id = "113029085566978"},
-    {name = "Nukesiren", id = "9067330158"},
-    {name = "nuclear sirenv2", id = "675587093"},
-    {name = "Alertescola", id = "6607047008"},
-    {name = "Memealertsiren", id = "8379374771"},
-    {name = "sirenv3", id = "6766811806"},
-    {name = "Alarm estourAAAA...", id = "93354528379052"},
-    {name = "MegaMan Alarm", id = "1442382907"},
-    {name = "Alarm bookhaven", id = "1526192493"},
-    {name = "alet malaysia", id = "7714172940"},
-    {name = "Risada", id = "79191730206814"},
-    {name = "Hahahah", id = "90096947219465"},
-    {name = "scream", id = "314568939"},
-    {name = "Terrified meme scream", id = "5853668794"},
-    {name = "Sonic.exe Scream Effect", id = "146563959"},
-    {name = "Demon Scream", id = "2738830850"},
-    {name = "SCP-096 Scream (raging)", id = "343430735"},
-    {name = "Nightmare Yelling Bursts", id = "9125713501"},
-    {name = "HORROR SCREAM 07", id = "9043345732"},
-    {name = "Female Scream Woman Screams", id = "9114397912"},
-    {name = "Scream1", id = "1319496541"},
-    {name = "Scream2", id = "199978176"},
-    {name = "scary maze scream", id = "270145703"},
-    {name = "SammyClassicSonicFan's Scream", id = "143942090"},
-    {name = "FNAF 2 Death Scream", id = "1572549161"},
-    {name = "cod zombie scream", id = "8566359672"},
-    {name = "Slendytubbies- CaveTubby Scream", id = "1482639185"},
-    {name = "FNAF 2 Death Scream", id = "5537531920"},
-    {name = "HORROR SCREAM 15", id = "9043346574"},
-    {name = "Jumpscare Scream", id = "6150329916"},
-    {name = "FNaF: Security Breach", id = "2050522547"},
-    {name = "llllllll", id = "5029269312"},
-    {name = "loud jumpscare", id = "7236490488"},
-    {name = "fnaf", id = "6982454389"},
-    {name = "Pinkamena Jumpscare 1", id = "192334186"},
-    {name = "Ennard Jumpscare 2", id = "629526707"},
-    {name = "a sla medo dino", id = "125506416092123"},
-    {name = "Backrooms Bacteria Pitfalls", id = "81325342128575"},
-    {name = "error Infinite", id = "3893790326"},
-    {name = "Screaming Meme", id = "107732411055226"},
-    {name = "Jumpscare - SCP CB", id = "97098997494905"},
-    {name = "mirror jumpscare", id = "80005164589425"},
-    {name = "PTLD-39 Jumpscare", id = "5581462381"},
-    {name = "jumpscare:Play()", id = "121519648044128"},
-    {name = "mimic jumpscare", id = "91998575878959"},
-    {name = "DOORS Glitch Jumpscare Sound", id = "96377507894391"},
-    {name = "FNAS 4 Nightmare Mario", id = "99804224106385"},
-    {name = "Death House I Jumpscare Sound", id = "8151488745"},
-    {name = "Shinky Jumpscare", id = "123447772144411"},
-    {name = "FNaTI Jumpscare Oblitus casa", id = "18338717319"},
-    {name = "fnaf jumpscare loadmode", id = "18911896588"}
-}
+-- Função para gerar cores do arco-íris
+local function getRainbowColor(speed)
+    local tick = tick()
+    local r = math.sin(speed * tick) * 0.5 + 0.5
+    local g = math.sin(speed * tick + 2) * 0.5 + 0.5
+    local b = math.sin(speed * tick + 4) * 0.5 + 0.5
+    return Color3.new(r, g, b)
+end
 
--- Adiciona botões para cada som de terror
-for _, sound in ipairs(terrorSounds) do
-    if sound.name ~= "" and sound.id ~= "" then
-        Tab6:AddButton({
-            Name = sound.name,
-            Description = "Tocar " .. sound.name,
-            Callback = function()
-                playSound(sound.id)
-            end
-        })
+-- Função auxiliar para fire servers
+local function fireServer(remoteName, args)
+    local remote = ReplicatedStorage:FindFirstChild("RE"):FindFirstChild(remoteName)
+    if remote then
+        remote:FireServer(unpack(args))
     end
 end
 
--- Tab7: RGB
-local Tab7 = Window:MakeTab({"RGB", "rainbow"})
+Tab6:AddSection({"Cabelo RGB"})
 
-Tab7:AddSection({"Cabelo RGB"})
 local hairColors = {
     Color3.new(1, 1, 0), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 1, 1),
     Color3.new(0, 1, 0), Color3.new(0.5, 0, 1), Color3.new(1, 0.647, 0), Color3.new(0, 1, 1)
@@ -1287,7 +1634,7 @@ local function changeHairColor()
     end
 end
 
-Tab7:AddToggle({
+Tab6:AddToggle({
     Name = "Cabelo RGB",
     Description = "Deixa Seu Cabelo RGB",
     Default = false,
@@ -1299,64 +1646,64 @@ Tab7:AddToggle({
     end
 })
 
-Tab7:AddSection({"Anti Sit"})
-Tab7:AddToggle({
-    Name = "Anti Sit",
-    Description = "Não Deixa seu personagem Sentar",
-    Default = false,
-    Callback = function(Value)
-        local player = game.Players.LocalPlayer
-        local connections = {}
-        local runService = game:GetService("RunService")
+-- Nova Aba: House
+local Tab7 = Window:MakeTab({"House", "house"})
 
-        local function preventSitting(humanoid)
-            if humanoid then
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                local sitConnection = humanoid.StateChanged:Connect(function(_, newState)
-                    if newState == Enum.HumanoidStateType.Seated then
-                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-                    end
+Tab7:AddSection({"Ser desbanido das casa"})
+
+-- Botão para remover ban de todas as casas
+Tab4:AddButton({
+    Name = "Remover Ban",
+    Description = "Tenta remover o ban de todas as casas ",
+    Callback = function()q
+        local successCount = 0
+        local failCount = 0
+        for i = 1, 37 do
+            local bannedBlockName = "BannedBlock" .. i
+            local bannedBlock = Workspace:FindFirstChild(bannedBlockName, true)
+            if bannedBlock then
+                local success, _ = pcall(function()
+                    bannedBlock:Destroy()
                 end)
-                table.insert(connections, sitConnection)
-            end
-        end
-
-        local function monitorCharacter()
-            local function onCharacterAdded(character)
-                local humanoid = character:WaitForChild("Humanoid")
-                preventSitting(humanoid)
-            end
-
-            local characterAddedConnection = player.CharacterAdded:Connect(onCharacterAdded)
-            table.insert(connections, characterAddedConnection)
-
-            if player.Character then
-                onCharacterAdded(player.Character)
-            end
-        end
-
-        local function resetSitting()
-            for _, connection in ipairs(connections) do
-                connection:Disconnect()
-            end
-            connections = {}
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-            end
-        end
-
-        if Value then
-            monitorCharacter()
-            local heartbeatConnection = runService.Heartbeat:Connect(function()
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                if success then
+                    successCount = successCount + 1
+                else
+                    failCount = failCount + 1
                 end
-            end)
-            table.insert(connections, heartbeatConnection)
-        else
-            resetSitting()
+            end
+        end
+        for _, house in pairs(Workspace:GetDescendants()) do
+            if house.Name:match("BannedBlock") then
+                local success, _ = pcall(function()
+                    house:Destroy()
+                end)
+                if success then
+                    successCount = successCount + 1
+                else
+                    failCount = failCount + 1
+                end
+            end
+        end
+        if successCount > 0 then
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Sucesso",
+                Text = "Bans removidos de " .. successCount .. " casas!",
+                Duration = 5
+            })
+        end
+        if failCount > 0 then
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Aviso",
+                Text = "Falha ao remover bans de " .. failCount .. " casas.",
+                Duration = 5
+            })
+        end
+        if successCount == 0 and failCount == 0 then
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Aviso",
+                Text = "Nenhum ban encontrado para remover.",
+                Duration = 5
+            })
         end
     end
 })
