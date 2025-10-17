@@ -135,12 +135,12 @@ Window:SelectTab(Tab1)
 local Section = Tab1:AddSection({"Créditos"})
 
 Tab1:AddParagraph({"Criador", "isaquexsz"})
-Tab1:AddParagraph({"Versão", "BETA V1"})
+Tab1:AddParagraph({"Versão", "BETA"})
 Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
 Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 
 -- Tab2: Funções Principais
-local Tab2 = Window:MakeTab({"Main", "Home"})
+local Tab2 = Window:MakeTab({"Admin", "Home"})
 
 Tab2:AddSection({"Verifique usuários Shadow"})
 
@@ -299,10 +299,10 @@ Tab3:AddButton({
     end
 })
 
-Tab3:AddSection({"fling e kill"})
+Tab3:AddSection({""})
 
 -- Seção Fling
-Tab3:AddSection({Name = "Fling"})
+Tab3:AddSection({Name = "Fling e kill"})
 
 -- Auto Fling otimizado
 Tab3:AddToggle({
@@ -485,39 +485,6 @@ end
 -- Tab6: RGB
 local Tab6 = Window:MakeTab({"RGB", "rainbow"})
 
-Tab6:AddSection({"Cabelo RGB"})
-
-local hairRGB = false
-
-Tab6:AddToggle({
-    Name = "Cabelo RGB",
-    Description = "Deixa Seu Cabelo RGB",
-    Default = false,
-    Callback = function(value)
-        hairRGB = value
-        if value then
-            task.spawn(function()
-                local colors = {
-                    Color3.new(1, 0, 0),
-                    Color3.new(0, 1, 0), 
-                    Color3.new(0, 0, 1),
-                    Color3.new(1, 1, 0),
-                    Color3.new(1, 0, 1),
-                    Color3.new(0, 1, 1)
-                }
-                local i = 1
-                while hairRGB do
-                    local args = { [1] = "ChangeHairColor2", [2] = colors[i] }
-                    pcall(function()
-                        ReplicatedStorage.RE["1Max1y"]:FireServer(unpack(args))
-                    end)
-                    task.wait(0.3)
-                    i = i % #colors + 1
-                end
-            end)
-        end
-    end
-})
 -- Velocidade controlada pelo slider (quanto maior, mais rápido)
 local rgbSpeed = 1
 
