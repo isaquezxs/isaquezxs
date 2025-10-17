@@ -593,37 +593,101 @@ local loopAtivo = false
 local InputID = ""
 
 Tab5:AddTextBox({
-    Name = "ID do Áudio",
-    Description = "Digite o ID do som",
+    Name = "Insira o ID Audio All",
+    Description = "Digite o ID do som que deseja tocar",
     Default = "",
     PlaceholderText = "Exemplo: 6832470734",
     ClearTextOnFocus = true,
     Callback = function(text)
-        InputID = text
+        InputID = tonumber(text)
     end
 })
 
-local function playSound(soundId)
-    if not soundId or soundId == "" then return end
-    
-    pcall(function()
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://" .. soundId
-        sound.Parent = workspace
-        sound:Play()
-        game.Debris:AddItem(sound, 10)
-    end)
+local function fireServer(eventName, args)
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local event = ReplicatedStorage:FindFirstChild("RE") and ReplicatedStorage.RE:FindFirstChild(eventName)
+    if event then
+        pcall(function()
+            event:FireServer(unpack(args))
+        end)
+    end
 end
 
 Tab5:AddButton({
     Name = "Tocar Som",
-    Description = "Toca o som inserido",
+    Description = "Clique para tocar a música inserida",
     Callback = function()
-        if InputID and InputID ~= "" then
-            playSound(InputID)
+        if InputID then
+            fireServer("1Gu1nSound1s", {Workspace, InputID, 1})
+            local globalSound = Instance.new("Sound", Workspace)
+            globalSound.SoundId = "rbxassetid://" .. InputID
+            globalSound.Looped = false
+            globalSound:Play()
+            task.wait(3)
+            globalSound:Destroy()
         end
     end
 })
+
+Tab5:AddToggle({
+    Name = "Loop",
+    Description = "Ative para colocar o som em loop",
+    Default = false,
+    Callback = function(state)
+        loopAtivo = state
+        if loopAtivo then
+            spawn(function()
+                while loopAtivo do
+                    if InputID then
+                        fireServer("1Gu1nSound1s", {Workspace, InputID, 1})
+                        local globalSound = Instance.new("Sound", Workspace)
+                        globalSound.SoundId = "rbxassetid://" .. InputID
+                        globalSound.Looped = false
+                        globalSound:Play()
+                        task.spawn(function()
+                            task.wait(3)
+                            globalSound:Destroy()
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+-- Dropdowns para Tab6
+local function createSoundDropdown(title, musicOptions, defaultOption)
+    local musicNames = {}
+    local categoryMap = {}
+    for category, sounds in pairs(musicOptions) do
+        for _, music in ipairs(sounds) do
+            if music.name ~= "" and music.id ~= "4354908569" then
+                table.insert(musicNames, music.name)
+                categoryMap[music.name] = {id = music.id, category = category}
+            end
+        end
+    end
+
+    local selectedSoundID = nil
+    local currentVolume = 1
+    local currentPitch = 1
+
+    local function playSound(soundId, volume, pitch)
+        fireServer("1Gu1nSound1s", {Workspace, soundId, volume})
+        local globalSound = Instance.new("Sound")
+        globalSound.Parent = Workspace
+        globalSound.SoundId = "rbxassetid://" .. soundId
+        globalSound.Volume = volume
+        globalSound.Pitch = pitch
+        globalSound.Looped = false
+        globalSound:Play()
+        task.spawn(function()
+            task.wait(3)
+            globalSound:Destroy()
+        end)
+    end
+
 
 Tab5:AddToggle({
     Name = "Loop do Som",
