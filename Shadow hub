@@ -376,6 +376,174 @@ Tab3:AddToggle({
     end
 })
 
+local kill = Troll:AddSection({Name = "Fling Boat"})
+
+Troll:AddButton({
+    Name = "Fling - Boat",
+    Callback = function()
+        if not selectedPlayerName or not game.Players:FindFirstChild(selectedPlayerName) then
+            warn("Nenhum jogador selecionado ou não existe")
+            return
+        end
+
+        local Player = game.Players.LocalPlayer
+        local Character = Player.Character
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+        local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+        local Vehicles = game.Workspace:FindFirstChild("Vehicles")
+
+        if not Humanoid or not RootPart then
+            warn("Humanoid ou RootPart inválido")
+            return
+        end
+
+        local function spawnBoat()
+            RootPart.CFrame = CFrame.new(1754, -2, 58)
+            task.wait(0.5)
+            game:GetService("ReplicatedStorage").RE:FindFirstChild("1Ca1r"):FireServer("PickingBoat", "MilitaryBoatFree")
+            task.wait(1)
+            return Vehicles:FindFirstChild(Player.Name.."Car")
+        end
+
+        local PCar = Vehicles:FindFirstChild(Player.Name.."Car") or spawnBoat()
+        if not PCar then
+            warn("Falha ao spawnar o barco")
+            return
+        end
+
+        local Seat = PCar:FindFirstChild("Body") and PCar.Body:FindFirstChild("VehicleSeat")
+        if not Seat then
+            warn("Assento não encontrado")
+            return
+        end
+
+        repeat 
+            task.wait(0.1)
+            RootPart.CFrame = Seat.CFrame * CFrame.new(0, 1, 0)
+        until Humanoid.SeatPart == Seat
+
+        print("Barco spawnado!")
+
+        local TargetPlayer = game.Players:FindFirstChild(selectedPlayerName)
+        if not TargetPlayer or not TargetPlayer.Character then
+            warn("Jogador não encontrado")
+            return
+        end
+
+        local TargetC = TargetPlayer.Character
+        local TargetH = TargetC:FindFirstChildOfClass("Humanoid")
+        local TargetRP = TargetC:FindFirstChild("HumanoidRootPart")
+
+        if not TargetRP or not TargetH then
+            warn("Humanoid ou RootPart do alvo não encontrado")
+            return
+        end
+
+        local Spin = Instance.new("BodyAngularVelocity")
+        Spin.Name = "Spinning"
+        Spin.Parent = PCar.PrimaryPart
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.AngularVelocity = Vector3.new(0, 369, 0) 
+
+        print("Fling ativo!")
+
+        local function moveCar(TargetRP, offset)
+            if PCar and PCar.PrimaryPart then
+                PCar:SetPrimaryPartCFrame(CFrame.new(TargetRP.Position + offset))
+            end
+        end
+
+        task.spawn(function()
+            while PCar and PCar.Parent and TargetRP and TargetRP.Parent do
+                task.wait(0.01) 
+                
+                moveCar(TargetRP, Vector3.new(0, 1, 0))  
+                moveCar(TargetRP, Vector3.new(0, -2.25, 5))  
+                moveCar(TargetRP, Vector3.new(0, 2.25, 0.25))  
+                moveCar(TargetRP, Vector3.new(-2.25, -1.5, 2.25))  
+                moveCar(TargetRP, Vector3.new(0, 1.5, 0))  
+                moveCar(TargetRP, Vector3.new(0, -1.5, 0))  
+
+                if PCar and PCar.PrimaryPart then
+                    local Rotation = CFrame.Angles(
+                        math.rad(math.random(-369, 369)),  
+                        math.rad(math.random(-369, 369)), 
+                        math.rad(math.random(-369, 369))
+                    )
+                    PCar:SetPrimaryPartCFrame(CFrame.new(TargetRP.Position + Vector3.new(0, 1.5, 0)) * Rotation)
+                end
+            end
+
+            if Spin and Spin.Parent then
+                Spin:Destroy()
+                print("Fling desativado")
+            end
+        end)
+    end
+})
+print("Fling - Boat button created")
+
+Troll:AddButton({
+    Name = "Desligar Fling - Boat",
+    Callback = function()
+        local Player = game.Players.LocalPlayer
+        local Character = Player.Character
+        local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+        local Vehicles = game.Workspace:FindFirstChild("Vehicles")
+
+        if not RootPart or not Humanoid then
+            warn("Nenhum RootPart ou Humanoid encontrado!")
+            return
+        end
+
+        Humanoid.PlatformStand = true
+        print("Jogador paralisado para reduzir efeitos do spin.")
+
+        for _, obj in pairs(RootPart:GetChildren()) do
+            if obj:IsA("BodyAngularVelocity") or obj:IsA("BodyVelocity") then
+                obj:Destroy()
+            end
+        end
+        print("Spin e forças removidas do jogador.")
+
+        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Ca1r"):FireServer("DeleteAllVehicles")
+        task.wait(0.5)
+
+        local PCar = Vehicles and Vehicles:FindFirstChild(Player.Name.."Car")
+        if PCar and PCar.PrimaryPart then
+            for _, obj in pairs(PCar.PrimaryPart:GetChildren()) do
+                if obj:IsA("BodyAngularVelocity") or obj:IsA("BodyVelocity") then
+                    obj:Destroy()
+                end
+            end
+            print("Spin removido do barco.")
+        end
+
+        task.wait(1)
+
+        local safePos = Vector3.new(0, 1000, 0)
+        local bp = Instance.new("BodyPosition", RootPart)
+        bp.Position = safePos
+        bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+
+        local bg = Instance.new("BodyGyro", RootPart)
+        bg.CFrame = RootPart.CFrame
+        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+
+        print("Jogador está preso na coordenada segura.")
+
+        task.wait(3)
+
+        bp:Destroy()
+        bg:Destroy()
+        Humanoid.PlatformStand = false
+
+        print("Jogador liberado, seguro na posição.")
+    end
+})
+
+
 -- Tab4: Scripts Trolls 
 local Tab4 = Window:MakeTab({"Scripts Trolls", "fire"})
 
@@ -513,6 +681,58 @@ Tab6:AddToggle({
                     end)
                     task.wait(0.3)
                     i = i % #colors + 1
+                end
+            end)
+        end
+    end
+})
+-- Velocidade controlada pelo slider (quanto maior, mais rápido)
+local rgbSpeed = 1
+
+Tab6:AddSlider({
+    Name = "Velocidade RGB",
+    Description = "Aumenta a velocidade do efeito RGB",
+    Min = 1,
+    Max = 5,
+    Increase = 1,
+    Default = 3,
+    Callback = function(Value)
+        rgbSpeed = Value
+    end
+})
+
+-- Função para criar cor RGB suave com HSV
+local function getRainbowColor(speedMultiplier)
+    local h = (tick() * speedMultiplier % 5) / 5 -- gira o hue suavemente de 0 a 1
+    return Color3.fromHSV(h, 1, 1)
+end
+
+-- Função para disparar eventos
+local function fireServer(eventName, args)
+    local event = game:GetService("ReplicatedStorage"):FindFirstChild("RE")
+    if event and event:FindFirstChild(eventName) then
+        pcall(function()
+            event[eventName]:FireServer(unpack(args))
+        end)
+    end
+end
+
+local Section = Tab6:AddSection({"RGB para usar em você"})
+
+-- Nome + Bio RGB  juntos
+local nameBioRGBActive = false
+Tab6:AddToggle({
+    Name = "Nome + Bio RGB ",
+    Default = false,
+    Callback = function(state)
+        nameBioRGBActive = state
+        if state then
+            task.spawn(function()
+                while nameBioRGBActive and LocalPlayer.Character do
+                    local color = getRainbowColor(rgbSpeed)
+                    fireServer("1RPNam1eColo1r", { "PickingRPNameColor", color })
+                    fireServer("1RPNam1eColo1r", { "PickingRPBioColor", color })
+                    task.wait(0.03)
                 end
             end)
         end
