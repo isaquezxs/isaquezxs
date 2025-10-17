@@ -140,7 +140,7 @@ Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
 Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 
 -- Tab2: Funções Principais
-local Tab2 = Window:MakeTab({"Main", "Home"})
+local Tab2 = Window:MakeTab({"Admin", "Home"})
 
 Tab2:AddSection({"Verifique usuários Shadow"})
 
