@@ -1,10 +1,10 @@
--- Tela de Carregamento Shadow hub Brookhaven - Estilizada
+-- Tela de Carregamento Shadow hubBrookhaven - Estilizada
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- Criando a ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ShadowHubLoading"
+screenGui.Name = "FireHubLoading"
 screenGui.Parent = playerGui
 
 -- Fundo da tela
@@ -15,12 +15,12 @@ background.BackgroundColor3 = Color3.fromRGB(20,20,20)
 background.BorderSizePixel = 0
 background.Parent = screenGui
 
--- Título Shadow Hub
+-- Título SHADOW HUB
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,100)
 title.Position = UDim2.new(0,0,0.25,0)
 title.BackgroundTransparency = 1
-title.Text = "Shadow hub"
+title.Text = "SHADOW SCRIPTS"
 title.Font = Enum.Font.GothamBlack
 title.TextSize = 60
 title.TextColor3 = Color3.fromRGB(255,85,0)
@@ -84,14 +84,22 @@ spawn(function()
     end
 end)
 
--- Executa animação por 5 segundos
-animateBar(5)
+-- Executa animação por 3 segundos
+animateBar(3)
 
 -- Remove tela após carregar
 task.wait(0.5)
 screenGui:Destroy()
 
--- Carrega a biblioteca UI
+-- Serviços
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local cam = workspace.CurrentCamera
+
+-- Carrega a biblioteca UI Redz APÓS a tela de loading
 local success, redzlib = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
 end)
@@ -102,13 +110,13 @@ if not success then
 end
 
 local Window = redzlib:MakeWindow({
-    Title = "Shadow hub V1| Brookhaven",
+    Title = "Shadow Hub | Brookhaven 🏡",
     SubTitle = "by isaquexz",
-    SaveFolder = "testando | Shadow v1"
+    SaveFolder = "ShadowHubBrookhaven"
 })
 
 Window:AddMinimizeButton({
-    Button = { Image = "rbxassetid://8652665149", BackgroundTransparency = 0 },
+    Button = { Image = "rbxassetid://71014873973869", BackgroundTransparency = 0 },
     Corner = { CornerRadius = UDim.new(35, 1) },
 })
 
@@ -116,25 +124,85 @@ Window:AddMinimizeButton({
 local Tab1 = Window:MakeTab({"Credits", "info"})
 
 Tab1:AddDiscordInvite({
-    Name = "Shadow hub",
+    Name = "Shadow Hub",
     Description = "Join server",
-    Logo = "rbxassetid://8652665149",
+    Logo = "rbxassetid://18751483361",
     Invite = "https://discord.gg/tsxKumHC",
 })
 
-local Section = Tab1:AddSection({"Credits"})
+Window:SelectTab(Tab1)
+
+local Section = Tab1:AddSection({"Créditos"})
 
 Tab1:AddParagraph({"Criador", "isaquexsz"})
-Tab1:AddParagraph({"Versão", "1.0.0V"})
-Tab1:AddParagraph({"Executor", "KRNL"})
-Tab1:AddParagraph({"total players", tostring(#game.Players:GetPlayers())})
+Tab1:AddParagraph({"Versão", "BETA V1"})
+Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
+Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 
--- Tab2: Troll V1
-local Tab2 = Window:MakeTab({"Troll V1", "fun"})
-local Section = Tab2:AddSection({"Spectate"})
+-- Tab2: Funções Principais
+local Tab2 = Window:MakeTab({"Main", "Home"})
 
--- Dropdown para selecionar jogador 
-local killDropdown = Tab2:AddDropdown({
+Tab2:AddSection({"Verifique usuários Shadow"})
+
+Tab2:AddButton({"/Verifique", function()
+    local TextChatService= game:GetService("TextChatService")
+    local StarterGui = game:GetService("StarterGui")
+    
+    local function safeChat(message)
+        local success = pcall(function()
+            if TextChatService and TextChatService.TextChannels then
+                local channel = TextChatService.TextChannels.RBXGeneral
+                if channel then
+                    channel:SendAsync(message)
+                end
+            else
+                game.Players:Chat(message)
+            end
+        end)
+        return success
+    end
+    
+    local results = {
+        safeChat("/Verifique"),
+        safeChat("Shadow_###")
+    }
+    
+    local successCount = 0
+    for _, result in ipairs(results) do
+        if result then successCount = successCount + 1 end
+    end
+    
+    StarterGui:SetCore("SendNotification", {
+        Title = "Verificação",
+        Text = string.format("%d/%d comandos enviados!", successCount, #results),
+        Duration = 5
+    })
+end})
+
+-- Tab3: Troll
+local Tab3 = Window:MakeTab({"Troll", "skull"})
+
+Tab3:AddSection({"Troll"})
+
+-- Variáveis globais otimizadas
+local selectedPlayerName = nil
+local methodKill = ""
+local flingActive = false
+
+-- Função para obter lista de jogadores (otimizada)
+local function getPlayerList()
+    local players = Players:GetPlayers()
+    local playerNames = {}
+    for _, player in ipairs(players) do
+        if player ~= LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+    return playerNames
+end
+
+-- Dropdown para selecionar jogador
+local killDropdown = Tab3:AddDropdown({
     Name = "Selecionar Jogador",
     Description = "Escolha um jogador para trollar",
     Options = getPlayerList(),
@@ -151,7 +219,7 @@ local killDropdown = Tab2:AddDropdown({
 })
 
 -- Botão para atualizar lista de jogadores
-Tab2:AddButton({
+Tab3:AddButton({
     Name = "Atualizar Player List",
     Callback = function()
         local newPlayers = getPlayerList()
@@ -167,7 +235,7 @@ Tab2:AddButton({
 })
 
 -- Função Spectar Jogador (otimizada)
-Tab2:AddToggle({
+Tab3:AddToggle({
     Name = "Spectar Player",
     Default = false,
     Callback = function(value)
@@ -210,7 +278,7 @@ Tab2:AddToggle({
         end
     end
 })-- Botão para teleportar até o jogador
-Tab2:AddButton({
+Tab3:AddButton({
     Name = "Teleportar até o Player",
     Callback = function()
         if not selectedPlayerName then return end
@@ -231,798 +299,308 @@ Tab2:AddButton({
     end
 })
 
+Tab3:AddSection({"fling e kill"})
 
--- Tab3: Admin
-local Tab3 = Window:MakeTab({"Admin", "Home"})
+-- Seção Fling
+Tab3:AddSection({Name = "Fling"})
 
-Tab3:AddButton({"Admin", function(Value)
-    local Version = "1.6.41"
-    local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/" .. Version .. "/main.lua"))()
-    local Window = WindUI:CreateWindow({
-        Title = "PAINEL SHADOW",
-        Icon = "shield",
-        Author = "By isaquexsz",
-        Folder = "Fire",
-        Size = UDim2.fromOffset(330, 220),
-        Transparent = true,
-        Theme = "Red",
-        Resizable = true,
-        SideBarWidth = 200,
-        Background = "8652665149",
-        BackgroundImageTransparency = 0.10,
-        HideSearchBar = true,
-        ScrollBarEnabled = false,
-        User = {
-            Enabled = true,
-            Xxxhey_lorenzo1 = true,
-            Callback = function()
-                print("clicked")
-            end,
-        },
-        KeySystem = {
-            Key = { "isaquexsz9992", "PainelAdm" },
-            Note = "painel Shadow",
-            Thumbnail = {
-                Image = "rbxassetid://8652665149",
-                Title = "Key system",
-            },
-            URL = "https://github.com/Footagesus/WindUI",
-            SaveKey = true,
-        },
-    })
-
-    Window:EditOpenButton({
-        Title = "Shadow Adm",
-        Icon = "shield",
-        CornerRadius = UDim.new(0,16),
-        StrokeThickness = 2,
-        Color = ColorSequence.new(
-            Color3.fromHex("FF0000"), 
-            Color3.fromHex("FFFFFF")
-        ),
-        OnlyMobile = false,
-        Enabled = true,
-        Draggable = true,
-    })
-
-    local Tab = Window:Tab({
-        Title = "Protetion",
-        Icon = "skull",
-        Locked = false,
-    })
-
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-    local StarterGui = game:GetService("StarterGui")
-    local HttpService = game:GetService("HttpService")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local TextChatService = game:GetService("TextChatService")
-
-    -- Gera lista com todos os nomes dos jogadores
-    local playerNames = {}
-    for _, plr in ipairs(Players:GetPlayers()) do
-        table.insert(playerNames, plr.Name)
-    end
-
-    -- Variável para armazenar os jogadores selecionados no Dropdown
-    local selectedPlayers = {}
-
-    local Dropdown = Tab:Dropdown({
-        Title = "Selecionar Jogadores",
-        Values = playerNames,
-        Value = {},
-        Multi = true,
-        AllowNone = true,
-        Callback = function(newSelectedPlayers)
-            selectedPlayers = newSelectedPlayers
-            print("Jogadores selecionados: " .. HttpService:JSONEncode(selectedPlayers))
-        end
-    })
-
-    -- Atualiza lista automaticamente quando entra ou sai jogador
-    Players.PlayerAdded:Connect(function(plr)
-        table.insert(playerNames, plr.Name)
-        Dropdown:SetValues(playerNames)
-    end)
-
-    Players.PlayerRemoving:Connect(function(plr)
-        for i, name in ipairs(playerNames) do
-            if name == plr.Name then
-                table.remove(playerNames, i)
-                break
-            end
-        end
-        Dropdown:SetValues(playerNames)
-    end)
-
-    -- Adiciona o Toggle para View Player na aba Protetion
-    local ViewToggle = Tab:Toggle({
-        Title = "Visualizar Jogador",
-        Icon = "eye",
-        Default = false,
-        Callback = function(state)
-            if state then
-                if #selectedPlayers > 0 then
-                    local targetPlayerName = selectedPlayers[1]
-                    local targetPlayer = Players:FindFirstChild(targetPlayerName)
-                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        local camera = workspace.CurrentCamera
-                        camera.CameraSubject = targetPlayer.Character.Humanoid
-                        camera.CameraType = Enum.CameraType.Follow
-                        StarterGui:SetCore("SendNotification", {
-                            Title = "Visualizando",
-                            Text = "Câmera focada em " .. targetPlayer.Name,
-                            Duration = 3
-                        })
-                    else
-                        ViewToggle:Set(false)
-                        StarterGui:SetCore("SendNotification", {
-                            Title = "Erro",
-                            Text = "Jogador " .. targetPlayerName .. " não encontrado ou sem personagem!",
-                            Duration = 3
-                        })
-                    end
-                else
-                    ViewToggle:Set(false)
-                    StarterGui:SetCore("SendNotification", {
-                        Title = "Erro",
-                        Text = "Nenhum jogador selecionado no Dropdown!",
-                        Duration = 3
-                    })
-                end
-            else
-                local camera = workspace.CurrentCamera
-                camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character.Humanoid
-                camera.CameraType = Enum.CameraType.Custom
-                StarterGui:SetCore("SendNotification", {
-                    Title = "Visualização Desativada",
-                    Text = "Câmera restaurada para o seu personagem.",
-                    Duration = 3
-                })
-            end
-        end
-    })
-
-    -- Função para enviar mensagem no chat
-    local function sendChatMessage(message)
-        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-            local textChannel = TextChatService.TextChannels.RBXGeneral
-            if textChannel then
-                textChannel:SendAsync(message)
-                return true
-            else
-                return false
-            end
-        else
-            local success, err = pcall(function()
-                ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
-            end)
-            return success
-        end
-    end
-
-    -- Adiciona o Botão Verifique na aba Protetion
-    local VerifyButton = Tab:Button({
-        Title = "Verifique",
-        Icon = "check",
-        Callback = function()
-            local success1 = sendChatMessage("/Verify")
-            task.wait(0.5)
-            local success2 = sendChatMessage("Shadow Hub")
+-- Auto Fling otimizado
+Tab3:AddToggle({
+    Name = "Auto Fling",
+    Default = false,
+    Callback = function(state)
+        flingActive = state
+        if state and selectedPlayerName then
+            local target = Players:FindFirstChild(selectedPlayerName)
+            if not target or not target.Character then return end
             
-            if success1 and success2 then
-                StarterGui:SetCore("SendNotification", {
-                    Title = "Verificação",
-                    Text = "Comandos '/Verifique e 'Shadow Hub' enviados no chat!",
-                    Duration = 3
-                })
-            else
-                StarterGui:SetCore("SendNotification", {
-                    Title = "Erro",
-                    Text = "Falha ao enviar uma ou ambas as mensagens no chat!",
-                    Duration = 3
-                })
+            local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local tRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+            if not root or not tRoot then return end
+            
+            local char = LocalPlayer.Character
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local original = root.CFrame
+
+            -- Limpar ferramentas
+            ReplicatedStorage.RE["1Clea1rTool1s"]:FireServer("ClearAllTools")
+            task.wait(0.2)
+
+            -- Spawnar sofá
+            ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+            task.wait(0.3)
+            
+            local tool = LocalPlayer.Backpack:FindFirstChild("Couch")
+            if tool then
+                tool.Parent = char
             end
+            
+            task.wait(0.2)
+            -- Simular tecla F
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
+            task.wait(0.25)
+
+            -- Configurar fling
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "FlingForce"
+            bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bv.Parent = root
+            
+            hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            hum.PlatformStand = false
+
+            -- Loop de fling
+            task.spawn(function()
+                while flingActive and target and target.Character do
+                    local tHum = target.Character:FindFirstChildOfClass("Humanoid")
+                    if tHum and tHum.Sit then break end
+                    
+                    local targetPos = tRoot.Position + (tRoot.Velocity / 1.5)
+                    root.CFrame = CFrame.new(targetPos) * CFrame.Angles(math.rad(tick() * 100), 0, 0)
+                    
+                    root.Velocity = Vector3.new(9e8, 9e8, 9e8)
+                    task.wait()
+                end
+                
+                -- Cleanup
+                if bv then bv:Destroy() end
+                hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                hum.PlatformStand = false
+                if root then root.CFrame = original end
+                
+                -- Limpar ferramentas
+                ReplicatedStorage.RE["1Clea1rTool1s"]:FireServer("ClearAllTools")
+            end)
         end
-    })
-
-    print("Painel adm adicionado!")
-end})
-
-local Section = Tab3:AddSection({"Chat Spy"})
-
-Tab3:AddButton({"Chat Spy", function(Value)
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-    local estiloValue = Character:WaitForChild("Estilo", 5)
-
-    if estiloValue and estiloValue:IsA("StringValue") then
-        local estilo = estiloValue.Value
-        print("Estilo detectado:", estilo)
-        
-        if estilo == "MandrakeStyle" then
-            local mandrake = workspace:FindFirstChild("Mandrake")
-            if mandrake and mandrake:IsA("BasePart") then
-                local hrp = Character:WaitForChild("HumanoidRootPart")
-                hrp.CFrame = mandrake.CFrame + Vector3.new(0, 5, 0)
-                print("Teleportado para Mandrake!")
-            else
-                warn("Mandrake não encontrado no workspace")
-            end
-        else
-            print("Estilo diferente, não vai teleportar")
-        end
-    else
-        warn("Objeto 'Estilo' não encontrado no personagem")
     end
-    print("chat a pasmado!")
-end})
+})
 
-local Section = Tab3:AddSection({"Domain Expansion"})
-
--- Tab4: Scripts Trolls
+-- Tab4: Scripts Trolls 
 local Tab4 = Window:MakeTab({"Scripts Trolls", "fire"})
 
-Tab4:AddSection({"Black Hole"})
+Tab4:AddSection({"Invisibilidade"})
 
-Tab4:AddButton({
-    Name = "Black Hole",
-    Description = "Ativando isso você puxa Parts até o seu personagem",
-    Callback = function()
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
-        local LocalPlayer = Players.LocalPlayer
-        local Workspace = game:GetService("Workspace")
-
-        local angle = 1
-        local radius = 10
-        local blackHoleActive = false
-
-        local function setupPlayer()
-            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-            local Folder = Instance.new("Folder", Workspace)
-            local Part = Instance.new("Part", Folder)
-            local Attachment1 = Instance.new("Attachment", Part)
-            Part.Anchored = true
-            Part.CanCollide = false
-            Part.Transparency = 1
-
-            return humanoidRootPart, Attachment1
-        end
-
-        local humanoidRootPart, Attachment1 = setupPlayer()
-
-        if not getgenv().Network then
-            getgenv().Network = {
-                BaseParts = {},
-                Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
-            }
-
-            Network.RetainPart = function(part)
-                if typeof(part) == "Instance" and part:IsA("BasePart") and part:IsDescendantOf(Workspace) then
-                    table.insert(Network.BaseParts, part)
-                    part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
-                    part.CanCollide = false
-                end
-            end
-
-            local function EnablePartControl()
-                LocalPlayer.ReplicationFocus = Workspace
-                RunService.Heartbeat:Connect(function()
-                    sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
-                    for _, part in pairs(Network.BaseParts) do
-                        if part:IsDescendantOf(Workspace) then
-                            part.Velocity = Network.Velocity
-                        end
-                    end
-                end)
-            end
-
-            EnablePartControl()
-        end
-
-        local function ForcePart(v)
-            if v:IsA("Part") and not v.Anchored and not v.Parent:FindFirstChild("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
-                for _, x in next, v:GetChildren() do
-                    if x:IsA("BodyAngularVelocity") or x:IsA("BodyForce") or x:IsA("BodyGyro") or x:IsA("BodyPosition") or x:IsA("BodyThrust") or x:IsA("BodyVelocity") or x:IsA("RocketPropulsion") then
-                        x:Destroy()
-                    end
-                end
-                if v:FindFirstChild("Attachment") then
-                    v:FindFirstChild("Attachment"):Destroy()
-                end
-                if v:FindFirstChild("AlignPosition") then
-                    v:FindFirstChild("AlignPosition"):Destroy()
-                end
-                if v:FindFirstChild("Torque") then
-                    v:FindFirstChild("Torque"):Destroy()
-                end
-                v.CanCollide = false
-                
-                local Torque = Instance.new("Torque", v)
-                Torque.Torque = Vector3.new(1000000, 1000000, 1000000)
-                local AlignPosition = Instance.new("AlignPosition", v)
-                local Attachment2 = Instance.new("Attachment", v)
-                Torque.Attachment0 = Attachment2
-                AlignPosition.MaxForce = math.huge
-                AlignPosition.MaxVelocity = math.huge
-                AlignPosition.Responsiveness = 500
-                AlignPosition.Attachment0 = Attachment2
-                AlignPosition.Attachment1 = Attachment1
+Tab4:AddButton({"Ficar Invisível", function()
+    local character = LocalPlayer.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 1
             end
         end
+    end
+end})
 
-        local function toggleBlackHole()
-            blackHoleActive = not blackHoleActive
-            if blackHoleActive then
-                for _, v in next, Workspace:GetDescendants() do
-                    ForcePart(v)
-                end
-
-                Workspace.DescendantAdded:Connect(function(v)
-                    if blackHoleActive then
-                        ForcePart(v)
-                    end
-                end)
-
-                spawn(function()
-                    while blackHoleActive and RunService.RenderStepped:Wait() do
-                        angle = angle + math.rad(2)
-
-                        local offsetX = math.cos(angle) * radius
-                        local offsetZ = math.sin(angle) * radius
-
-                        Attachment1.WorldCFrame = humanoidRootPart.CFrame * CFrame.new(offsetX, 0, offsetZ)
-                    end
-                end)
-            else
-                Attachment1.WorldCFrame = CFrame.new(0, -1000, 0)
+Tab4:AddButton({"Voltar ao Normal", function()
+    local character = LocalPlayer.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
             end
         end
+    end
+end})
 
-        LocalPlayer.CharacterAdded:Connect(function()
-            humanoidRootPart, Attachment1 = setupPlayer()
-            if blackHoleActive then
-                toggleBlackHole()
-            end
-        end)
+-- Tab5: Sistema de Áudio (OTIMIZADO)
+local Tab5 = Window:MakeTab({"Audio", "radio"})
 
-        local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
-        local window = library:Window("Projeto LKB")
+local loopAtivo = false
+local InputID = ""
 
-        window:Slider("Radius Blackhole",1,100,10, function(Value)
-           radius = Value
-        end)
-
-        window:Toggle("Blackhole", true, function(Value)
-               if Value then
-                    toggleBlackHole()
-                else
-                    blackHoleActive = false
-                end
-        end)
-
-        spawn(function()
-            while true do
-                RunService.RenderStepped:Wait()
-                if blackHoleActive then
-                    angle = angle + math.rad(1)
-                end
-            end
-        end)
-
-        toggleBlackHole()
+Tab5:AddTextBox({
+    Name = "ID do Áudio",
+    Description = "Digite o ID do som",
+    Default = "",
+    PlaceholderText = "Exemplo: 6832470734",
+    ClearTextOnFocus = true,
+    Callback = function(text)
+        InputID = text
     end
 })
 
-Tab4:AddSection({"Puxar Parts"})
+local function playSound(soundId)
+    if not soundId or soundId == "" then return end
+    
+    pcall(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://" .. soundId
+        sound.Parent = workspace
+        sound:Play()
+        game.Debris:AddItem(sound, 10)
+    end)
+end
 
-Tab4:AddButton({
-    Name = "Puxar Parts",
-    Description = "Para usar, chegue perto do Player Selecionado",
+Tab5:AddButton({
+    Name = "Tocar Som",
+    Description = "Toca o som inserido",
     Callback = function()
-        -- GUI para puxar parts
-        local Gui = Instance.new("ScreenGui")
-        local Main = Instance.new("Frame")
-        local Box = Instance.new("TextBox")
-        local UITextSizeConstraint = Instance.new("UITextSizeConstraint")
-        local Label = Instance.new("TextLabel")
-        local UITextSizeConstraint_2 = Instance.new("UITextSizeConstraint")
-        local Button = Instance.new("TextButton")
-        local UITextSizeConstraint_3 = Instance.new("UITextSizeConstraint")
-
-        Gui.Name = "Gui"
-        Gui.Parent = game:GetService("CoreGui")
-        Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-        Main.Name = "Main"
-        Main.Parent = Gui
-        Main.BackgroundColor3 = Color3.fromRGB(75, 75, 75)
-        Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        Main.BorderSizePixel = 0
-        Main.Position = UDim2.new(0.335954279, 0, 0.542361975, 0)
-        Main.Size = UDim2.new(0.240350261, 0, 0.166880623, 0)
-        Main.Active = true
-        Main.Draggable = true
-
-        Box.Name = "Box"
-        Box.Parent = Main
-        Box.BackgroundColor3 = Color3.fromRGB(95, 95, 95)
-        Box.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        Box.BorderSizePixel = 0
-        Box.Position = UDim2.new(0.0980926454, 0, 0.218712583, 0)
-        Box.Size = UDim2.new(0.801089942, 0, 0.364963502, 0)
-        Box.FontFace = Font.new("rbxasset://fonts/families/SourceSansSemibold.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-        Box.PlaceholderText = "Player here"
-        Box.Text = ""
-        Box.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Box.TextScaled = true
-        Box.TextSize = 31.000
-        Box.TextWrapped = true
-
-        UITextSizeConstraint.Parent = Box
-        UITextSizeConstraint.MaxTextSize = 31
-
-        Label.Name = "Label"
-        Label.Parent = Main
-        Label.BackgroundColor3 = Color3.fromRGB(95, 95, 95)
-        Label.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        Label.BorderSizePixel = 0
-        Label.Size = UDim2.new(1, 0, 0.160583943, 0)
-        Label.FontFace = Font.new("rbxasset://fonts/families/Nunito.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-        Label.Text = "Bring Parts | Made by: Lusquinha_067"
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Label.TextScaled = true
-        Label.TextSize = 14.000
-        Label.TextWrapped = true
-
-        UITextSizeConstraint_2.Parent = Label
-        UITextSizeConstraint_2.MaxTextSize = 21
-
-        Button.Name = "Button"
-        Button.Parent = Main
-        Button.BackgroundColor3 = Color3.fromRGB(95, 95, 95)
-        Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        Button.BorderSizePixel = 0
-        Button.Position = UDim2.new(0.183284417, 0, 0.656760991, 0)
-        Button.Size = UDim2.new(0.629427791, 0, 0.277372271, 0)
-        Button.Font = Enum.Font.Nunito
-        Button.Text = "Bring | Off"
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.TextScaled = true
-        Button.TextSize = 28.000
-        Button.TextWrapped = true
-
-        UITextSizeConstraint_3.Parent = Button
-        UITextSizeConstraint_3.MaxTextSize = 28
-
-        -- Scripts para puxar parts
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
-        local LocalPlayer = Players.LocalPlayer
-        local UserInputService = game:GetService("UserInputService")
-        local Workspace = game:GetService("Workspace")
-
-        local character
-        local humanoidRootPart
-
-        mainStatus = true
-        UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-            if input.KeyCode == Enum.KeyCode.RightControl and not gameProcessedEvent then
-                mainStatus = not mainStatus
-                Main.Visible = mainStatus
-            end
-        end)
-
-        local Folder = Instance.new("Folder", Workspace)
-        local Part = Instance.new("Part", Folder)
-        local Attachment1 = Instance.new("Attachment", Part)
-        Part.Anchored = true
-        Part.CanCollide = false
-        Part.Transparency = 1
-
-        if not getgenv().Network then
-            getgenv().Network = {
-                BaseParts = {},
-                Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
-            }
-
-            Network.RetainPart = function(Part)
-                if Part:IsA("BasePart") and Part:IsDescendantOf(Workspace) then
-                    table.insert(Network.BaseParts, Part)
-                    Part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
-                    Part.CanCollide = false
-                end
-            end
-
-            local function EnablePartControl()
-                LocalPlayer.ReplicationFocus = Workspace
-                RunService.Heartbeat:Connect(function()
-                    sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
-                    for _, Part in pairs(Network.BaseParts) do
-                        if Part:IsDescendantOf(Workspace) then
-                            Part.Velocity = Network.Velocity
-                        end
-                    end
-                end)
-            end
-
-            EnablePartControl()
+        if InputID and InputID ~= "" then
+            playSound(InputID)
         end
-
-        local function ForcePart(v)
-            if v:IsA("BasePart") and not v.Anchored and not v.Parent:FindFirstChildOfClass("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
-                for _, x in ipairs(v:GetChildren()) do
-                    if x:IsA("BodyMover") or x:IsA("RocketPropulsion") then
-                        x:Destroy()
-                    end
-                end
-                if v:FindFirstChild("Attachment") then
-                    v:FindFirstChild("Attachment"):Destroy()
-                end
-                if v:FindFirstChild("AlignPosition") then
-                    v:FindFirstChild("AlignPosition"):Destroy()
-                end
-                if v:FindFirstChild("Torque") then
-                    v:FindFirstChild("Torque"):Destroy()
-                end
-                v.CanCollide = false
-                local Torque = Instance.new("Torque", v)
-                Torque.Torque = Vector3.new(100000, 100000, 100000)
-                local AlignPosition = Instance.new("AlignPosition", v)
-                local Attachment2 = Instance.new("Attachment", v)
-                Torque.Attachment0 = Attachment2
-                AlignPosition.MaxForce = math.huge
-                AlignPosition.MaxVelocity = math.huge
-                AlignPosition.Responsiveness = 200
-                AlignPosition.Attachment0 = Attachment2
-                AlignPosition.Attachment1 = Attachment1
-            end
-        end
-
-        local blackHoleActive = false
-        local DescendantAddedConnection
-
-        local function toggleBlackHole()
-            blackHoleActive = not blackHoleActive
-            if blackHoleActive then
-                Button.Text = "Bring Parts | On"
-                for _, v in ipairs(Workspace:GetDescendants()) do
-                    ForcePart(v)
-                end
-
-                DescendantAddedConnection = Workspace.DescendantAdded:Connect(function(v)
-                    if blackHoleActive then
-                        ForcePart(v)
-                    end
-                end)
-
-                spawn(function()
-                    while blackHoleActive and RunService.RenderStepped:Wait() do
-                        Attachment1.WorldCFrame = humanoidRootPart.CFrame
-                    end
-                end)
-            else
-                Button.Text = "Bring Parts | Off"
-                if DescendantAddedConnection then
-                    DescendantAddedConnection:Disconnect()
-                end
-            end
-        end
-
-        local function getPlayer(name)
-            local lowerName = string.lower(name)
-            for _, p in pairs(Players:GetPlayers()) do
-                local lowerPlayer = string.lower(p.Name)
-                if string.find(lowerPlayer, lowerName) then
-                    return p
-                elseif string.find(string.lower(p.DisplayName), lowerName) then
-                    return p
-                end
-            end
-        end
-
-        local player = nil
-
-        Box.FocusLost:Connect(function(enterPressed)
-            if enterPressed then
-                player = getPlayer(Box.Text)
-                if player then
-                    Box.Text = player.Name
-                    print("Player found:", player.Name)
-                else
-                    print("Player not found")
-                end
-            end
-        end)
-
-        Button.MouseButton1Click:Connect(function()
-            if player then
-                character = player.Character or player.CharacterAdded:Wait()
-                humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-                toggleBlackHole()
-            else
-                print("Player is not selected")
-            end
-        end)
     end
 })
 
-Tab4:AddSection({"Invisível"})
-
-Tab4:AddButton({
-    Name = "Ficar Invisível",
-    Description = "Ficar invisível FE",
-    Callback = function()
-        local args = {
-            [1] = {
-                [1] = 102344834840946,
-                [2] = 70400527171038,
-                [3] = 0,
-                [4] = 0,
-                [5] = 0,
-                [6] = 0
-            }
-        }
-
-        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ChangeCharacterBody"):InvokeServer(unpack(args))
-        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Wear"):InvokeServer(111858803548721)
-        
-        local allaccessories = {}
-
-        for zxcwefwfecas, xcaefwefas in ipairs({
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.BackAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.FaceAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.FrontAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.NeckAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.HatAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.HairAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.ShouldersAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.WaistAccessory,
-            game.Players.LocalPlayer.Character.Humanoid.HumanoidDescription.GraphicTShirt
-        }) do
-            for scacvdfbdb in string.gmatch(xcaefwefas, "%d+") do
-                table.insert(allaccessories, tonumber(scacvdfbdb))
-            end
-        end
-
-        task.wait()
-
-        for asdwr,asderg in ipairs(allaccessories) do
+Tab5:AddToggle({
+    Name = "Loop do Som",
+    Description = "Toca em loop",
+    Default = false,
+    Callback = function(value)
+        loopAtivo = value
+        if value then
             task.spawn(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Wear"):InvokeServer(asderg)
-                print(asderg)
+                while loopAtivo do
+                    if InputID and InputID ~= "" then
+                        playSound(InputID)
+                    end
+                    task.wait(3)
+                end
             end)
         end
     end
 })
 
-Tab4:AddSection({"Avatar RGB"})
+-- Sons de memes reduzidos (apenas os principais)
+Tab5:AddSection({"Sons de Memes"})
 
-local colors = { "Bright red", "Lime green", "Bright blue", "Bright yellow", "Bright cyan", "Hot pink", "Royal purple" }
-local rgbEnabled = false
-
-local function changeColor(color)
-    local args = { color }
-    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ChangeBodyColor"):FireServer(unpack(args))
-end
-
-local function toggleRGBCharacter(enabled)
-    rgbEnabled = enabled
-    if rgbEnabled then
-        while rgbEnabled do
-            for _, color in ipairs(colors) do
-                if not rgbEnabled then return end
-                changeColor(color)
-                task.wait(0.5)
-            end
-        end
-    end
-end
-
-Tab4:AddToggle({
-    Name = "RGB Character",
-    Description = "Deixa seu personagem RGB",
-    Default = false,
-    Callback = function(value)
-        toggleRGBCharacter(value)
-    end
-})
-
-Tab4:AddSection({"Cabelo RGB"})
-
-local hairColors = {
-    Color3.new(1, 1, 0), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 1, 1),
-    Color3.new(0, 1, 0), Color3.new(0.5, 0, 1), Color3.new(1, 0.647, 0), Color3.new(0, 1, 1)
+local memeSounds = {
+    {name = "pankapakan", id = "122547522269143"},
+    {name = "Gemido rápido", id = "128863565301778"},
+    {name = "skibidi", id = "128771670035179"},
+    {name = "miau", id = "131804436682424"},
+    {name = "receba", id = "94142662616215"},
+    {name = "OH MY GOD", id = "73349649774476"}
 }
-local isActive = false
 
-local function changeHairColor()
-    local i = 1
-    while isActive do
-        if not isActive then break end
-        local args = { [1] = "ChangeHairColor2", [2] = hairColors[i] }
-        game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1Max1y"):FireServer(unpack(args))
-        task.wait(0.1)
-        i = i % #hairColors + 1
-    end
+for _, sound in ipairs(memeSounds) do
+    Tab5:AddButton({
+        Name = sound.name,
+        Callback = function()
+            playSound(sound.id)
+        end
+    })
 end
 
-Tab4:AddToggle({
+-- Tab6: RGB
+local Tab6 = Window:MakeTab({"RGB", "rainbow"})
+
+Tab6:AddSection({"Cabelo RGB"})
+
+local hairRGB = false
+
+Tab6:AddToggle({
     Name = "Cabelo RGB",
     Description = "Deixa Seu Cabelo RGB",
     Default = false,
     Callback = function(value)
-        isActive = value
-        if isActive then
-            changeHairColor()
+        hairRGB = value
+        if value then
+            task.spawn(function()
+                local colors = {
+                    Color3.new(1, 0, 0),
+                    Color3.new(0, 1, 0), 
+                    Color3.new(0, 0, 1),
+                    Color3.new(1, 1, 0),
+                    Color3.new(1, 0, 1),
+                    Color3.new(0, 1, 1)
+                }
+                local i = 1
+                while hairRGB do
+                    local args = { [1] = "ChangeHairColor2", [2] = colors[i] }
+                    pcall(function()
+                        ReplicatedStorage.RE["1Max1y"]:FireServer(unpack(args))
+                    end)
+                    task.wait(0.3)
+                    i = i % #colors + 1
+                end
+            end)
         end
     end
 })
+-- Velocidade controlada pelo slider (quanto maior, mais rápido)
+local rgbSpeed = 1
 
-Tab4:AddSection({"Anti Sit"})
-
-Tab4:AddToggle({
-    Name = "Anti Sit",
-    Description = "Não Deixa seu personagem Sentar",
-    Default = false,
+Tab6:AddSlider({
+    Name = "Velocidade RGB",
+    Description = "Aumenta a velocidade do efeito RGB",
+    Min = 1,
+    Max = 5,
+    Increase = 1,
+    Default = 3,
     Callback = function(Value)
-        local player = game.Players.LocalPlayer
-        local connections = {}
-        local runService = game:GetService("RunService")
+        rgbSpeed = Value
+    end
+})
 
-        local function preventSitting(humanoid)
-            if humanoid then
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                local sitConnection = humanoid.StateChanged:Connect(function(_, newState)
-                    if newState == Enum.HumanoidStateType.Seated then
-                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-                    end
-                end)
-                table.insert(connections, sitConnection)
-            end
-        end
+-- Função para criar cor RGB suave com HSV
+local function getRainbowColor(speedMultiplier)
+    local h = (tick() * speedMultiplier % 5) / 5 -- gira o hue suavemente de 0 a 1
+    return Color3.fromHSV(h, 1, 1)
+end
 
-        local function monitorCharacter()
-            local function onCharacterAdded(character)
-                local humanoid = character:WaitForChild("Humanoid")
-                preventSitting(humanoid)
-            end
+-- Função para disparar eventos
+local function fireServer(eventName, args)
+    local event = game:GetService("ReplicatedStorage"):FindFirstChild("RE")
+    if event and event:FindFirstChild(eventName) then
+        pcall(function()
+            event[eventName]:FireServer(unpack(args))
+        end)
+    end
+end
 
-            local characterAddedConnection = player.CharacterAdded:Connect(onCharacterAdded)
-            table.insert(connections, characterAddedConnection)
+local Section = Tab6:AddSection({"RGB para usar em você"})
 
-            if player.Character then
-                onCharacterAdded(player.Character)
-            end
-        end
-
-        local function resetSitting()
-            for _, connection in ipairs(connections) do
-                connection:Disconnect()
-            end
-            connections = {}
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-            end
-        end
-
-        if Value then
-            monitorCharacter()
-            local heartbeatConnection = runService.Heartbeat:Connect(function()
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+-- Nome + Bio RGB  juntos
+local nameBioRGBActive = false
+Tab6:AddToggle({
+    Name = "Nome + Bio RGB ",
+    Default = false,
+    Callback = function(state)
+        nameBioRGBActive = state
+        if state then
+            task.spawn(function()
+                while nameBioRGBActive and LocalPlayer.Character do
+                    local color = getRainbowColor(rgbSpeed)
+                    fireServer("1RPNam1eColo1r", { "PickingRPNameColor", color })
+                    fireServer("1RPNam1eColo1r", { "PickingRPBioColor", color })
+                    task.wait(0.03)
                 end
             end)
-            table.insert(connections, heartbeatConnection)
-        else
-            resetSitting()
         end
+    end
+})
+-- Nova Aba: House (simplificada)
+local Tab7 = Window:MakeTab({"House", "house"})
+
+Tab7:AddButton({
+    Name = "Remover Ban",
+    Description = "Remove banimento de todas as casas",
+    Callback = function()  -- ← CORRIGIDO: removido o "q"
+        local successCount = 0
+        local housesChecked = 0
+        
+        for i = 1, 37 do
+            local bannedBlockName = "BannedBlock" .. i
+            local bannedBlock = Workspace:FindFirstChild(bannedBlockName, true)
+            
+            if bannedBlock then
+                local success = pcall(function()
+                    bannedBlock:Destroy()
+                end)
+                
+                if success then
+                    successCount = successCount + 1
+                end
+                housesChecked = housesChecked + 1
+            end
+        end
+        
+        -- Notificação de resultado
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Remoção de Ban",
+            Text = string.format("Sucesso em %d/%d casas", successCount, housesChecked),
+            Duration = 5
+        })
     end
 })
