@@ -376,8 +376,6 @@ Tab3:AddToggle({
     end
 })
 
-local kill = Troll:AddSection({Name = "Fling Boat"})
-
 Troll:AddButton({
     Name = "Fling - Boat",
     Callback = function()
