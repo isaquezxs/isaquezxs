@@ -312,7 +312,17 @@ Tab3:AddToggle({
     Default = false,
     Callback = function(state)
         flingActive = state
-        if state and selectedPlayerName then
+        if state then
+            if not selectedPlayerName then
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Erro",
+                    Text = "Selecione um jogador primeiro!",
+                    Duration = 3
+                })
+                flingActive = false
+                return
+            end
+            
             local target = Players:FindFirstChild(selectedPlayerName)
             if not target or not target.Character then return end
             
@@ -389,6 +399,16 @@ local function houseBanKill()
         return
     end
 
+    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
+    if not selectedPlayer then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Erro",
+            Text = "Jogador não encontrado!",
+            Duration = 3
+        })
+        return
+    end
+
     local Player = game.Players.LocalPlayer
     local Backpack = Player.Backpack
     local Character = Player.Character
@@ -408,7 +428,6 @@ local function houseBanKill()
         end
     end
 
-    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
     if selectedPlayer and selectedPlayer.Character then
         if Check() then
             local House = Houses:FindFirstChild(Player.Name .. "House")
@@ -585,12 +604,49 @@ Tab4:AddButton({"Voltar ao Normal", function()
         end
     end
 end})
+
 -- Tab5: Sistema de Áudio
 local Tab5 = Window:MakeTab({"Audio", "radio"})
 
 local loopAtivo = false
 local InputID = ""
 local currentSound = nil
+
+-- Função para criar dropdown de sons
+local function createSoundDropdown(name, sounds, defaultSound)
+    local soundOptions = {}
+    
+    -- Coletar todos os sons em uma lista única
+    for category, soundList in pairs(sounds) do
+        for _, sound in ipairs(soundList) do
+            if sound.name ~= "" and sound.id ~= "" then
+                table.insert(soundOptions, sound.name)
+            end
+        end
+    end
+    
+    -- Criar o dropdown
+    local soundDropdown = Tab5:AddDropdown({
+        Name = name,
+        Description = "Selecione um som pré-definido",
+        Options = soundOptions,
+        Default = defaultSound or "",
+        Callback = function(selectedName)
+            -- Encontrar o ID correspondente ao nome selecionado
+            for category, soundList in pairs(sounds) do
+                for _, sound in ipairs(soundList) do
+                    if sound.name == selectedName then
+                        InputID = sound.id
+                        playGlobalSound(sound.id)
+                        break
+                    end
+                end
+            end
+        end
+    })
+    
+    return soundDropdown
+end
 
 Tab5:AddSection({"Audio Global"})
 
@@ -666,17 +722,16 @@ Tab5:AddToggle({
     end
 })
 
--- Dropdown "Memes"
-createSoundDropdown("Selecione um meme", {
+-- Criar a tabela de sons corretamente
+local memeSounds = {
     ["Memes"] = {
-        {name = "pankapakan", id = "122547522269143"}, 
-       
+        {name = "pankapakan", id = "122547522269143"},
         {name = "Gemido ultra rápido", id = "128863565301778"},
         {name = "vai g0z@?", id = "116293771329297"},
         {name = "G0z33iiii", id = "93462644278510"},
-        {name = "Hommmm ", id = "133135656929513"},
+        {name = "Hommmm", id = "133135656929513"},
         {name = "gemido1", id = "105263704862377"},
-        {name = " gemido2", id = "92186909873950"},
+        {name = "gemido2", id = "92186909873950"},
         {name = "sus sex", id = "128137573022197"},
         {name = "gemido estranho", id = "131219411501419"},
         {name = "gemido kawai", id = "100409245129170"},
@@ -684,33 +739,14 @@ createSoundDropdown("Selecione um meme", {
         {name = "iamete cunasai", id = "108494476595033"},
         {name = "dodichan onnn...", id = "134640594695384"},
         {name = "Loly gemiD0", id = "119277017538197"},
-         {name = "ai poison", id = "115870718113313"},
-         {name = "chegachega SUS", id = "77405864184828"},
-         {name = "uwu", id = "76820720070248"},
-         {name = "ai meu cuzin", id = "130714479795369"},
-         {name = "girl audio 2", id = "84207358477461"},
+        {name = "ai poison", id = "115870718113313"},
+        {name = "chegachega SUS", id = "77405864184828"},
+        {name = "uwu", id = "76820720070248"},
+        {name = "ai meu cuzin", id = "130714479795369"},
+        {name = "girl audio 2", id = "84207358477461"},
         {name = "Hoo ze da manga", id = "106624090319571"},
         {name = "ai alexandre de moraes", id = "107261471941570"},
         {name = "haaii meme", id = "120006672159037"},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
- 
-    
-
-
         {name = "GoGogo gogogo", id = "103262503950995"},
         {name = "Toma jack", id = "132603645477541"},
         {name = "Toma jackV2", id = "100446887985203"},
@@ -737,9 +773,7 @@ createSoundDropdown("Selecione um meme", {
         {name = "aahhh plankton meme", id = "95982351322190"},
         {name = "CHINABOY", id = "84403553163931"},
         {name = "PASTOR MIRIM E A LÍNGUA DOS ANJOS", id = "71153532555470"},
-        
         {name = "Sai d3sgraç@", id = "106973692977609"},
-        
         {name = "opa salve tudo bem?", id = "80870678096428"},
         {name = "OLHA O CARRO DO DANONE", id = "110493863773948"},
         {name = "Nãoooo, Nãoooo, Nãooo!!!!!", id = "95825536480898"},
@@ -766,30 +800,12 @@ createSoundDropdown("Selecione um meme", {
         {name = "um cavalo de tres pernas?", id = "8164241439"},
         {name = "voces sao um bado de fdp", id = "8232773326"},
         {name = "HAHA TROLLEI ATÉ VOCÊ", id = "7021794555"},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        {name = "", id = ""},
-        
-        
-
         {name = "Calaboca Kenga", id = "86494561679259"},
         {name = "alvincut", id = "88788640194373"},
         {name = "e a risada faz como?", id = "140713372459057"},
         {name = "voce deve se m@t4", id = "100227426848009"},
         {name = "receba", id = "94142662616215"},
         {name = "UUIIII", id = "73210569653520"},
-        
-
-
-
         {name = "sai", id = "121169949217007"},
         {name = "risada boa dms", id = "127589011971759"},
         {name = "vacilo perna de pau", id = "106809680656199"},
@@ -797,11 +813,10 @@ createSoundDropdown("Selecione um meme", {
         {name = "arroto", id = "140203378050178"},
         {name = "iraaaa", id = "136752451575091"},
         {name = "não fica se achando muito não", id = "101588606280167"},
-       
         {name = "WhatsApp notificaçaoV1", id = "107004225739474"},
         {name = "WhatsApp notificaçaoV2", id = "18850631582"},
         {name = "SamsungV1", id = "123767635061073"},
-        {name = "SamsungV2", id = "96579234730244"}, 
+        {name = "SamsungV2", id = "96579234730244"},
         {name = "Shiiii", id = "120566727202986"},
         {name = "ai_tomaa miku", id = "139770074770361"},
         {name = "Miku Miku", id = "72812231495047"},
@@ -830,7 +845,10 @@ createSoundDropdown("Selecione um meme", {
         {name = "sla", id = "116672405522828"},
         {name = "HA HA HA", id = "138236682866721"}
     }
-}, "pankapakan")
+}
+
+-- Criar o dropdown
+createSoundDropdown("Selecione um meme", memeSounds, "pankapakan")
 
 -- Tab6: RGB
 local Tab6 = Window:MakeTab({"RGB", "rainbow"})
