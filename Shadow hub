@@ -666,6 +666,22 @@ Tab5:AddToggle({
     end
 })
 
+Tab5:AddSection({"Audio Global"})
+
+-- Lista de IDs prontos com descrição
+local audio_list = {
+    bruh = "4590662766",
+    E mentira sou bem macho = "7339658122",
+    omae_wa_mou = "780394983",
+    bombastic = "7596076957",
+    oh_no = "8236294548",
+    basketball = "9015572459",
+    fart = "9112964367",
+    lofi = "6832470734",
+    never_gonna = "2769722173",
+    giga_chad = "7140348031"
+}
+
 -- Tab6: RGB
 local Tab6 = Window:MakeTab({"RGB", "rainbow"})
 
