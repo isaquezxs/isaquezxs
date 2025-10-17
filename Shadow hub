@@ -666,8 +666,6 @@ Tab5:AddToggle({
     end
 })
 
-Tab5:AddSection({"Audio Global"})
-
 -- Lista de IDs prontos com descrição
 local audio_list = {
     bruh = "4590662766",
