@@ -1,4 +1,4 @@
--- Tela de Carregamento Fire Hub Brookhaven - Estilizada
+-- Tela de Carregamento Shadow hub Brookhaven - Estilizada
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
