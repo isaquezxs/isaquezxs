@@ -375,6 +375,8 @@ Tab3:AddToggle({
         end
     end
 })
+
+Tab3:AddButton{(
 local function houseBanKill()
     if not selectedPlayerName then
         print("Nenhum jogador selecionado!")
