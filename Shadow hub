@@ -277,7 +277,9 @@ Tab3:AddToggle({
             end
         end
     end
-})-- Botão para teleportar até o jogador
+})
+
+-- Botão para teleportar até o jogador
 Tab3:AddButton({
     Name = "Teleportar até o Player",
     Callback = function()
@@ -376,10 +378,14 @@ Tab3:AddToggle({
     end
 })
 
-Tab3:AddButton{(
+-- Função House Ban Kill CORRIGIDA
 local function houseBanKill()
     if not selectedPlayerName then
-        print("Nenhum jogador selecionado!")
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Erro",
+            Text = "Selecione um jogador primeiro!",
+            Duration = 3
+        })
         return
     end
 
@@ -410,7 +416,7 @@ local function houseBanKill()
                 local EHouse
                 local availableHouses = {}
                 
-                -- Coletar todas as casas disponÃ­veis ("For Sale")
+                -- Coletar todas as casas disponíveis ("For Sale")
                 for _, Lot in pairs(Houses:GetChildren()) do
                     if Lot.Name == "For Sale" then
                         for _, num in pairs(Lot:GetDescendants()) do
@@ -422,7 +428,7 @@ local function houseBanKill()
                     end
                 end
 
-                -- Escolher uma casa aleatÃ³ria da lista
+                -- Escolher uma casa aleatória da lista
                 if #availableHouses > 0 then
                     local randomHouse = availableHouses[math.random(1, #availableHouses)]
                     EHouse = randomHouse.Lot
@@ -443,12 +449,12 @@ local function houseBanKill()
                     -- Disparar o novo remote event para construir a casa
                     task.wait(0.5)
                     local args = {
-                        houseNumber, -- NÃºmero da casa aleatÃ³ria
+                        houseNumber, -- Número da casa aleatória
                         "056_House" -- Tipo da casa
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Lot:BuildProperty"):FireServer(unpack(args))
                 else
-                    print("Nenhuma casa disponÃ­vel para compra!")
+                    print("Nenhuma casa disponível para compra!")
                     return
                 end
             end
@@ -547,7 +553,8 @@ local function houseBanKill()
     end
 end
 
-Troll:AddButton({
+-- Botão House Ban Kill CORRIGIDO
+Tab3:AddButton({
     Name = "House Ban Kill",
     Callback = houseBanKill
 })
@@ -713,13 +720,14 @@ Tab6:AddToggle({
         end
     end
 })
+
 -- Nova Aba: House (simplificada)
 local Tab7 = Window:MakeTab({"House", "house"})
 
 Tab7:AddButton({
     Name = "Remover Ban",
     Description = "Remove banimento de todas as casas",
-    Callback = function()  -- ← CORRIGIDO: removido o "q"
+    Callback = function()
         local successCount = 0
         local housesChecked = 0
         
