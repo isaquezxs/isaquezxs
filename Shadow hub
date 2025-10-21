@@ -320,7 +320,7 @@ Tab2:AddButton({"Painel Adm", function()
             if success1 and success2 then
                 StarterGui:SetCore("SendNotification", {
                     Title = "Verificação",
-                    Text = "Comandos '/Verifique e 'Coquette Hub' enviados no chat!",
+                    Text = "Comandos '/Verifique e 'Shadow hub' enviados no chat!",
                     Duration = 3
                 })
             else
