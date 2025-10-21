@@ -142,130 +142,17 @@ Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 -- Tab2: Funções Principais
 local Tab2 = Window:MakeTab({"Admin", "Home"})
 
--- COMANDOS OCULTOS ADICIONADOS AQUI
-Tab2:AddSection({"Comandos Ocultos"})
-
-Tab2:AddButton({"Kill", function()
-    local TextChatService = game:GetService("TextChatService")
-    local function sendCommand()
-        if TextChatService and TextChatService.TextChannels then
-            local channel = TextChatService.TextChannels.RBXGeneral
-            if channel then
-                channel:SendAsync(";kill")
-            end
-        else
-            game.Players:Chat(";kill")
-        end
-    end
-    sendCommand()
-end})
-
-Tab2:AddButton({"Kick", function()
-    local TextChatService = game:GetService("TextChatService")
-    local function sendCommand()
-        if TextChatService and TextChatService.TextChannels then
-            local channel = TextChatService.TextChannels.RBXGeneral
-            if channel then
-                channel:SendAsync(";kick")
-            end
-        else
-            game.Players:Chat(";kick")
-        end
-    end
-    sendCommand()
-end})
-
-Tab2:AddButton({"Jail", function()
-    local TextChatService = game:GetService("TextChatService")
-    local function sendCommand()
-        if TextChatService and TextChatService.TextChannels then
-            local channel = TextChatService.TextChannels.RBXGeneral
-            if channel then
-                channel:SendAsync(";jail")
-            end
-        else
-            game.Players:Chat(";jail")
-        end
-    end
-    sendCommand()
-end})
-
-Tab2:AddButton({"Killbus", function()
-    local TextChatService = game:GetService("TextChatService")
-    local function sendCommand()
-        if TextChatService and TextChatService.TextChannels then
-            local channel = TextChatService.TextChannels.RBXGeneral
-            if channel then
-                channel:SendAsync(";killbus")
-            end
-        else
-            game.Players:Chat(";killbus")
-        end
-    end
-    sendCommand()
-end})
-
-Tab2:AddButton({"Bring", function()
-    local TextChatService = game:GetService("TextChatService")
-    local function sendCommand()
-        if TextChatService and TextChatService.TextChannels then
-            local channel = TextChatService.TextChannels.RBXGeneral
-            if channel then
-                channel:SendAsync(";bring")
-            end
-        else
-            game.Players:Chat(";bring")
-        end
-    end
-    sendCommand()
-end})
-
-Tab2:AddSection({"Verifique usuários Shadow visual"})
-
-Tab2:AddButton({"/Verifique", function()
-    local TextChatService = game:GetService("TextChatService")
-    local StarterGui = game:GetService("StarterGui")
-    
-    local function safeChat(message)
-        local success = pcall(function()
-            if TextChatService and TextChatService.TextChannels then
-                local channel = TextChatService.TextChannels.RBXGeneral
-                if channel then
-                    channel:SendAsync(message)
-                end
-            else
-                game.Players:Chat(message)
-            end
-        end)
-        return success
-    end
-    
-    local success = safeChat("/Verifique")
-    
-    if success then
-        StarterGui:SetCore("SendNotification", {
-            Title = "Verificação",
-            Text = "Comando '/Verifique' enviado no chat!",
-            Duration = 5
-        })
-    else
-        StarterGui:SetCore("SendNotification", {
-            Title = "Erro",
-            Text = "Falha ao enviar o comando no chat!",
-            Duration = 5
-        })
-    end
-end})
+Tab2:AddSection({"Painel Admin Shadow"})
 
 -- PAINEL ADM CORRIGIDO - AGORA NA TAB2
 Tab2:AddButton({"Painel Adm", function()
     local Version = "1.6.41"
     local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/" .. Version .. "/main.lua"))()
     local Window = WindUI:CreateWindow({
-        Title = "Admin Fire",
+        Title = "Admin Shadow",
         Icon = "shield",
         Author = "By isaquexsz",
-        Folder = "Fire",
+        Folder = "Shadow",
         Size = UDim2.fromOffset(330, 220),
         Transparent = true,
         Theme = "Red",
@@ -426,18 +313,20 @@ Tab2:AddButton({"Painel Adm", function()
         Title = "Verifique",
         Icon = "check",
         Callback = function()
-            local success = sendChatMessage("/Verifique")
+            local success1 = sendChatMessage("/Verifique")
+            wait(0.5)
+            local success2 = sendChatMessage("Shadow_###")
             
-            if success then
+            if success1 and success2 then
                 StarterGui:SetCore("SendNotification", {
                     Title = "Verificação",
-                    Text = "Comando '/Verifique' enviado no chat!",
+                    Text = "Comandos '/Verifique e 'Shadow hub' enviados no chat!",
                     Duration = 3
                 })
             else
                 StarterGui:SetCore("SendNotification", {
                     Title = "Erro",
-                    Text = "Falha ao enviar o comando no chat!",
+                    Text = "Falha ao enviar uma ou ambas as mensagens no chat!",
                     Duration = 3
                 })
             end
