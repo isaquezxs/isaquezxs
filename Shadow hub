@@ -142,13 +142,159 @@ Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 -- Tab2: Funções Principais
 local Tab2 = Window:MakeTab({"Admin", "Home"})
 
-Tab2:AddSection({"Verifique usuários Shadow"})
+Tab2:AddSection({"Painel Admin Shadow"})
 
-Tab2:AddButton({"/Verifique", function()
-    local TextChatService= game:GetService("TextChatService")
+-- PAINEL ADM CORRIGIDO - AGORA NA TAB2
+Tab2:AddButton({"Painel Adm", function()
+    local Version = "1.6.41"
+    local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/" .. Version .. "/main.lua"))()
+    local Window = WindUI:CreateWindow({
+        Title = "Admin Shadow",
+        Icon = "shield",
+        Author = "By isaquexsz",
+        Folder = "Shadow",
+        Size = UDim2.fromOffset(330, 220),
+        Transparent = true,
+        Theme = "Red",
+        Resizable = true,
+        SideBarWidth = 200,
+        Background = "8652665149",
+        BackgroundImageTransparency = 0.10,
+        HideSearchBar = true,
+        ScrollBarEnabled = false,
+        User = {
+            Enabled = true,
+            Xxxhey_lorenzo1 = true,
+            Callback = function()
+                print("clicked")
+            end,
+        },
+        KeySystem = {
+            Key = { "isaquexsz9992", "PainelAdm" },
+            Note = "Painel Shadow Scripts by Doggeblox studios",
+            Thumbnail = {
+                Image = "rbxassetid://8652665149",
+                Title = "Key system",
+            },
+            URL = "https://github.com/Footagesus/WindUI",
+            SaveKey = true,
+        },
+    })
+
+    Window:EditOpenButton({
+        Title = "Painel Shadow hub by doggeblox studios",
+        Icon = "shield",
+        CornerRadius = UDim.new(0,16),
+        StrokeThickness = 2,
+        Color = ColorSequence.new(
+            Color3.fromHex("FF0000"), 
+            Color3.fromHex("FFFFFF")
+        ),
+        OnlyMobile = false,
+        Enabled = true,
+        Draggable = true,
+    })
+
+    local Tab = Window:Tab({
+        Title = "Protetion",
+        Icon = "skull",
+        Locked = false,
+    })
+
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
     local StarterGui = game:GetService("StarterGui")
-    
-    local function safeChat(message)
+    local HttpService = game:GetService("HttpService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local TextChatService = game:GetService("TextChatService")
+
+    -- Gera lista com todos os nomes dos jogadores
+    local playerNames = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        table.insert(playerNames, plr.Name)
+    end
+
+    -- Variável para armazenar os jogadores selecionados no Dropdown
+    local selectedPlayers = {}
+
+    local Dropdown = Tab:Dropdown({
+        Title = "Selecionar Jogadores",
+        Values = playerNames,
+        Value = {},
+        Multi = true,
+        AllowNone = true,
+        Callback = function(newSelectedPlayers)
+            selectedPlayers = newSelectedPlayers
+            print("Jogadores selecionados: " .. HttpService:JSONEncode(selectedPlayers))
+        end
+    })
+
+    -- Atualiza lista automaticamente quando entra ou sai jogador
+    Players.PlayerAdded:Connect(function(plr)
+        table.insert(playerNames, plr.Name)
+        Dropdown:SetValues(playerNames)
+    end)
+
+    Players.PlayerRemoving:Connect(function(plr)
+        for i, name in ipairs(playerNames) do
+            if name == plr.Name then
+                table.remove(playerNames, i)
+                break
+            end
+        end
+        Dropdown:SetValues(playerNames)
+    end)
+
+    -- Adiciona o Toggle para View Player na aba Protetion
+    local ViewToggle = Tab:Toggle({
+        Title = "Visualizar Jogador",
+        Icon = "eye",
+        Default = false,
+        Callback = function(state)
+            if state then
+                if #selectedPlayers > 0 then
+                    local targetPlayerName = selectedPlayers[1]
+                    local targetPlayer = Players:FindFirstChild(targetPlayerName)
+                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local camera = workspace.CurrentCamera
+                        camera.CameraSubject = targetPlayer.Character.Humanoid
+                        camera.CameraType = Enum.CameraType.Follow
+                        StarterGui:SetCore("SendNotification", {
+                            Title = "Visualizando",
+                            Text = "Câmera focada em " .. targetPlayer.Name,
+                            Duration = 3
+                        })
+                    else
+                        ViewToggle:Set(false)
+                        StarterGui:SetCore("SendNotification", {
+                            Title = "Erro",
+                            Text = "Jogador " .. targetPlayerName .. " não encontrado ou sem personagem!",
+                            Duration = 3
+                        })
+                    end
+                else
+                    ViewToggle:Set(false)
+                    StarterGui:SetCore("SendNotification", {
+                        Title = "Erro",
+                        Text = "Nenhum jogador selecionado no Dropdown!",
+                        Duration = 3
+                    })
+                end
+            else
+                local camera = workspace.CurrentCamera
+                camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character.Humanoid
+                camera.CameraType = Enum.CameraType.Custom
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Visualização Desativada",
+                    Text = "Câmera restaurada para o seu personagem.",
+                    Duration = 3
+                })
+            end
+        end
+    })
+
+    -- Função para enviar mensagens no chat
+    local function sendChatMessage(message)
         local success = pcall(function()
             if TextChatService and TextChatService.TextChannels then
                 local channel = TextChatService.TextChannels.RBXGeneral
@@ -161,22 +307,33 @@ Tab2:AddButton({"/Verifique", function()
         end)
         return success
     end
-    
-    local results = {
-        safeChat("/Verifique"),
-        safeChat("Shadow_###")
-    }
-    
-    local successCount = 0
-    for _, result in ipairs(results) do
-        if result then successCount = successCount + 1 end
-    end
-    
-    StarterGui:SetCore("SendNotification", {
-        Title = "Verificação",
-        Text = string.format("%d/%d comandos enviados!", successCount, #results),
-        Duration = 5
+
+    -- Adiciona o Botão Verifique na aba Protetion
+    local VerifyButton = Tab:Button({
+        Title = "Verifique",
+        Icon = "check",
+        Callback = function()
+            local success1 = sendChatMessage("/Verifique")
+            wait(0.5)
+            local success2 = sendChatMessage("Shadow_###")
+            
+            if success1 and success2 then
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Verificação",
+                    Text = "Comandos '/Verifique e 'Coquette Hub' enviados no chat!",
+                    Duration = 3
+                })
+            else
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Erro",
+                    Text = "Falha ao enviar uma ou ambas as mensagens no chat!",
+                    Duration = 3
+                })
+            end
+        end
     })
+
+    print("Painel adm adicionado!")
 end})
 
 -- Tab3: Troll
@@ -598,6 +755,176 @@ Tab4:AddButton({"Voltar ao Normal", function()
         end
     end
 end})
+
+-- BLACK HOLE ADICIONADO AQUI
+Tab4:AddSection({"Black Hole"})
+
+Tab4:AddButton({
+    Name = "Black Hole",
+    Description = "Ativando isso você puxa Parts até o seu personagem",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local LocalPlayer = Players.LocalPlayer
+        local Workspace = game:GetService("Workspace")
+
+        local angle = 1
+        local radius = 10
+        local blackHoleActive = false
+        local angleSpeed = 2
+
+        local function setupPlayer()
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+            local Folder = Instance.new("Folder", Workspace)
+            Folder.Name = "BlackHoleFolder"
+            local Part = Instance.new("Part", Folder)
+            local Attachment1 = Instance.new("Attachment", Part)
+            Part.Anchored = true
+            Part.CanCollide = false
+            Part.Transparency = 1
+
+            return humanoidRootPart, Attachment1
+        end
+
+        local humanoidRootPart, Attachment1 = setupPlayer()
+
+        if not getgenv().Network then
+            getgenv().Network = {
+                BaseParts = {},
+                Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
+            }
+
+            Network.RetainPart = function(part)
+                if typeof(part) == "Instance" and part:IsA("BasePart") and part:IsDescendantOf(Workspace) then
+                    table.insert(Network.BaseParts, part)
+                    part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                    part.CanCollide = false
+                end
+            end
+
+            local function EnablePartControl()
+                LocalPlayer.ReplicationFocus = Workspace
+                RunService.Heartbeat:Connect(function()
+                    sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+                    for _, part in pairs(Network.BaseParts) do
+                        if part:IsDescendantOf(Workspace) then
+                            part.Velocity = Network.Velocity
+                        end
+                    end
+                end)
+            end
+
+            EnablePartControl()
+        end
+
+        local function ForcePart(v)
+            if v:IsA("Part") and not v.Anchored and not v.Parent:FindFirstChild("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
+                for _, x in next, v:GetChildren() do
+                    if x:IsA("BodyAngularVelocity") or x:IsA("BodyForce") or x:IsA("BodyGyro") or x:IsA("BodyPosition") or x:IsA("BodyThrust") or x:IsA("BodyVelocity") or x:IsA("RocketPropulsion") then
+                        x:Destroy()
+                    end
+                end
+                if v:FindFirstChild("Attachment") then
+                    v:FindFirstChild("Attachment"):Destroy()
+                end
+                if v:FindFirstChild("AlignPosition") then
+                    v:FindFirstChild("AlignPosition"):Destroy()
+                end
+                if v:FindFirstChild("Torque") then
+                    v:FindFirstChild("Torque"):Destroy()
+                end
+                v.CanCollide = false
+                
+                local Torque = Instance.new("Torque", v)
+                Torque.Torque = Vector3.new(1000000, 1000000, 1000000)
+                local AlignPosition = Instance.new("AlignPosition", v)
+                local Attachment2 = Instance.new("Attachment", v)
+                Torque.Attachment0 = Attachment2
+                AlignPosition.MaxForce = math.huge
+                AlignPosition.MaxVelocity = math.huge
+                AlignPosition.Responsiveness = 500
+                AlignPosition.Attachment0 = Attachment2
+                AlignPosition.Attachment1 = Attachment1
+            end
+        end
+
+        local function toggleBlackHole()
+            blackHoleActive = not blackHoleActive
+            if blackHoleActive then
+                for _, v in next, Workspace:GetDescendants() do
+                    ForcePart(v)
+                end
+
+                Workspace.DescendantAdded:Connect(function(v)
+                    if blackHoleActive then
+                        ForcePart(v)
+                    end
+                end)
+
+                spawn(function()
+                    while blackHoleActive and RunService.RenderStepped:Wait() do
+                        angle = angle + math.rad(angleSpeed)
+
+                        local offsetX = math.cos(angle) * radius
+                        local offsetZ = math.sin(angle) * radius
+
+                        Attachment1.WorldCFrame = humanoidRootPart.CFrame * CFrame.new(offsetX, 0, offsetZ)
+                    end
+                end)
+                
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Black Hole",
+                    Text = "Ativado! Puxando partes para você",
+                    Duration = 3
+                })
+            else
+                Attachment1.WorldCFrame = CFrame.new(0, -1000, 0)
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Black Hole",
+                    Text = "Desativado",
+                    Duration = 3
+                })
+            end
+        end
+
+        LocalPlayer.CharacterAdded:Connect(function()
+            humanoidRootPart, Attachment1 = setupPlayer()
+            if blackHoleActive then
+                toggleBlackHole()
+            end
+        end)
+
+        -- Slider para o raio do Black Hole
+        Tab4:AddSlider({
+            Name = "Raio do Black Hole",
+            Min = 1,
+            Max = 50,
+            Default = 10,
+            Callback = function(Value)
+                radius = Value
+            end
+        })
+
+        -- Toggle para o Black Hole
+        Tab4:AddToggle({
+            Name = "Ativar/Desativar Black Hole",
+            Default = false,
+            Callback = function(Value)
+                if Value then
+                    toggleBlackHole()
+                else
+                    blackHoleActive = false
+                    Attachment1.WorldCFrame = CFrame.new(0, -1000, 0)
+                end
+            end
+        })
+
+        -- Iniciar o Black Hole
+        toggleBlackHole()
+    end
+})
 
 -- Tab5: Sistema de Áudio
 local Tab5 = Window:MakeTab({"Audio", "radio"})
