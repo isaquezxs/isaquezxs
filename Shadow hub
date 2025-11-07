@@ -1261,3 +1261,180 @@ Tab7:AddButton({
         })
     end
 })
+
+-- Tab8:Músic
+local Tab8 = Window:MakeTab({"Música Visual", "music"})
+
+Tab8:AddSection({"coloque o id"})
+
+local musicInputID = ""
+local musicVolume = 0.5
+local musicLoop = false
+local personalMusicActive = false
+local personalCurrentSound = nil
+
+-- Função para tocar som pessoal (apenas para o jogador local)
+local function playPersonalSound(soundId)
+    if not soundId or soundId == "" or soundId == "0" then
+        return false
+    end
+    
+    local numericId = tonumber(soundId)
+    if not numericId then
+        return false
+    end
+    
+    -- Para o som atual se existir
+    if personalCurrentSound then
+        personalCurrentSound:Stop()
+        personalCurrentSound:Destroy()
+        personalCurrentSound = nil
+    end
+    
+    -- Cria o som no PlayerGui do jogador local (só ele ouve)
+    local sound = Instance.new("Sound")
+    sound.Name = "PersonalMusic"
+    sound.SoundId = "rbxassetid://" .. soundId
+    sound.Volume = musicVolume
+    sound.Looped = musicLoop
+    
+    -- Coloca no PlayerGui do jogador local
+    local playerGui = LocalPlayer:FindFirstChild("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
+    sound.Parent = playerGui
+    
+    -- Tenta tocar o som
+    local success, errorMessage = pcall(function()
+        sound:Play()
+    end)
+    
+    if success then
+        personalCurrentSound = sound
+        personalMusicActive = true
+        
+        -- Remove o som quando terminar (se não for loop)
+        if not musicLoop then
+            sound.Ended:Connect(function()
+                if personalCurrentSound == sound then
+                    personalCurrentSound:Stop()
+                    personalCurrentSound:Destroy()
+                    personalCurrentSound = nil
+                    personalMusicActive = false
+                end
+            end)
+        else
+            -- Se for loop, destruir após tempo máximo
+            delay(600, function() -- 10 minutos
+                if personalCurrentSound == sound then
+                    personalCurrentSound:Stop()
+                    personalCurrentSound:Destroy()
+                    personalCurrentSound = nil
+                    personalMusicActive = false
+                end
+            end)
+        end
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Música Visual",
+            Text = "Música tocando!",
+            Duration = 3
+        })
+        
+        return true
+    else
+        warn("Erro ao tocar música pessoal: " .. tostring(errorMessage))
+        sound:Destroy()
+        return false
+    end
+end
+
+-- Função para parar música pessoal
+local function stopPersonalMusic()
+    if personalCurrentSound then
+        personalCurrentSound:Stop()
+        personalCurrentSound:Destroy()
+        personalCurrentSound = nil
+    end
+    personalMusicActive = false
+    musicLoop = false
+    
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Música Pessoal",
+        Text = "Música parada!",
+        Duration = 3
+    })
+end
+
+Tab8:AddTextBox({
+    Name = "ID da Música",
+    Description = "Digite o ID da música (Visual)",
+    Default = "",
+    PlaceholderText = "Exemplo: 123456789",
+    ClearTextOnFocus = true,
+    Callback = function(text)
+        musicInputID = text
+    end
+})
+
+Tab8:AddSlider({
+    Name = "Volume",
+    Description = "Ajuste o volume da música",
+    Min = 0,
+    Max = 10,
+    Default = 0.5,
+    Callback = function(value)
+        musicVolume = value
+        if personalCurrentSound then
+            personalCurrentSound.Volume = value
+        end
+    end
+})
+
+Tab8:AddButton({
+    Name = "Tocar Música",
+    Description = "Tocar música apenas para você",
+    Callback = function()
+        if musicInputID and musicInputID ~= "" then
+            playPersonalSound(musicInputID)
+        else
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Erro",
+                Text = "Digite um ID de música válido",
+                Duration = 3
+            })
+        end
+    end
+})
+
+Tab8:AddButton({
+    Name = "Parar Música",
+    Description = "Parar música atual",
+    Callback = function()
+        stopPersonalMusic()
+    end
+})
+
+-- Seção com músicas pré-definidas
+Tab8:AddSection({"Músicas Pré-definidas"})
+
+local musicList = {
+    {"arrepia xl3", "83331623293224"},
+    {"e so mlk bom", "93146696739126"},
+    {"Gorillaz - Feel Good Inc", "7140368350"},
+    {"The Weeknd - Blinding Lights", "6687605091"},
+    {"Daft Punk - Get Lucky", "27697743"},
+    {"Minecraft Sweden", "7456309211"},
+    {"Rick Astley - Never Gonna Give You Up", "27697259"},
+    {"Among Us Drip", "7114743921"},
+    {"Tokyo Ghoul Unravel", "2837726272"},
+    {"Attack on Titan Theme", "2837721845"}
+}
+
+for i, music in ipairs(musicList) do
+    Tab8:AddButton({
+        Name = music[1],
+        Callback = function()
+            musicInputID = music[2]
+            playPersonalSound(music[2])
+        end
+    })
+end
