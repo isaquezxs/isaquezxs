@@ -1379,7 +1379,7 @@ Tab8:AddSlider({
     Name = "Volume",
     Description = "Ajuste o volume da música",
     Min = 0,
-    Max = 10,
+    Max = 30,
     Default = 0.5,
     Callback = function(value)
         musicVolume = value
