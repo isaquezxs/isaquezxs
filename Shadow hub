@@ -1379,7 +1379,7 @@ Tab8:AddSlider({
     Name = "Volume",
     Description = "Ajuste o volume da música",
     Min = 0,
-    Max = 30,
+    Max = 10,
     Default = 0.5,
     Callback = function(value)
         musicVolume = value
@@ -1415,19 +1415,11 @@ Tab8:AddButton({
 
 -- Seção com músicas pré-definidas
 Tab8:AddSection({"Músicas Pré-definidas"})
-
-local musicList = {
-    {"arrepia xl3", "83331623293224"},
+{"arrepia xl3", "83331623293224"},
     {"e so mlk bom", "93146696739126"},
-    {"Gorillaz - Feel Good Inc", "7140368350"},
-    {"The Weeknd - Blinding Lights", "6687605091"},
-    {"Daft Punk - Get Lucky", "27697743"},
-    {"Minecraft Sweden", "7456309211"},
-    {"Rick Astley - Never Gonna Give You Up", "27697259"},
-    {"Among Us Drip", "7114743921"},
-    {"Tokyo Ghoul Unravel", "2837726272"},
-    {"Attack on Titan Theme", "2837721845"}
-}
+end
+
+})
 
 for i, music in ipairs(musicList) do
     Tab8:AddButton({
