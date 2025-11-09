@@ -1262,7 +1262,7 @@ Tab7:AddButton({
     end
 })
 
--- Tab8:Músic
+-- Tab8: Música Visual (CORRIGIDA)
 local Tab8 = Window:MakeTab({"Música Visual", "music"})
 
 Tab8:AddSection({"coloque o id"})
@@ -1413,13 +1413,21 @@ Tab8:AddButton({
     end
 })
 
--- Seção com músicas pré-definidas
+-- Seção com músicas pré-definidas (CORRIGIDA)
 Tab8:AddSection({"Músicas Pré-definidas"})
-{"arrepia xl3", "83331623293224"},
-    {"e so mlk bom", "93146696739126"},
-end
 
-})
+local musicList = {
+    {"arrepia xl3", "83331623293224"},
+    {"e so mlk bom", "93146696739126"},
+    {"Gorillaz - Feel Good Inc", "7140368350"},
+    {"The Weeknd - Blinding Lights", "6687605091"},
+    {"Daft Punk - Get Lucky", "27697743"},
+    {"Minecraft Sweden", "7456309211"},
+    {"Rick Astley - Never Gonna Give You Up", "27697259"},
+    {"Among Us Drip", "7114743921"},
+    {"Tokyo Ghoul Unravel", "2837726272"},
+    {"Attack on Titan Theme", "2837721845"}
+}
 
 for i, music in ipairs(musicList) do
     Tab8:AddButton({
