@@ -1430,3 +1430,505 @@ for i, music in ipairs(musicList) do
         end
     })
 end
+
+-- Tab9: Shaders
+local Tab9 = Window:MakeTab({"Shaders", "sun"})
+
+Tab9:AddSection({"Sistema de Shaders Shadow"})
+
+-- Configurações globais
+local shaderEffects = {}
+local currentPreset = ""
+
+-- Função para aplicar efeitos de pós-processamento
+local function applyShaderEffect(effectType, properties)
+    local lighting = game:GetService("Lighting")
+    
+    -- Remove efeito anterior do mesmo tipo
+    local existingEffect = lighting:FindFirstChild("ShadowShader_" .. effectType)
+    if existingEffect then
+        existingEffect:Destroy()
+    end
+    
+    -- Cria novo efeito
+    local effect = Instance.new(effectType)
+    effect.Name = "ShadowShader_" .. effectType
+    
+    -- Aplica propriedades
+    for property, value in pairs(properties) do
+        if effect[property] ~= nil then
+            effect[property] = value
+        end
+    end
+    
+    effect.Enabled = true
+    effect.Parent = lighting
+    
+    shaderEffects[effectType] = effect
+    return effect
+end
+
+-- Função para remover todos os shaders
+local function removeAllShaders()
+    local lighting = game:GetService("Lighting")
+    
+    for effectName, effect in pairs(shaderEffects) do
+        if effect and effect.Parent then
+            effect:Destroy()
+        end
+    end
+    
+    shaderEffects = {}
+    
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Shaders",
+        Text = "Todos os shaders removidos!",
+        Duration = 3
+    })
+end
+
+-- Seção Bloom Effect
+Tab9:AddSection({"Bloom Effect"})
+
+Tab9:AddToggle({
+    Name = "Ativar Bloom",
+    Default = false,
+    Callback = function(state)
+        if state then
+            applyShaderEffect("BloomEffect", {
+                Intensity = 1.5,      -- Intensidade do brilho
+                Size = 24,            -- Tamanho do efeito
+                Threshold = 0.9       -- Limiar de brilho
+            })
+        else
+            local effect = shaderEffects["BloomEffect"]
+            if effect then effect:Destroy() end
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Intensidade Bloom",
+    Min = 0.1,
+    Max = 5,
+    Default = 1.5,
+    Callback = function(value)
+        local effect = shaderEffects["BloomEffect"]
+        if effect then
+            effect.Intensity = value
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Tamanho Bloom",
+    Min = 1,
+    Max = 24,
+    Default = 24,
+    Callback = function(value)
+        local effect = shaderEffects["BloomEffect"]
+        if effect then
+            effect.Size = value
+        end
+    end
+})
+
+-- Seção Color Correction
+Tab9:AddSection({"Color Correction"})
+
+Tab9:AddToggle({
+    Name = "Ativar Color Correction",
+    Default = false,
+    Callback = function(state)
+        if state then
+            applyShaderEffect("ColorCorrectionEffect", {
+                Brightness = 0.05,    -- Brilho geral
+                Contrast = 1.1,       -- Contraste
+                Saturation = 0.8,     -- Saturação das cores
+                TintColor = Color3.fromRGB(255, 255, 255) -- Tonalidade
+            })
+        else
+            local effect = shaderEffects["ColorCorrectionEffect"]
+            if effect then effect:Destroy() end
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Saturação",
+    Min = 0,
+    Max = 2,
+    Default = 0.8,
+    Callback = function(value)
+        local effect = shaderEffects["ColorCorrectionEffect"]
+        if effect then
+            effect.Saturation = value
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Contraste",
+    Min = 0.5,
+    Max = 2,
+    Default = 1.1,
+    Callback = function(value)
+        local effect = shaderEffects["ColorCorrectionEffect"]
+        if effect then
+            effect.Contrast = value
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Brilho",
+    Min = -0.5,
+    Max = 0.5,
+    Default = 0.05,
+    Callback = function(value)
+        local effect = shaderEffects["ColorCorrectionEffect"]
+        if effect then
+            effect.Brightness = value
+        end
+    end
+})
+
+-- Seção Sun Rays
+Tab9:AddSection({"Sun Rays Effect"})
+
+Tab9:AddToggle({
+    Name = "Ativar Sun Rays",
+    Default = false,
+    Callback = function(state)
+        if state then
+            applyShaderEffect("SunRaysEffect", {
+                Intensity = 0.1,      -- Intensidade dos raios
+                Spread = 1.0          -- Espalhamento
+            })
+        else
+            local effect = shaderEffects["SunRaysEffect"]
+            if effect then effect:Destroy() end
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Intensidade Sun Rays",
+    Min = 0.01,
+    Max = 0.5,
+    Default = 0.1,
+    Callback = function(value)
+        local effect = shaderEffects["SunRaysEffect"]
+        if effect then
+            effect.Intensity = value
+        end
+    end
+})
+
+-- Seção Depth of Field (CUIDADO: Pesado para performance)
+Tab9:AddSection({"Depth of Field"})
+
+Tab9:AddToggle({
+    Name = "Ativar Depth of Field",
+    Default = false,
+    Callback = function(state)
+        if state then
+            applyShaderEffect("DepthOfFieldEffect", {
+                FocusDistance = 50,   -- Distância do foco
+                InFocusRadius = 30,   -- Raio em foco
+                NearIntensity = 0.5,  -- Intensidade perto
+                FarIntensity = 0.5    -- Intensidade longe
+            })
+            
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Performance",
+                Text = "Depth of Field pode afetar FPS!",
+                Duration = 5
+            })
+        else
+            local effect = shaderEffects["DepthOfFieldEffect"]
+            if effect then effect:Destroy() end
+        end
+    end
+})
+
+-- Seção Blur
+Tab9:AddSection({"Blur Effect"})
+
+Tab9:AddToggle({
+    Name = "Ativar Blur",
+    Default = false,
+    Callback = function(state)
+        if state then
+            applyShaderEffect("BlurEffect", {
+                Size = 3  -- Tamanho do desfoque
+            })
+        else
+            local effect = shaderEffects["BlurEffect"]
+            if effect then effect:Destroy() end
+        end
+    end
+})
+
+Tab9:AddSlider({
+    Name = "Intensidade Blur",
+    Min = 1,
+    Max = 10,
+    Default = 3,
+    Callback = function(value)
+        local effect = shaderEffects["BlurEffect"]
+        if effect then
+            effect.Size = value
+        end
+    end
+})
+
+-- Seção de Presets Prontos
+Tab9:AddSection({"Presets Prontos"})
+
+-- Presets de shaders
+local shaderPresets = {
+    ["Vibrante"] = {
+        BloomEffect = {Intensity = 2.0, Size = 24, Threshold = 0.8},
+        ColorCorrectionEffect = {Brightness = 0.1, Contrast = 1.2, Saturation = 1.0},
+        SunRaysEffect = {Intensity = 0.15, Spread = 1.0}
+    },
+    
+    ["Cinematográfico"] = {
+        BloomEffect = {Intensity = 1.2, Size = 20, Threshold = 0.9},
+        ColorCorrectionEffect = {Brightness = -0.1, Contrast = 1.3, Saturation = 0.6, TintColor = Color3.fromRGB(255, 240, 220)},
+        DepthOfFieldEffect = {FocusDistance = 25, InFocusRadius = 15, NearIntensity = 0.7, FarIntensity = 0.7}
+    },
+    
+    ["Realista"] = {
+        BloomEffect = {Intensity = 0.8, Size = 16, Threshold = 0.95},
+        ColorCorrectionEffect = {Brightness = 0.05, Contrast = 1.1, Saturation = 0.7},
+        SunRaysEffect = {Intensity = 0.08, Spread = 0.8}
+    },
+    
+    ["Noturno"] = {
+        BloomEffect = {Intensity = 3.0, Size = 24, Threshold = 0.7},
+        ColorCorrectionEffect = {Brightness = -0.2, Contrast = 1.4, Saturation = 0.5, TintColor = Color3.fromRGB(180, 200, 255)},
+        BlurEffect = {Size = 2}
+    },
+    
+    ["Dream"] = {
+        BloomEffect = {Intensity = 2.5, Size = 24, Threshold = 0.6},
+        ColorCorrectionEffect = {Brightness = 0.2, Contrast = 1.1, Saturation = 1.2, TintColor = Color3.fromRGB(255, 220, 255)},
+        BlurEffect = {Size = 4},
+        SunRaysEffect = {Intensity = 0.2, Spread = 1.2}
+    }
+}
+
+-- Aplicar preset
+local function applyShaderPreset(presetName)
+    removeAllShaders() -- Remove shaders atuais
+    
+    local preset = shaderPresets[presetName]
+    if preset then
+        for effectType, properties in pairs(preset) do
+            applyShaderEffect(effectType, properties)
+        end
+        
+        currentPreset = presetName
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Shaders",
+            Text = "Preset " .. presetName .. " aplicado!",
+            Duration = 3
+        })
+    end
+end
+
+-- Criar botões para cada preset
+for presetName, _ in pairs(shaderPresets) do
+    Tab9:AddButton({
+        Name = "Preset: " .. presetName,
+        Callback = function()
+            applyShaderPreset(presetName)
+        end
+    })
+end
+
+-- Seção de Performance
+Tab9:AddSection({"Performance"})
+
+Tab9:AddParagraph({"Aviso Performance", "Shaders podem afetar FPS! DepthOfField é o mais pesado."})
+
+Tab9:AddButton({
+    Name = "Modo Performance (Low)",
+    Callback = function()
+        removeAllShaders()
+        applyShaderEffect("ColorCorrectionEffect", {
+            Brightness = 0.05,
+            Contrast = 1.1,
+            Saturation = 0.8
+        })
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Performance Mode",
+            Text = "Shaders leves ativados para melhor FPS",
+            Duration = 3
+        })
+    end
+})
+
+Tab9:AddButton({
+    Name = "Remover Todos Shaders",
+    Callback = function()
+        removeAllShaders()
+    end
+})
+
+-- Seção Skybox Personalizado
+Tab9:AddSection({"Skybox Personalizado"})
+
+Tab9:AddButton({
+    Name = "Skybox Noturno Estrelado",
+    Callback = function()
+        local lighting = game:GetService("Lighting")
+        
+        -- Remove sky atual
+        local currentSky = lighting:FindFirstChildOfClass("Sky")
+        if currentSky then
+            currentSky:Destroy()
+        end
+        
+        -- Cria novo sky
+        local sky = Instance.new("Sky")
+        sky.SkyboxBk = "rbxassetid://159454299"
+        sky.SkyboxDn = "rbxassetid://159454296"
+        sky.SkyboxFt = "rbxassetid://159454293"
+        sky.SkyboxLf = "rbxassetid://159454286"
+        sky.SkyboxRt = "rbxassetid://159454300"
+        sky.SkyboxUp = "rbxassetid://159454288"
+        sky.Parent = lighting
+        
+        -- Ajusta iluminação para noturno
+        lighting.ClockTime = 0
+        lighting.Brightness = 0.1
+        lighting.Ambient = Color3.fromRGB(50, 50, 100)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Skybox",
+            Text = "Skybox noturno aplicado!",
+            Duration = 3
+        })
+    end
+})
+
+Tab9:AddButton({
+    Name = "Skybox Realista (Dia)",
+    Callback = function()
+        local lighting = game:GetService("Lighting")
+        
+        local currentSky = lighting:FindFirstChildOfClass("Sky")
+        if currentSky then
+            currentSky:Destroy()
+        end
+        
+        local sky = Instance.new("Sky")
+        sky.SkyboxBk = "rbxassetid://6444881967"
+        sky.SkyboxDn = "rbxassetid://6444881952"
+        sky.SkyboxFt = "rbxassetid://6444881972"
+        sky.SkyboxLf = "rbxassetid://6444881985"
+        sky.SkyboxRt = "rbxassetid://6444881993"
+        sky.SkyboxUp = "rbxassetid://6444882009"
+        sky.Parent = lighting
+        
+        -- Ajusta iluminação para dia
+        lighting.ClockTime = 14
+        lighting.Brightness = 2
+        lighting.Ambient = Color3.fromRGB(100, 100, 100)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Skybox",
+            Text = "Skybox realista aplicado!",
+            Duration = 3
+        })
+    end
+})
+
+Tab9:AddButton({
+    Name = "Restaurar Sky Padrão",
+    Callback = function()
+        local lighting = game:GetService("Lighting")
+        
+        local currentSky = lighting:FindFirstChildOfClass("Sky")
+        if currentSky then
+            currentSky:Destroy()
+        end
+        
+        -- Restaura configurações padrão
+        lighting.Brightness = 2
+        lighting.ClockTime = 14
+        lighting.Ambient = Color3.fromRGB(0, 0, 0)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Skybox",
+            Text = "Skybox padrão restaurado!",
+            Duration = 3
+        })
+    end
+})
+
+-- Seção Atmosfera
+Tab9:AddSection({"Atmosfera"})
+
+Tab9:AddToggle({
+    Name = "Ativar Atmosfera",
+    Default = false,
+    Callback = function(state)
+        local lighting = game:GetService("Lighting")
+        
+        if state then
+            lighting.Atmosphere.Density = 0.3
+            lighting.Atmosphere.Offset = 0.5
+            lighting.Atmosphere.Color = Color3.fromRGB(200, 200, 255)
+            lighting.Atmosphere.Decay = Color3.fromRGB(100, 100, 150)
+            lighting.Atmosphere.Glare = 0
+            lighting.Atmosphere.Haze = 0
+        else
+            lighting.Atmosphere.Density = 0
+        end
+    end
+})
+
+-- Informações e Status
+Tab9:AddSection({"Status e Informações"})
+
+Tab9:AddParagraph({"Shader Ativo", function() return currentPreset ~= "" and currentPreset or "Nenhum" end})
+
+Tab9:AddButton({
+    Name = "Testar Performance",
+    Callback = function()
+        local startTime = tick()
+        local frames = 0
+        
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            frames = frames + 1
+            if tick() - startTime >= 1 then
+                connection:Disconnect()
+                
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Performance Test",
+                    Text = string.format("FPS: %d", frames),
+                    Duration = 5
+                })
+            end
+        end)
+    end
+})
+
+-- Inicialização segura
+game:GetService("RunService").RenderStepped:Connect(function()
+    -- Mantém os efeitos ativos se estiverem configurados
+    for effectName, effect in pairs(shaderEffects) do
+        if effect and effect.Parent then
+            effect.Enabled = true
+        end
+    end
+end)
+
+print("Tab Shaders carregada com sucesso!")
