@@ -1,103 +1,3 @@
--- Tela de Carregamento Shadow hubBrookhaven - Estilizada
-local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Criando a ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FireHubLoading"
-screenGui.Parent = playerGui
-
--- Fundo da tela
-local background = Instance.new("Frame")
-background.Size = UDim2.new(1,0,1,0)
-background.Position = UDim2.new(0,0,0,0)
-background.BackgroundColor3 = Color3.fromRGB(20,20,20)
-background.BorderSizePixel = 0
-background.Parent = screenGui
-
--- Título SHADOW HUB
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,100)
-title.Position = UDim2.new(0,0,0.25,0)
-title.BackgroundTransparency = 1
-title.Text = "SHADOW SCRIPTS"
-title.Font = Enum.Font.GothamBlack
-title.TextSize = 60
-title.TextColor3 = Color3.fromRGB(255,85,0)
-title.Parent = background
-title.TextScaled = true
-
--- Barra de carregamento com fundo
-local barBackground = Instance.new("Frame")
-barBackground.Size = UDim2.new(0.6,0,0,30)
-barBackground.Position = UDim2.new(0.2,0,0.55,0)
-barBackground.BackgroundColor3 = Color3.fromRGB(50,50,50)
-barBackground.BorderSizePixel = 0
-barBackground.Parent = background
-
--- Barra de preenchimento
-local barFill = Instance.new("Frame")
-barFill.Size = UDim2.new(0,0,1,0)
-barFill.BackgroundColor3 = Color3.fromRGB(255,85,0)
-barFill.BorderSizePixel = 0
-barFill.Parent = barBackground
-
--- Gradiente na barra
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,85,0)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,180,0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,85,0))
-}
-gradient.Rotation = 45
-gradient.Parent = barFill
-
--- Texto de carregamento
-local loadingText = Instance.new("TextLabel")
-loadingText.Size = UDim2.new(1,0,0,30)
-loadingText.Position = UDim2.new(0,0,0.62,0)
-loadingText.BackgroundTransparency = 1
-loadingText.Text = "Carregando..."
-loadingText.Font = Enum.Font.Gotham
-loadingText.TextSize = 28
-loadingText.TextColor3 = Color3.fromRGB(255,255,255)
-loadingText.Parent = background
-
--- Função para animar a barra
-local function animateBar(duration)
-    local startTime = tick()
-    while tick() - startTime < duration do
-        local progress = (tick() - startTime) / duration
-        barFill.Size = UDim2.new(progress,0,1,0)
-        task.wait(0.03)
-    end
-    barFill.Size = UDim2.new(1,0,1,0)
-end
-
--- Função para piscar o texto
-spawn(function()
-    while screenGui.Parent do
-        loadingText.TextTransparency = 0.3
-        task.wait(0.5)
-        loadingText.TextTransparency = 0
-        task.wait(0.5)
-    end
-end)
-
--- Executa animação por 3 segundos
-animateBar(3)
-
--- Remove tela após carregar
-task.wait(0.5)
-screenGui:Destroy()
-
--- Serviços
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-local cam = workspace.CurrentCamera
 
 -- Carrega a biblioteca UI Redz APÓS a tela de loading
 local success, redzlib = pcall(function()
@@ -110,7 +10,7 @@ if not success then
 end
 
 local Window = redzlib:MakeWindow({
-    Title = "Shadow Hub | Brookhaven 🏡",
+    Title = "Shadow Hub V1",
     SubTitle = "by isaquexz",
     SaveFolder = "ShadowHubBrookhaven"
 })
@@ -136,7 +36,7 @@ local Section = Tab1:AddSection({"Créditos"})
 
 Tab1:AddParagraph({"Criador", "isaquexsz"})
 Tab1:AddParagraph({"Versão", "BETA"})
-Tab1:AddParagraph({"Executor", "KRNL/Synapse"})
+Tab1:AddParagraph({"Colaboradores", "SnowYT/TEC 9"})
 Tab1:AddParagraph({"Jogadores Online", tostring(#game.Players:GetPlayers())})
 
 -- Tab2: Funções Principais
@@ -337,7 +237,7 @@ Tab2:AddButton({"Painel Adm", function()
 end})
 
 -- Tab3: Troll
-local Tab3 = Window:MakeTab({"Troll", "skull"})
+local Tab3 = Window:MakeTab({"Principal", "🏠"})
 
 Tab3:AddSection({"Troll"})
 
@@ -458,11 +358,6 @@ Tab3:AddButton({
         end
     end
 })
-
-Tab3:AddSection({""})
-
--- Seção Fling
-Tab3:AddSection({Name = "Fling e kill"})
 
 -- Auto Fling otimizado
 Tab3:AddToggle({
@@ -1940,3 +1835,97 @@ game:GetService("RunService").RenderStepped:Connect(function()
 end)
 
 print("Tab Shaders carregada com sucesso!")
+
+-- Tab10: Outros
+local Tab10 = Window:MakeTab({"Outros", "proteção"}, {Icon = "rbxassetid://6031090994"}) -- ícone de vídeo
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Anti Sit
+Tab10:AddToggle({
+    Name = "Anti Sit",
+    Default = false,
+    Callback = function(state)
+        if state then
+            if LocalPlayer.Character then
+                LocalPlayer.Character.Humanoid.Sit = false
+            end
+            LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
+                LocalPlayer.Character.Humanoid.Sit = false
+            end)
+            print("Anti Sit ativado")
+        else
+            print("Anti Sit desativado")
+        end
+    end
+})
+
+-- Anti Audio All
+Tab10:AddToggle({
+    Name = "Anti Audio All",
+    Default = false,
+    Callback = function(state)
+        if state then
+            for _, sound in pairs(workspace:GetDescendants()) do
+                if sound:IsA("Sound") then
+                    sound.Volume = 0
+                end
+            end
+            -- Mantém monitorando novos sons
+            workspace.DescendantAdded:Connect(function(desc)
+                if desc:IsA("Sound") then
+                    desc.Volume = 0
+                end
+            end)
+            print("Anti Audio All ativado")
+        else
+            print("Anti Audio All desativado")
+        end
+    end
+})
+
+-- Anti Fling
+Tab10:AddToggle({
+    Name = "Anti Fling",
+    Default = false,
+    Callback = function(state)
+        if state then
+            RunService.Stepped:Connect(function()
+                if LocalPlayer.Character then
+                    LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, LocalPlayer.Character.HumanoidRootPart.Velocity.Y, 0)
+                end
+            end)
+            print("Anti Fling ativado")
+        else
+            print("Anti Fling desativado")
+        end
+    end
+})
+
+-- Anti Glitch
+Tab10:AddToggle({
+    Name = "Anti Glitch",
+    Default = false,
+    Callback = function(state)
+        if state then
+            LocalPlayer.CharacterAdded:Connect(function(char)
+                local hrp = char:WaitForChild("HumanoidRootPart")
+                local humanoid = char:WaitForChild("Humanoid")
+                humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
+                    humanoid.Sit = false
+                end)
+                hrp:GetPropertyChangedSignal("Position"):Connect(function()
+                    if hrp.Position.Y < -10 then
+                        hrp.CFrame = CFrame.new(0,10,0)
+                    end
+                end)
+            end)
+            print("Anti Glitch ativado")
+        else
+            print("Anti Glitch desativado")
+        end
+    end
+})
