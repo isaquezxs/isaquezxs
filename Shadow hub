@@ -1,118 +1,14 @@
--- Tela de Carregamento Shadow hubBrookhaven - Estilizada
-local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Criando a ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FireHubLoading"
-screenGui.Parent = playerGui
-
--- Fundo da tela
-local background = Instance.new("Frame")
-background.Size = UDim2.new(1,0,1,0)
-background.Position = UDim2.new(0,0,0,0)
-background.BackgroundColor3 = Color3.fromRGB(20,20,20)
-background.BorderSizePixel = 0
-background.Parent = screenGui
-
--- Título SHADOW HUB
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,100)
-title.Position = UDim2.new(0,0,0.25,0)
-title.BackgroundTransparency = 1
-title.Text = "SHADOW SCRIPTS"
-title.Font = Enum.Font.GothamBlack
-title.TextSize = 60
-title.TextColor3 = Color3.fromRGB(255,85,0)
-title.Parent = background
-title.TextScaled = true
-
--- Barra de carregamento com fundo
-local barBackground = Instance.new("Frame")
-barBackground.Size = UDim2.new(0.6,0,0,30)
-barBackground.Position = UDim2.new(0.2,0,0.55,0)
-barBackground.BackgroundColor3 = Color3.fromRGB(50,50,50)
-barBackground.BorderSizePixel = 0
-barBackground.Parent = background
-
--- Barra de preenchimento
-local barFill = Instance.new("Frame")
-barFill.Size = UDim2.new(0,0,1,0)
-barFill.BackgroundColor3 = Color3.fromRGB(255,85,0)
-barFill.BorderSizePixel = 0
-barFill.Parent = barBackground
-
--- Gradiente na barra
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,85,0)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,180,0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,85,0))
-}
-gradient.Rotation = 45
-gradient.Parent = barFill
-
--- Texto de carregamento
-local loadingText = Instance.new("TextLabel")
-loadingText.Size = UDim2.new(1,0,0,30)
-loadingText.Position = UDim2.new(0,0,0.62,0)
-loadingText.BackgroundTransparency = 1
-loadingText.Text = "Carregando..."
-loadingText.Font = Enum.Font.Gotham
-loadingText.TextSize = 28
-loadingText.TextColor3 = Color3.fromRGB(255,255,255)
-loadingText.Parent = background
-
--- Função para animar a barra
-local function animateBar(duration)
-    local startTime = tick()
-    while tick() - startTime < duration do
-        local progress = (tick() - startTime) / duration
-        barFill.Size = UDim2.new(progress,0,1,0)
-        task.wait(0.03)
-    end
-    barFill.Size = UDim2.new(1,0,1,0)
-end
-
--- Função para piscar o texto
-spawn(function()
-    while screenGui.Parent do
-        loadingText.TextTransparency = 0.3
-        task.wait(0.5)
-        loadingText.TextTransparency = 0
-        task.wait(0.5)
-    end
-end)
-
--- Executa animação por 3 segundos
-animateBar(3)
-
--- Remove tela após carregar
-task.wait(0.5)
-screenGui:Destroy()
-
--- Serviços
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-local cam = workspace.CurrentCamera
 
 -- Carrega a biblioteca UI Redz APÓS a tela de loading
 local success, redzlib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
-end)
-
+    return loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 if not success then
     warn("Erro ao carregar a biblioteca UI")
     return
 end
 
-local Window = redzlib:MakeWindow({
-    Title = "Shadow Hub | Brookhaven 🏡",
-    SubTitle = "by isaquexz",
-    SaveFolder = "ShadowHubBrookhaven"
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
 })
 
 Window:AddMinimizeButton({
