@@ -1,24 +1,49 @@
-
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- Criar interface de usuário
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 300, 0, 400)
-Frame.Position = UDim2.new(0.5, -150, 0.5, -200)
-Frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+local function SetupGoPro()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hum = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+    local head = char:WaitForChild("Head")
 
-local function teleportToPlayer(targetPlayer)
-    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-    end
+    -- FIX: Impede que o corpo tente girar a cabeça e vice-versa (o que causa o bug de girar)
+    hum.AutoRotate = true 
+    hum.CameraOffset = Vector3.new(0, 0, 0)
+
+    -- CONFIGURAÇÃO DA CÂMARA
+    local FOV = 90
+    local OFFSET = CFrame.new(0, 0.3, -0.5) -- Um pouco acima e à frente para evitar bugs
+
+    RunService:BindToRenderStep("GoProEstavel", Enum.RenderPriority.Camera.Value + 1, function()
+        if char and head then
+            -- 1. Visibilidade Total (Braços e Pernas)
+            for _, part in pairs(char:GetChildren()) do
+                if part:IsA("BasePart") then
+                    if part.Name == "Head" then
+                        part.LocalTransparencyModifier = 1
+                    else
+                        part.LocalTransparencyModifier = 0
+                    end
+                elseif part:IsA("Accessory") then
+                    part:FindFirstChild("Handle").LocalTransparencyModifier = 1
+                end
+            end
+
+            -- 2. Suavização e Trava de Rotação
+            -- Usamos a posição da cabeça mas a rotação da HumanoidRootPart 
+            -- para a câmara não "tremer" com a animação do pescoço
+            local cameraRotation = Camera.CFrame.Rotation
+            local targetPos = head.Position + (root.CFrame.LookVector * 0.5)
+            
+            Camera.FieldOfView = FOV
+            Camera.CFrame = CFrame.new(head.Position) * cameraRotation * OFFSET
+        end
+    end)
 end
 
-local yOffset = 10
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        local btn = Instance.new("TextButton", Frame)
-        btn.Size = UDim2.new(1, -20, 0, 30)
-        btn.Position = UDim2.new(
-0
+-- Inicia o script
+SetupGoPro()
+LocalPlayer.CharacterAdded:Connect(SetupGoPro)
