@@ -1,0 +1,505 @@
+--[[
+    Calculadora Roblox
+    By: isaquexsz
+    Interface completa com botões numéricos e operadores
+]]
+
+-- ============================================================
+-- CRIA A INTERFACE
+-- ============================================================
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Remove calculadora antiga se existir
+local oldCalc = playerGui:FindFirstChild("Calculadora")
+if oldCalc then oldCalc:Destroy() end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Calculadora"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- ============================================================
+-- FRAME PRINCIPAL
+-- ============================================================
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -210)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = mainFrame
+
+-- Sombra
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(1, 15, 1, 15)
+shadow.Position = UDim2.new(0, -7, 0, -7)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.5
+shadow.ZIndex = mainFrame.ZIndex - 1
+shadow.Parent = mainFrame
+
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0, 15)
+shadowCorner.Parent = shadow
+
+-- ============================================================
+-- TÍTULO
+-- ============================================================
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.fromRGB(60, 0, 150)
+title.BackgroundTransparency = 0.4
+title.Text = "🧮 CALCULADORA"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 15)
+titleCorner.Parent = title
+
+-- ============================================================
+-- BOTÃO FECHAR
+-- ============================================================
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -38, 0, 3)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeBtn.BackgroundTransparency = 0.3
+closeBtn.BorderSizePixel = 0
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = mainFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(1, 0)
+closeCorner.Parent = closeBtn
+
+closeBtn.MouseEnter:Connect(function()
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+end)
+closeBtn.MouseLeave:Connect(function()
+    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- ============================================================
+-- DISPLAY (VISOR)
+-- ============================================================
+
+local displayFrame = Instance.new("Frame")
+displayFrame.Size = UDim2.new(0.9, 0, 0, 60)
+displayFrame.Position = UDim2.new(0.05, 0, 0, 42)
+displayFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+displayFrame.BackgroundTransparency = 0.3
+displayFrame.BorderSizePixel = 0
+displayFrame.Parent = mainFrame
+
+local displayCorner = Instance.new("UICorner")
+displayCorner.CornerRadius = UDim.new(0, 8)
+displayCorner.Parent = displayFrame
+
+local display = Instance.new("TextLabel")
+display.Size = UDim2.new(1, -10, 1, -5)
+display.Position = UDim2.new(0, 5, 0, 2)
+display.BackgroundTransparency = 1
+display.Text = "0"
+display.TextColor3 = Color3.fromRGB(255, 255, 255)
+display.TextSize = 30
+display.Font = Enum.Font.GothamBold
+display.TextXAlignment = Enum.TextXAlignment.Right
+display.TextYAlignment = Enum.TextYAlignment.Center
+display.Parent = displayFrame
+
+-- ============================================================
+-- VARIÁVEIS DA CALCULADORA
+-- ============================================================
+
+local currentNumber = ""
+local previousNumber = ""
+local operation = ""
+local resultDisplayed = false
+local isNewNumber = true
+
+-- ============================================================
+-- FUNÇÃO PARA ATUALIZAR O DISPLAY
+-- ============================================================
+
+local function UpdateDisplay(value)
+    if value == "" or value == nil then
+        display.Text = "0"
+    else
+        -- Formata o número para evitar muitos decimais
+        local num = tonumber(value)
+        if num then
+            if num % 1 == 0 then
+                display.Text = tostring(num)
+            else
+                display.Text = string.format("%.8f", num):gsub("0+$", ""):gsub("%.$", "")
+            end
+        else
+            display.Text = value
+        end
+    end
+end
+
+-- ============================================================
+-- FUNÇÃO PARA ADICIONAR NÚMERO
+-- ============================================================
+
+local function AddNumber(number)
+    if resultDisplayed then
+        currentNumber = ""
+        resultDisplayed = false
+    end
+    
+    if isNewNumber then
+        currentNumber = ""
+        isNewNumber = false
+    end
+    
+    -- Limita o tamanho do número
+    if string.len(currentNumber) >= 15 then return end
+    
+    currentNumber = currentNumber .. tostring(number)
+    UpdateDisplay(currentNumber)
+end
+
+-- ============================================================
+-- FUNÇÃO PARA ADICIONAR PONTO DECIMAL
+-- ============================================================
+
+local function AddDecimal()
+    if resultDisplayed then
+        currentNumber = "0"
+        resultDisplayed = false
+        isNewNumber = false
+    end
+    
+    if isNewNumber then
+        currentNumber = "0"
+        isNewNumber = false
+    end
+    
+    if not string.find(currentNumber, "%.") then
+        if currentNumber == "" then
+            currentNumber = "0."
+        else
+            currentNumber = currentNumber .. "."
+        end
+        UpdateDisplay(currentNumber)
+    end
+end
+
+-- ============================================================
+-- FUNÇÃO PARA ADICIONAR OPERADOR
+-- ============================================================
+
+local function AddOperator(op)
+    if currentNumber == "" and previousNumber == "" then
+        return
+    end
+    
+    if currentNumber == "" and previousNumber ~= "" then
+        operation = op
+        return
+    end
+    
+    if previousNumber ~= "" and currentNumber ~= "" then
+        Calculate()
+    end
+    
+    previousNumber = currentNumber
+    currentNumber = ""
+    operation = op
+    isNewNumber = true
+    resultDisplayed = false
+end
+
+-- ============================================================
+-- FUNÇÃO PARA CALCULAR
+-- ============================================================
+
+local function Calculate()
+    if previousNumber == "" or currentNumber == "" or operation == "" then
+        return
+    end
+    
+    local num1 = tonumber(previousNumber)
+    local num2 = tonumber(currentNumber)
+    
+    if num1 == nil or num2 == nil then
+        return
+    end
+    
+    local result = 0
+    
+    if operation == "+" then
+        result = num1 + num2
+    elseif operation == "-" then
+        result = num1 - num2
+    elseif operation == "×" then
+        result = num1 * num2
+    elseif operation == "÷" then
+        if num2 == 0 then
+            display.Text = "Erro: Div/0"
+            previousNumber = ""
+            currentNumber = ""
+            operation = ""
+            isNewNumber = true
+            resultDisplayed = true
+            return
+        end
+        result = num1 / num2
+    end
+    
+    -- Verifica se o resultado é inteiro
+    if result % 1 == 0 then
+        display.Text = tostring(result)
+    else
+        display.Text = string.format("%.8f", result):gsub("0+$", ""):gsub("%.$", "")
+    end
+    
+    currentNumber = tostring(result)
+    previousNumber = ""
+    operation = ""
+    isNewNumber = true
+    resultDisplayed = true
+end
+
+-- ============================================================
+-- FUNÇÃO PARA LIMPAR
+-- ============================================================
+
+local function Clear()
+    currentNumber = ""
+    previousNumber = ""
+    operation = ""
+    isNewNumber = true
+    resultDisplayed = false
+    display.Text = "0"
+end
+
+-- ============================================================
+-- FUNÇÃO PARA BACKSPACE
+-- ============================================================
+
+local function Backspace()
+    if resultDisplayed then
+        Clear()
+        return
+    end
+    
+    if currentNumber ~= "" then
+        currentNumber = currentNumber:sub(1, -2)
+        if currentNumber == "" then
+            display.Text = "0"
+        else
+            UpdateDisplay(currentNumber)
+        end
+    end
+end
+
+-- ============================================================
+-- FUNÇÃO PARA CRIAR BOTÕES
+-- ============================================================
+
+local function CreateButton(parent, text, yPos, xPos, width, height, callback, color)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(width or 0.22, 0, height or 0, 50)
+    btn.Position = UDim2.new(xPos or 0.02, 0, 0, yPos)
+    btn.BackgroundColor3 = color or Color3.fromRGB(50, 50, 80)
+    btn.BackgroundTransparency = 0.3
+    btn.BorderSizePixel = 0
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = parent
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = btn
+
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundTransparency = 0.1
+    end)
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundTransparency = 0.3
+    end)
+
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- ============================================================
+-- CRIA OS BOTÕES
+-- ============================================================
+
+local startY = 115
+local spacing = 55
+
+-- Primeira linha: 7, 8, 9, ÷
+CreateButton(mainFrame, "7", startY, 0.02, 0.22, 0, function() AddNumber(7) end)
+CreateButton(mainFrame, "8", startY, 0.27, 0.22, 0, function() AddNumber(8) end)
+CreateButton(mainFrame, "9", startY, 0.52, 0.22, 0, function() AddNumber(9) end)
+CreateButton(mainFrame, "÷", startY, 0.77, 0.22, 0, function() AddOperator("÷") end, Color3.fromRGB(150, 50, 50))
+
+-- Segunda linha: 4, 5, 6, ×
+local y2 = startY + spacing
+CreateButton(mainFrame, "4", y2, 0.02, 0.22, 0, function() AddNumber(4) end)
+CreateButton(mainFrame, "5", y2, 0.27, 0.22, 0, function() AddNumber(5) end)
+CreateButton(mainFrame, "6", y2, 0.52, 0.22, 0, function() AddNumber(6) end)
+CreateButton(mainFrame, "×", y2, 0.77, 0.22, 0, function() AddOperator("×") end, Color3.fromRGB(150, 50, 50))
+
+-- Terceira linha: 1, 2, 3, -
+local y3 = y2 + spacing
+CreateButton(mainFrame, "1", y3, 0.02, 0.22, 0, function() AddNumber(1) end)
+CreateButton(mainFrame, "2", y3, 0.27, 0.22, 0, function() AddNumber(2) end)
+CreateButton(mainFrame, "3", y3, 0.52, 0.22, 0, function() AddNumber(3) end)
+CreateButton(mainFrame, "-", y3, 0.77, 0.22, 0, function() AddOperator("-") end, Color3.fromRGB(150, 50, 50))
+
+-- Quarta linha: 0, ., =, +
+local y4 = y3 + spacing
+CreateButton(mainFrame, "0", y4, 0.02, 0.22, 0, function() AddNumber(0) end)
+CreateButton(mainFrame, ".", y4, 0.27, 0.22, 0, function() AddDecimal() end)
+CreateButton(mainFrame, "=", y4, 0.52, 0.22, 0, function() Calculate() end, Color3.fromRGB(0, 150, 0))
+CreateButton(mainFrame, "+", y4, 0.77, 0.22, 0, function() AddOperator("+") end, Color3.fromRGB(150, 50, 50))
+
+-- Quinta linha: C, ← (backspace)
+local y5 = y4 + spacing
+CreateButton(mainFrame, "C", y5, 0.02, 0.46, 0, function() Clear() end, Color3.fromRGB(200, 50, 0))
+CreateButton(mainFrame, "⌫", y5, 0.52, 0.47, 0, function() Backspace() end, Color3.fromRGB(50, 50, 150))
+
+-- ============================================================
+-- BOTÃO PARA REABRIR A CALCULADORA (FLUTUANTE)
+-- ============================================================
+
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(0, 45, 0, 45)
+openBtn.Position = UDim2.new(0.01, 0, 0.7, 0)
+openBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 150)
+openBtn.BackgroundTransparency = 0.2
+openBtn.BorderSizePixel = 0
+openBtn.Text = "🧮"
+openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+openBtn.TextScaled = true
+openBtn.Font = Enum.Font.GothamBold
+openBtn.Parent = screenGui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(1, 0)
+openCorner.Parent = openBtn
+
+-- Drag do botão flutuante
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+local UserInputService = game:GetService("UserInputService")
+
+openBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = openBtn.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+openBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        openBtn.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Abrir/Fechar calculadora
+local calcVisible = true
+
+openBtn.MouseButton1Click:Connect(function()
+    calcVisible = not calcVisible
+    mainFrame.Visible = calcVisible
+end)
+
+-- ============================================================
+-- TECLAS DE ATALHO DO TECLADO
+-- ============================================================
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    local key = input.KeyCode
+    
+    if key == Enum.KeyCode.One then AddNumber(1)
+    elseif key == Enum.KeyCode.Two then AddNumber(2)
+    elseif key == Enum.KeyCode.Three then AddNumber(3)
+    elseif key == Enum.KeyCode.Four then AddNumber(4)
+    elseif key == Enum.KeyCode.Five then AddNumber(5)
+    elseif key == Enum.KeyCode.Six then AddNumber(6)
+    elseif key == Enum.KeyCode.Seven then AddNumber(7)
+    elseif key == Enum.KeyCode.Eight then AddNumber(8)
+    elseif key == Enum.KeyCode.Nine then AddNumber(9)
+    elseif key == Enum.KeyCode.Zero then AddNumber(0)
+    elseif key == Enum.KeyCode.Period then AddDecimal()
+    elseif key == Enum.KeyCode.Plus then AddOperator("+")
+    elseif key == Enum.KeyCode.Minus then AddOperator("-")
+    elseif key == Enum.KeyCode.KeypadMultiply then AddOperator("×")
+    elseif key == Enum.KeyCode.KeypadDivide then AddOperator("÷")
+    elseif key == Enum.KeyCode.Equals or key == Enum.KeyCode.KeypadEnter then Calculate()
+    elseif key == Enum.KeyCode.Backspace then Backspace()
+    elseif key == Enum.KeyCode.Delete or key == Enum.KeyCode.C then Clear()
+    elseif key == Enum.KeyCode.KeypadMinus then AddOperator("-")
+    elseif key == Enum.KeyCode.KeypadPlus then AddOperator("+")
+    end
+end)
+
+-- ============================================================
+-- INICIALIZAÇÃO
+-- ============================================================
+
+print("========================================")
+print("🧮 CALCULADORA CARREGADA!")
+print("========================================")
+print("✅ Interface gráfica completa")
+print("✅ Botão flutuante 🧮 para abrir/fechar")
+print("✅ Atalhos do teclado:")
+print("   • Números: 0-9")
+print("   • Operadores: + - * /")
+print("   • = ou Enter para calcular")
+print("   • C ou Delete para limpar")
+print("   • Backspace para apagar")
+print("========================================")
