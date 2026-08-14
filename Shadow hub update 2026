@@ -1,7 +1,6 @@
 --[[
-    Shadow Hub - Versão Completa (Interface Manual)
+    Shadow Hub - Versão Completa (Volume Corrigido)
     By: isaquexsz
-    TODAS AS FUNÇÕES FUNCIONANDO
 ]]
 
 -- ============================================================
@@ -248,11 +247,10 @@ end
 
 local function CreateButton(text, yPos, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.Size = UDim2.new(0.9, 0, 0, 32)
     btn.Position = UDim2.new(0.05, 0, 0, yPos)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
     btn.BackgroundTransparency = 0.4
-    btn.BorderSizePixel = 0
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextScaled = true
@@ -276,7 +274,7 @@ end
 
 local function CreateToggle(text, yPos, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.9, 0, 0, 40)
+    frame.Size = UDim2.new(0.9, 0, 0, 32)
     frame.Position = UDim2.new(0.05, 0, 0, yPos)
     frame.BackgroundTransparency = 1
     frame.Parent = contentFrame
@@ -325,7 +323,7 @@ end
 
 local function CreateSlider(text, yPos, min, max, default, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.9, 0, 0, 50)
+    frame.Size = UDim2.new(0.9, 0, 0, 45)
     frame.Position = UDim2.new(0.05, 0, 0, yPos)
     frame.BackgroundTransparency = 1
     frame.Parent = contentFrame
@@ -432,7 +430,7 @@ local function CreateInput(text, yPos, callback)
     inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
     inputBox.TextScaled = true
     inputBox.Font = Enum.Font.Gotham
-    inputBox.PlaceholderText = "Digite o nome"
+    inputBox.PlaceholderText = "Digite o ID"
     inputBox.Parent = frame
 
     local inputCorner = Instance.new("UICorner")
@@ -534,7 +532,63 @@ local flingActive = false
 local bhActive = false
 local bhRadius = 10
 local bhConnection = nil
-local shaders = {}
+
+-- ============================================================
+-- VARIÁVEIS DE MÚSICA (VOLUME CORRIGIDO)
+-- ============================================================
+
+local musicId = ""
+local musicVolume = 5  -- Valor padrão 5 (equivale a 50% de volume)
+local isPlaying = false
+
+-- Cria objeto de som
+local musicPart = Instance.new("Part")
+musicPart.Name = "ShadowMusicPlayer"
+musicPart.Anchored = true
+musicPart.CanCollide = false
+musicPart.Transparency = 1
+musicPart.Size = Vector3.new(1, 1, 1)
+musicPart.Parent = Workspace
+
+local musicSound = Instance.new("Sound")
+musicSound.Name = "MusicSound"
+musicSound.Parent = musicPart
+musicSound.Volume = 0.5  -- Volume inicial 50%
+musicSound.Looped = false
+
+musicSound.Ended:Connect(function()
+    isPlaying = false
+end)
+
+local function PlayMusic(id)
+    if isPlaying then
+        pcall(function() musicSound:Stop() end)
+        isPlaying = false
+    end
+    if not id or id == "" then
+        Notify("Erro", "Digite um ID!")
+        return
+    end
+    local success = pcall(function()
+        musicSound.SoundId = "rbxassetid://" .. id
+        musicSound.Volume = musicVolume / 10  -- Converte o valor do slider para volume (0-1)
+        musicSound:Play()
+    end)
+    if success then
+        isPlaying = true
+        Notify("Música", "Tocando ID: " .. id)
+    else
+        Notify("Erro", "ID inválido!")
+    end
+end
+
+local function StopMusic()
+    if isPlaying then
+        pcall(function() musicSound:Stop() end)
+        isPlaying = false
+        Notify("Música", "Parada!")
+    end
+end
 
 -- ============================================================
 -- ABAS
@@ -552,12 +606,12 @@ local function ShowTab(tabName)
         end
     end
 
+    local y = 20
+
     -- ============================================================
-    -- TAB: CRÉDITOS
+    -- CRÉDITOS
     -- ============================================================
     if tabName == "Créditos" then
-        local y = 20
-
         local title = Instance.new("TextLabel")
         title.Size = UDim2.new(1, 0, 0, 50)
         title.Position = UDim2.new(0, 0, 0, y)
@@ -576,7 +630,7 @@ local function ShowTab(tabName)
         info.Size = UDim2.new(0.9, 0, 0, 120)
         info.Position = UDim2.new(0.05, 0, 0, y)
         info.BackgroundTransparency = 1
-        info.Text = "Criador: isaquexsz\nVersão: 2.1\nExecutor: KRNL/Synapse\nJogadores Online: " .. #Players:GetPlayers()
+        info.Text = "Criador: isaquexsz\nVersão: 2.2\nJogadores Online: " .. #Players:GetPlayers()
         info.TextColor3 = Color3.fromRGB(200, 200, 255)
         info.TextScaled = true
         info.TextXAlignment = Enum.TextXAlignment.Left
@@ -591,58 +645,17 @@ local function ShowTab(tabName)
     end
 
     -- ============================================================
-    -- TAB: ADMIN
+    -- ADMIN
     -- ============================================================
     if tabName == "Admin" then
-        local y = 20
-
         CreateSection("PAINEL ADMIN", y)
         y = y + 40
 
-        local dropdownFrame = Instance.new("Frame")
-        dropdownFrame.Size = UDim2.new(0.9, 0, 0, 45)
-        dropdownFrame.Position = UDim2.new(0.05, 0, 0, y)
-        dropdownFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-        dropdownFrame.BackgroundTransparency = 0.3
-        dropdownFrame.Parent = contentFrame
-
-        local dropdownCorner = Instance.new("UICorner")
-        dropdownCorner.CornerRadius = UDim.new(0, 8)
-        dropdownCorner.Parent = dropdownFrame
-
-        local dropdownLabel = Instance.new("TextLabel")
-        dropdownLabel.Size = UDim2.new(0.3, 0, 1, 0)
-        dropdownLabel.Position = UDim2.new(0.05, 0, 0, 0)
-        dropdownLabel.BackgroundTransparency = 1
-        dropdownLabel.Text = "Jogador:"
-        dropdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        dropdownLabel.TextScaled = true
-        dropdownLabel.Font = Enum.Font.Gotham
-        dropdownLabel.Parent = dropdownFrame
-
-        local dropdownBox = Instance.new("TextBox")
-        dropdownBox.Size = UDim2.new(0.6, 0, 0.8, 0)
-        dropdownBox.Position = UDim2.new(0.35, 0, 0.1, 0)
-        dropdownBox.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-        dropdownBox.Text = ""
-        dropdownBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-        dropdownBox.TextScaled = true
-        dropdownBox.Font = Enum.Font.Gotham
-        dropdownBox.PlaceholderText = "Digite o nome"
-        dropdownBox.Parent = dropdownFrame
-
-        local dropdownCorner2 = Instance.new("UICorner")
-        dropdownCorner2.CornerRadius = UDim.new(0, 4)
-        dropdownCorner2.Parent = dropdownBox
-
-        dropdownBox.FocusLost:Connect(function(enter)
-            if enter then
-                selectedPlayer = dropdownBox.Text
-                Notify("Selecionado", selectedPlayer)
-            end
+        local inputFrame, inputBox = CreateInput("Jogador:", y, function(value)
+            selectedPlayer = value
+            Notify("Selecionado", value)
         end)
-
-        y = y + 55
+        y = y + 45
 
         CreateToggle("Visualizar Jogador", y, function(state)
             if state then
@@ -666,58 +679,17 @@ local function ShowTab(tabName)
     end
 
     -- ============================================================
-    -- TAB: TROLL
+    -- TROLL
     -- ============================================================
     if tabName == "Troll" then
-        local y = 20
-
         CreateSection("TROLL", y)
         y = y + 40
 
-        local dropdownFrame = Instance.new("Frame")
-        dropdownFrame.Size = UDim2.new(0.9, 0, 0, 45)
-        dropdownFrame.Position = UDim2.new(0.05, 0, 0, y)
-        dropdownFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-        dropdownFrame.BackgroundTransparency = 0.3
-        dropdownFrame.Parent = contentFrame
-
-        local dropdownCorner = Instance.new("UICorner")
-        dropdownCorner.CornerRadius = UDim.new(0, 8)
-        dropdownCorner.Parent = dropdownFrame
-
-        local dropdownLabel = Instance.new("TextLabel")
-        dropdownLabel.Size = UDim2.new(0.3, 0, 1, 0)
-        dropdownLabel.Position = UDim2.new(0.05, 0, 0, 0)
-        dropdownLabel.BackgroundTransparency = 1
-        dropdownLabel.Text = "Alvo:"
-        dropdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        dropdownLabel.TextScaled = true
-        dropdownLabel.Font = Enum.Font.Gotham
-        dropdownLabel.Parent = dropdownFrame
-
-        local dropdownBox = Instance.new("TextBox")
-        dropdownBox.Size = UDim2.new(0.6, 0, 0.8, 0)
-        dropdownBox.Position = UDim2.new(0.35, 0, 0.1, 0)
-        dropdownBox.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-        dropdownBox.Text = ""
-        dropdownBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-        dropdownBox.TextScaled = true
-        dropdownBox.Font = Enum.Font.Gotham
-        dropdownBox.PlaceholderText = "Digite o nome"
-        dropdownBox.Parent = dropdownFrame
-
-        local dropdownCorner2 = Instance.new("UICorner")
-        dropdownCorner2.CornerRadius = UDim.new(0, 4)
-        dropdownCorner2.Parent = dropdownBox
-
-        dropdownBox.FocusLost:Connect(function(enter)
-            if enter then
-                targetPlayer = dropdownBox.Text
-                Notify("Alvo", targetPlayer)
-            end
+        local inputFrame, inputBox = CreateInput("Alvo:", y, function(value)
+            targetPlayer = value
+            Notify("Alvo", value)
         end)
-
-        y = y + 55
+        y = y + 45
 
         CreateButton("Teleportar", y, function()
             if not targetPlayer then
@@ -734,7 +706,7 @@ local function ShowTab(tabName)
                 end
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateToggle("Auto Fling", y, function(state)
             flingActive = state
@@ -770,11 +742,9 @@ local function ShowTab(tabName)
     end
 
     -- ============================================================
-    -- TAB: SCRIPTS TROLLS
+    -- SCRIPTS
     -- ============================================================
     if tabName == "Scripts" then
-        local y = 20
-
         CreateSection("INVISIBILIDADE", y)
         y = y + 40
 
@@ -789,7 +759,7 @@ local function ShowTab(tabName)
                 Notify("Invisível", "Ativado!")
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateButton("👀 Voltar ao Normal", y, function()
             local char = LocalPlayer.Character
@@ -802,7 +772,7 @@ local function ShowTab(tabName)
                 Notify("Normal", "Restaurado!")
             end
         end)
-        y = y + 60
+        y = y + 42
 
         CreateSection("BLACK HOLE", y)
         y = y + 40
@@ -852,7 +822,7 @@ local function ShowTab(tabName)
                 Notify("Black Hole", "Desativado!")
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateSlider("Raio do BH", y, 1, 50, 10, function(value)
             bhRadius = value
@@ -860,11 +830,9 @@ local function ShowTab(tabName)
     end
 
     -- ============================================================
-    -- TAB: HOUSE
+    -- HOUSE
     -- ============================================================
     if tabName == "House" then
-        local y = 20
-
         CreateSection("HOUSE", y)
         y = y + 40
 
@@ -884,11 +852,9 @@ local function ShowTab(tabName)
     end
 
     -- ============================================================
-    -- TAB: SHADERS
+    -- SHADERS
     -- ============================================================
     if tabName == "Shaders" then
-        local y = 20
-
         CreateSection("SHADERS", y)
         y = y + 40
 
@@ -908,15 +874,13 @@ local function ShowTab(tabName)
                 if old then old:Destroy() end
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateSlider("Intensidade Bloom", y, 0.1, 5, 1.5, function(value)
             local bloom = Lighting:FindFirstChild("SH_Bloom")
-            if bloom then
-                bloom.Intensity = value
-            end
+            if bloom then bloom.Intensity = value end
         end)
-        y = y + 60
+        y = y + 50
 
         CreateToggle("🎨 Color Correction", y, function(state)
             shaderStates.Color = state
@@ -932,15 +896,13 @@ local function ShowTab(tabName)
                 if old then old:Destroy() end
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateSlider("Saturação", y, 0, 2, 0.8, function(value)
             local cc = Lighting:FindFirstChild("SH_Color")
-            if cc then
-                cc.Saturation = value
-            end
+            if cc then cc.Saturation = value end
         end)
-        y = y + 60
+        y = y + 50
 
         CreateToggle("☀️ Sun Rays", y, function(state)
             shaderStates.Sun = state
@@ -955,7 +917,7 @@ local function ShowTab(tabName)
                 if old then old:Destroy() end
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateToggle("🌀 Blur", y, function(state)
             shaderStates.Blur = state
@@ -969,15 +931,13 @@ local function ShowTab(tabName)
                 if old then old:Destroy() end
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateSlider("Intensidade Blur", y, 1, 10, 3, function(value)
             local blur = Lighting:FindFirstChild("SH_Blur")
-            if blur then
-                blur.Size = value
-            end
+            if blur then blur.Size = value end
         end)
-        y = y + 60
+        y = y + 50
 
         CreateButton("❌ Remover Todos", y, function()
             for _, child in pairs(Lighting:GetChildren()) do
@@ -991,101 +951,47 @@ local function ShowTab(tabName)
     end
 
     -- ============================================================
-    -- TAB: MÚSICA
+    -- MÚSICA (VOLUME CORRIGIDO)
     -- ============================================================
     if tabName == "Música" then
-        local y = 20
-
-        CreateSection("🎵 MÚSICA PESSOAL", y)
+        CreateSection("🎵 MÚSICA VISUAL", y)
         y = y + 40
 
-        local musicId = ""
-        local musicVolume = 0.5
-        local currentSound = nil
-        local isPlaying = false
-
-        -- Cria objeto de som
-        local musicPart = Instance.new("Part")
-        musicPart.Name = "ShadowMusicPlayer"
-        musicPart.Anchored = true
-        musicPart.CanCollide = false
-        musicPart.Transparency = 1
-        musicPart.Size = Vector3.new(1, 1, 1)
-        musicPart.Parent = Workspace
-
-        local musicSound = Instance.new("Sound")
-        musicSound.Name = "MusicSound"
-        musicSound.Parent = musicPart
-        musicSound.Volume = 0.5
-        musicSound.Looped = false
-
-        local function PlayMusic(id)
-            if isPlaying then
-                pcall(function()
-                    musicSound:Stop()
-                end)
-                isPlaying = false
-            end
-
-            if not id or id == "" then
-                Notify("Erro", "Digite um ID!")
-                return
-            end
-
-            local success = pcall(function()
-                musicSound.SoundId = "rbxassetid://" .. id
-                musicSound.Volume = musicVolume
-                musicSound:Play()
-            end)
-
-            if success then
-                isPlaying = true
-                Notify("Música", "Tocando ID: " .. id)
-            else
-                Notify("Erro", "ID inválido!")
-            end
-        end
-
-        local function StopMusic()
-            if isPlaying then
-                pcall(function()
-                    musicSound:Stop()
-                end)
-                isPlaying = false
-                Notify("Música", "Parada!")
-            end
-        end
-
-        -- Input ID
         local inputFrame, inputBox = CreateInput("ID da Música:", y, function(value)
             musicId = value
+            print("[Música] ID salvo:", value)
         end)
         y = y + 45
 
         CreateButton("▶️ Tocar Música", y, function()
+            print("[Música] Tentando tocar ID:", musicId)
             if musicId and musicId ~= "" then
                 PlayMusic(musicId)
             else
-                Notify("Erro", "Digite um ID!")
+                Notify("Erro", "Digite um ID primeiro!")
             end
         end)
-        y = y + 50
+        y = y + 42
 
         CreateButton("⏹️ Parar Música", y, function()
             StopMusic()
         end)
-        y = y + 50
+        y = y + 42
 
-        CreateSlider("🔊 Volume", y, 0, 10, 5, function(value)
-            musicVolume = value / 10
+        -- ============================================================
+        -- SLIDER DE VOLUME CORRIGIDO (0 a 10, com valor máximo 10 = 100%)
+        -- ============================================================
+        CreateSlider("🔊 Volume", y, 0, 100, 5, function(value)
+            musicVolume = value  -- Salva o valor (0 a 10)
             pcall(function()
-                musicSound.Volume = musicVolume
+                -- Converte para volume do Roblox (0 a 1)
+                musicSound.Volume = value / 10
+                print("[Volume] Atualizado para:", value / 10 * 100, "%")
             end)
         end)
-        y = y + 60
+        y = y + 50
 
-        -- Músicas Pré-definidas
-        CreateSection("MÚSICAS PRÉ-DEFINIDAS", y)
+        CreateSection("🎵 MÚSICAS PRÉ-DEFINIDAS", y)
         y = y + 40
 
         local presets = {
@@ -1095,8 +1001,7 @@ local function ShowTab(tabName)
             {"🎵 pent", "136923848139722"},
             {"🎵 eufaleiqiapassadrax", "98384396691270"},
             {"🎵 toma tapa", "128589691105865"},
-            {"🎵 uma botadinha", "
-84624301411909"},
+            {"🎵 uma botadinha", "84624301411909"},
             {"🎵 do nada ela brota", "130806788012841"},
             {"🎵 baile da colombia", "110023885558332"},
             {"🎵 Attack on Titan Theme", "2837721845"}
@@ -1104,18 +1009,21 @@ local function ShowTab(tabName)
 
         for _, music in ipairs(presets) do
             CreateButton(music[1], y, function()
+                print("[Música] Tocando:", music[1])
+                if inputBox then
+                    inputBox.Text = music[2]
+                end
+                musicId = music[2]
                 PlayMusic(music[2])
             end)
-            y = y + 45
+            y = y + 42
         end
     end
 
     -- ============================================================
-    -- TAB: ANTI-BAN
+    -- ANTI-BAN
     -- ============================================================
     if tabName == "Anti-Ban" then
-        local y = 20
-
         CreateSection("🛡️ ANTI-BAN", y)
         y = y + 50
 
@@ -1125,10 +1033,8 @@ local function ShowTab(tabName)
         local function StartAntiBan()
             if antiBanActive then return end
             antiBanActive = true
-
             Notify("Anti-Ban", "Ativado!")
 
-            -- Bloqueia queda
             local function BlockFall()
                 local char = LocalPlayer.Character
                 if not char then return end
@@ -1140,7 +1046,6 @@ local function ShowTab(tabName)
                 if root.AssemblyLinearVelocity.Y < -20 then
                     root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z)
                 end
-
                 pcall(function()
                     hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
                     hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
@@ -1150,7 +1055,6 @@ local function ShowTab(tabName)
             local conn = RunService.Heartbeat:Connect(BlockFall)
             table.insert(antiBanConnections, conn)
 
-            -- Anti-AFK
             local afkTimer = 0
             local afkConn = RunService.Heartbeat:Connect(function()
                 afkTimer = afkTimer + 1
@@ -1172,12 +1076,10 @@ local function ShowTab(tabName)
         local function StopAntiBan()
             if not antiBanActive then return end
             antiBanActive = false
-
             for _, conn in ipairs(antiBanConnections) do
                 pcall(function() conn:Disconnect() end)
             end
             antiBanConnections = {}
-
             Notify("Anti-Ban", "Desativado!")
         end
 
@@ -1188,10 +1090,10 @@ local function ShowTab(tabName)
                 StopAntiBan()
             end
         end)
-        y = y + 60
+        y = y + 50
 
         local info = Instance.new("TextLabel")
-        info.Size = UDim2.new(0.9, 0, 0, 120)
+        info.Size = UDim2.new(0.9, 0, 0, 100)
         info.Position = UDim2.new(0.05, 0, 0, y)
         info.BackgroundTransparency = 1
         info.Text = "🛡️ Proteção contra:\n• Quedas e Ragdoll\n• Kick por inatividade\n• Detecção de exploração"
@@ -1226,18 +1128,8 @@ end
 ShowTab("Créditos")
 
 print("========================================")
-print("⚡ SHADOW HUB v2.1 COMPLETO ⚡")
+print("⚡ SHADOW HUB v2.2 (VOLUME CORRIGIDO) ⚡")
 print("========================================")
-print("✅ 8 Abas funcionando:")
-print("   • Créditos")
-print("   • Admin (Visualizar)")
-print("   • Troll (Teleport, Auto Fling)")
-print("   • Scripts (Invisibilidade, Black Hole)")
-print("   • House (Remover Ban)")
-print("   • Shaders (Bloom, Color, Sun, Blur)")
-print("   • Música (ID e Presets)")
-print("   • Anti-Ban (Proteção)")
-print("========================================")
-print("🎯 Clique no ⚡ para abrir/fechar")
-print("🎯 Tecla INSERT para abrir/fechar")
+print("✅ Volume máximo = 100%")
+print("✅ 8 Abas funcionando")
 print("========================================")
