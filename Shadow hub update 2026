@@ -1089,15 +1089,16 @@ local function ShowTab(tabName)
         y = y + 40
 
         local presets = {
-            {"🎵 arrepia xl3", "83331623293224"},
-            {"🎵 e so mlk bom", "93146696739126"},
-            {"🎵 Gorillaz - Feel Good Inc", "7140368350"},
-            {"🎵 The Weeknd - Blinding Lights", "6687605091"},
-            {"🎵 Daft Punk - Get Lucky", "27697743"},
-            {"🎵 Minecraft Sweden", "7456309211"},
-            {"🎵 Rick Astley - Never Gonna Give You Up", "27697259"},
-            {"🎵 Among Us Drip", "7114743921"},
-            {"🎵 Tokyo Ghoul Unravel", "2837726272"},
+            {"🎵 AUTOMOTIVO AGUÇADO", "108514034335295"},
+            {"🎵 So Parasita X", "130629170421888"},
+            {"🎵 tarad", "100723668752455"},
+            {"🎵 pent", "136923848139722"},
+            {"🎵 eufaleiqiapassadrax", "98384396691270"},
+            {"🎵 toma tapa", "128589691105865"},
+            {"🎵 uma botadinha", "
+84624301411909"},
+            {"🎵 do nada ela brota", "130806788012841"},
+            {"🎵 baile da colombia", "110023885558332"},
             {"🎵 Attack on Titan Theme", "2837721845"}
         }
 
