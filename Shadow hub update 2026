@@ -1,5 +1,5 @@
 --// SHADOW LIFE
---// UI HUB - versÃ£o visual
+--// UI HUB - versão visual (Tecla F para abrir/fechar)
 --// Criadores: dogge2870 | isaki123123
 
 local Players = game:GetService("Players")
@@ -20,28 +20,24 @@ local Themes = {
         Hover = Color3.fromRGB(24, 24, 32),
         Accent = Color3.fromRGB(120, 120, 130)
     },
-
     ["Azul escuro"] = {
         Background = Color3.fromRGB(5, 10, 20),
         Panel = Color3.fromRGB(10, 20, 36),
         Hover = Color3.fromRGB(20, 40, 68),
         Accent = Color3.fromRGB(65, 155, 255)
     },
-
     ["Verde"] = {
         Background = Color3.fromRGB(4, 12, 8),
         Panel = Color3.fromRGB(8, 23, 15),
         Hover = Color3.fromRGB(16, 45, 29),
         Accent = Color3.fromRGB(55, 220, 125)
     },
-
     ["Amarelo"] = {
         Background = Color3.fromRGB(13, 11, 4),
         Panel = Color3.fromRGB(26, 22, 8),
         Hover = Color3.fromRGB(50, 42, 14),
         Accent = Color3.fromRGB(255, 205, 55)
     },
-
     ["Branco"] = {
         Background = Color3.fromRGB(205, 210, 220),
         Panel = Color3.fromRGB(235, 238, 244),
@@ -58,32 +54,23 @@ local Theme = Themes[CurrentTheme]
 --==================================================
 
 local old = nil
-
 pcall(function()
     old = game:GetService("CoreGui"):FindFirstChild("ShadowLife")
 end)
-
-if old then
-    old:Destroy()
-end
+if old then old:Destroy() end
 
 pcall(function()
     old = LocalPlayer.PlayerGui:FindFirstChild("ShadowLife")
 end)
-
-if old then
-    old:Destroy()
-end
+if old then old:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ShadowLife"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
-
 pcall(function()
     ScreenGui.Parent = game:GetService("CoreGui")
 end)
-
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
@@ -107,11 +94,7 @@ local function Stroke(Object, Color, Transparency)
 end
 
 local function Tween(Object, Properties, Time)
-    return TweenService:Create(
-        Object,
-        TweenInfo.new(Time or .15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        Properties
-    )
+    return TweenService:Create(Object, TweenInfo.new(Time or .15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), Properties)
 end
 
 --==================================================
@@ -152,7 +135,7 @@ local Subtitle = Instance.new("TextLabel")
 Subtitle.Size = UDim2.new(0, 500, 0, 20)
 Subtitle.Position = UDim2.new(0, 26, 0, 42)
 Subtitle.BackgroundTransparency = 1
-Subtitle.Text = "VISUAL HUB  â€¢  1.0.0"
+Subtitle.Text = "VISUAL HUB  •  [F] para abrir/fechar"
 Subtitle.TextColor3 = Color3.fromRGB(140, 160, 190)
 Subtitle.Font = Enum.Font.Gotham
 Subtitle.TextSize = 11
@@ -164,13 +147,12 @@ Close.Size = UDim2.new(0, 38, 0, 38)
 Close.Position = UDim2.new(1, -52, 0, 16)
 Close.BackgroundColor3 = Theme.Panel
 Close.BorderSizePixel = 0
-Close.Text = "Ã—"
+Close.Text = "✕"
 Close.TextColor3 = Color3.fromRGB(235, 240, 250)
 Close.TextSize = 25
 Close.Font = Enum.Font.Gotham
 Close.AutoButtonColor = false
 Close.Parent = Top
-
 Corner(Close, 10)
 
 --==================================================
@@ -183,7 +165,6 @@ Sidebar.Position = UDim2.new(0, 12, 0, 74)
 Sidebar.BackgroundColor3 = Theme.Panel
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = Window
-
 Corner(Sidebar, 14)
 
 local PageArea = Instance.new("ScrollingFrame")
@@ -201,8 +182,7 @@ PageLayout.Padding = UDim.new(0, 9)
 PageLayout.Parent = PageArea
 
 PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    PageArea.CanvasSize =
-        UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 20)
+    PageArea.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 20)
 end)
 
 --==================================================
@@ -210,25 +190,19 @@ end)
 --==================================================
 
 local function ClearPage()
-
     for _, Object in ipairs(PageArea:GetChildren()) do
-
         if Object:IsA("GuiObject") then
             Object:Destroy()
         end
-
     end
-
 end
 
 local function Header(Text, Description)
-
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(1, -2, 0, Description and 64 or 52)
     Frame.BackgroundColor3 = Theme.Panel
     Frame.BorderSizePixel = 0
     Frame.Parent = PageArea
-
     Corner(Frame, 11)
 
     local Bar = Instance.new("Frame")
@@ -237,7 +211,6 @@ local function Header(Text, Description)
     Bar.BackgroundColor3 = Theme.Accent
     Bar.BorderSizePixel = 0
     Bar.Parent = Frame
-
     Corner(Bar, 4)
 
     local TextLabel = Instance.new("TextLabel")
@@ -252,7 +225,6 @@ local function Header(Text, Description)
     TextLabel.Parent = Frame
 
     if Description then
-
         local Desc = Instance.new("TextLabel")
         Desc.Size = UDim2.new(1, -45, 0, 20)
         Desc.Position = UDim2.new(0, 30, 0, 36)
@@ -263,13 +235,10 @@ local function Header(Text, Description)
         Desc.TextSize = 12
         Desc.TextXAlignment = Enum.TextXAlignment.Left
         Desc.Parent = Frame
-
     end
-
 end
 
 local function Button(Text, Description, Callback)
-
     local B = Instance.new("TextButton")
     B.Size = UDim2.new(1, -2, 0, Description and 64 or 52)
     B.BackgroundColor3 = Theme.Panel
@@ -277,7 +246,6 @@ local function Button(Text, Description, Callback)
     B.Text = ""
     B.AutoButtonColor = false
     B.Parent = PageArea
-
     Corner(B, 11)
     Stroke(B, Color3.fromRGB(40, 75, 120), .3)
 
@@ -293,7 +261,6 @@ local function Button(Text, Description, Callback)
     T.Parent = B
 
     if Description then
-
         local D = Instance.new("TextLabel")
         D.Size = UDim2.new(1, -75, 0, 20)
         D.Position = UDim2.new(0, 20, 0, 35)
@@ -304,45 +271,33 @@ local function Button(Text, Description, Callback)
         D.TextSize = 12
         D.TextXAlignment = Enum.TextXAlignment.Left
         D.Parent = B
-
     end
 
     local Arrow = Instance.new("TextLabel")
     Arrow.Size = UDim2.new(0, 30, 0, 40)
     Arrow.Position = UDim2.new(1, -45, .5, -20)
     Arrow.BackgroundTransparency = 1
-    Arrow.Text = "â€º"
+    Arrow.Text = "›"
     Arrow.TextColor3 = Theme.Accent
     Arrow.Font = Enum.Font.Gotham
     Arrow.TextSize = 29
     Arrow.Parent = B
 
     B.MouseEnter:Connect(function()
-        Tween(B, {
-            BackgroundColor3 = Theme.Hover
-        }, .12):Play()
+        Tween(B, { BackgroundColor3 = Theme.Hover }, .12):Play()
     end)
-
     B.MouseLeave:Connect(function()
-        Tween(B, {
-            BackgroundColor3 = Theme.Panel
-        }, .12):Play()
+        Tween(B, { BackgroundColor3 = Theme.Panel }, .12):Play()
     end)
 
     B.MouseButton1Click:Connect(function()
-
-        if Callback then
-            Callback()
-        end
-
+        if Callback then Callback() end
     end)
 
     return B
-
 end
 
-local function Toggle(Text, Default)
-
+local function Toggle(Text, Default, Callback)
     local B = Instance.new("TextButton")
     B.Size = UDim2.new(1, -2, 0, 52)
     B.BackgroundColor3 = Theme.Panel
@@ -350,7 +305,6 @@ local function Toggle(Text, Default)
     B.Text = ""
     B.AutoButtonColor = false
     B.Parent = PageArea
-
     Corner(B, 11)
 
     local Label = Instance.new("TextLabel")
@@ -370,7 +324,6 @@ local function Toggle(Text, Default)
     Track.BackgroundColor3 = Color3.fromRGB(32, 52, 82)
     Track.BorderSizePixel = 0
     Track.Parent = B
-
     Corner(Track, 17)
 
     local Knob = Instance.new("Frame")
@@ -379,56 +332,36 @@ local function Toggle(Text, Default)
     Knob.BackgroundColor3 = Color3.fromRGB(235, 238, 243)
     Knob.BorderSizePixel = 0
     Knob.Parent = Track
-
     Corner(Knob, 13)
 
     local State = Default == true
 
     local function Render()
-
         if State then
-
-            Tween(Track, {
-                BackgroundColor3 = Theme.Accent
-            }):Play()
-
-            Tween(Knob, {
-                Position = UDim2.new(0, 40, 0, 4)
-            }):Play()
-
+            Tween(Track, { BackgroundColor3 = Theme.Accent }):Play()
+            Tween(Knob, { Position = UDim2.new(0, 40, 0, 4) }):Play()
         else
-
-            Tween(Track, {
-                BackgroundColor3 = Color3.fromRGB(32, 52, 82)
-            }):Play()
-
-            Tween(Knob, {
-                Position = UDim2.new(0, 5, 0, 4)
-            }):Play()
-
+            Tween(Track, { BackgroundColor3 = Color3.fromRGB(32, 52, 82) }):Play()
+            Tween(Knob, { Position = UDim2.new(0, 5, 0, 4) }):Play()
         end
-
     end
-
     Render()
 
     B.MouseButton1Click:Connect(function()
-
         State = not State
         Render()
-
+        if Callback then Callback(State) end
     end)
 
+    return B
 end
 
 local function Input(Text, Placeholder)
-
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(1, -2, 0, 64)
     Frame.BackgroundColor3 = Theme.Panel
     Frame.BorderSizePixel = 0
     Frame.Parent = PageArea
-
     Corner(Frame, 11)
 
     local Label = Instance.new("TextLabel")
@@ -455,11 +388,9 @@ local function Input(Text, Placeholder)
     Box.TextSize = 15
     Box.ClearTextOnFocus = false
     Box.Parent = Frame
-
     Corner(Box, 9)
 
     return Box
-
 end
 
 --==================================================
@@ -467,7 +398,6 @@ end
 --==================================================
 
 local function PlayerPopup(Callback)
-
     local Popup = Instance.new("Frame")
     Popup.Size = UDim2.new(0, 390, 0, 410)
     Popup.Position = UDim2.new(.5, -195, .5, -205)
@@ -475,7 +405,6 @@ local function PlayerPopup(Callback)
     Popup.BorderSizePixel = 0
     Popup.ZIndex = 50
     Popup.Parent = ScreenGui
-
     Corner(Popup, 14)
     Stroke(Popup, Theme.Accent, .25)
 
@@ -496,12 +425,11 @@ local function PlayerPopup(Callback)
     X.Position = UDim2.new(1, -44, 0, 10)
     X.BackgroundColor3 = Theme.Panel
     X.BorderSizePixel = 0
-    X.Text = "Ã—"
+    X.Text = "✕"
     X.TextColor3 = Color3.fromRGB(235, 240, 250)
     X.TextSize = 20
     X.ZIndex = 51
     X.Parent = Popup
-
     Corner(X, 8)
 
     X.MouseButton1Click:Connect(function()
@@ -522,7 +450,6 @@ local function PlayerPopup(Callback)
     Layout.Parent = List
 
     for _, Player in ipairs(Players:GetPlayers()) do
-
         local P = Instance.new("TextButton")
         P.Size = UDim2.new(1, -5, 0, 44)
         P.BackgroundColor3 = Theme.Panel
@@ -534,22 +461,77 @@ local function PlayerPopup(Callback)
         P.TextXAlignment = Enum.TextXAlignment.Left
         P.ZIndex = 52
         P.Parent = List
-
         Corner(P, 9)
 
         P.MouseButton1Click:Connect(function()
-
-            if Callback then
-                Callback(Player)
-            end
-
+            if Callback then Callback(Player) end
             Popup:Destroy()
-
         end)
-
     end
-
 end
+
+--==================================================
+-- ESP FUNCIONANDO
+--==================================================
+
+local ESP_Enabled = false
+
+local function ApplyESP(state)
+    ESP_Enabled = state
+    
+    -- Limpar todos os highlights existentes
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            pcall(function()
+                local char = player.Character
+                if char then
+                    local highlight = char:FindFirstChild("ESP_Highlight")
+                    if highlight then
+                        highlight:Destroy()
+                    end
+                end
+            end)
+        end
+    end
+    
+    if not state then return end
+    
+    -- Criar highlights para jogadores atuais
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            pcall(function()
+                local char = player.Character
+                if char then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "ESP_Highlight"
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.FillTransparency = 0.6
+                    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineTransparency = 0
+                    highlight.Parent = char
+                end
+            end)
+        end
+    end
+end
+
+-- Monitorar novos jogadores
+Players.PlayerAdded:Connect(function(player)
+    if ESP_Enabled then
+        player.CharacterAdded:Connect(function(char)
+            task.wait(0.5)
+            pcall(function()
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "ESP_Highlight"
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                highlight.FillTransparency = 0.6
+                highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                highlight.OutlineTransparency = 0
+                highlight.Parent = char
+            end)
+        end)
+    end
+end)
 
 --==================================================
 -- PAGES
@@ -558,319 +540,172 @@ end
 local Pages = {}
 
 Pages.Credits = function()
-
-    Header("CrÃ©ditos", "Shadow Life")
-
-    Button("Criadores", "dogge2870  â€¢  isaki123123")
-
+    Header("Créditos", "Shadow Life")
+    Button("Criadores", "dogge2870  •  isaki123123")
     Button("Executor", "Shadow Life Visual Hub")
-
     Button("Discord", "Comunidade Shadow Life")
-
-    Button("discord.gg/Dx6YPdj4v",
-        "Link do servidor")
-
-    Button("VersÃ£o", "1.0.0")
-
+    Button("discord.gg/Dx6YPdj4v", "Link do servidor")
+    Button("Versão", "1.0.0")
 end
 
 Pages.Jogador = function()
-
-    Header("Jogador", "ConfiguraÃ§Ãµes do personagem")
-
+    Header("Jogador", "Configurações do personagem")
     Input("Speed Player", "Ex.: 100")
-
     Input("JumpPower", "Ex.: 50")
-
     Input("Gravity", "Ex.: 196.2")
-
     Toggle("Infinite Jump", false)
-
     Input("FOV", "Ex.: 90")
-
 end
 
 Pages.Jogadores = function()
-
     Header("Jogadores", "Selecione um jogador")
-
-    Button("Selecionar Jogador",
-        "Clique para abrir a lista",
-        function()
-
-            PlayerPopup(function(Player)
-
-                print("Selecionado:", Player.Name)
-
-            end)
-
-        end
-    )
-
-    Button("Atualizar Lista",
-        "Atualizar jogadores disponÃ­veis")
-
-    Toggle("ESP", false)
-
+    Button("Selecionar Jogador", "Clique para abrir a lista", function()
+        PlayerPopup(function(Player)
+            print("Selecionado:", Player.Name)
+        end)
+    end)
+    Button("Atualizar Lista", "Atualizar jogadores disponíveis")
+    Toggle("ESP", false, function(state)
+        ApplyESP(state)
+    end)
     Toggle("Nomes", false)
-
-    Toggle("DistÃ¢ncia", false)
-
+    Toggle("Distância", false)
     Toggle("Barra de Vida", false)
-
     Toggle("Visualizar Jogador", false)
-
 end
 
 Pages.Avatar = function()
-
     Header("Avatar", "Escolha um jogador")
-
-    Button("Selecionar Jogador",
-        "Abrir lista de jogadores",
-        function()
-
-            PlayerPopup(function(Player)
-
-                print("Avatar selecionado:", Player.Name)
-
-            end)
-
-        end
-    )
-
-    Button("Copiar Avatar",
-        "Interface preparada para implementaÃ§Ã£o no seu prÃ³prio jogo")
-
+    Button("Selecionar Jogador", "Abrir lista de jogadores", function()
+        PlayerPopup(function(Player)
+            print("Avatar selecionado:", Player.Name)
+        end)
+    end)
+    Button("Copiar Avatar", "Interface preparada para implementação no seu próprio jogo")
 end
 
 Pages.House = function()
+    Header("House", "Casas disponíveis")
+    Button("Escolher Casa", "Abrir lista de casas", function()
+        local Popup = Instance.new("Frame")
+        Popup.Size = UDim2.new(0, 400, 0, 420)
+        Popup.Position = UDim2.new(.5, -200, .5, -210)
+        Popup.BackgroundColor3 = Theme.Background
+        Popup.BorderSizePixel = 0
+        Popup.ZIndex = 50
+        Popup.Parent = ScreenGui
+        Corner(Popup, 14)
+        Stroke(Popup, Theme.Accent, .25)
 
-    Header("House", "Casas disponÃ­veis")
+        local T = Instance.new("TextLabel")
+        T.Size = UDim2.new(1, -60, 0, 35)
+        T.Position = UDim2.new(0, 18, 0, 10)
+        T.BackgroundTransparency = 1
+        T.Text = "Casas"
+        T.TextColor3 = Color3.fromRGB(230,236,248)
+        T.Font = Enum.Font.GothamBold
+        T.TextSize = 20
+        T.TextXAlignment = Enum.TextXAlignment.Left
+        T.ZIndex = 51
+        T.Parent = Popup
 
-    Button("Escolher Casa",
-        "Abrir lista de casas",
-        function()
+        local CloseHouse = Instance.new("TextButton")
+        CloseHouse.Size = UDim2.new(0,32,0,32)
+        CloseHouse.Position = UDim2.new(1,-44,0,10)
+        CloseHouse.Text = "✕"
+        CloseHouse.TextSize = 20
+        CloseHouse.BackgroundColor3 = Theme.Panel
+        CloseHouse.TextColor3 = Color3.fromRGB(235,240,250)
+        CloseHouse.BorderSizePixel = 0
+        CloseHouse.ZIndex = 51
+        CloseHouse.Parent = Popup
+        Corner(CloseHouse,8)
 
-            local Popup = Instance.new("Frame")
-            Popup.Size = UDim2.new(0, 400, 0, 420)
-            Popup.Position = UDim2.new(.5, -200, .5, -210)
-            Popup.BackgroundColor3 = Theme.Background
-            Popup.BorderSizePixel = 0
-            Popup.ZIndex = 50
-            Popup.Parent = ScreenGui
+        CloseHouse.MouseButton1Click:Connect(function()
+            Popup:Destroy()
+        end)
 
-            Corner(Popup, 14)
-            Stroke(Popup, Theme.Accent, .25)
+        local List = Instance.new("ScrollingFrame")
+        List.Size = UDim2.new(1,-24,1,-60)
+        List.Position = UDim2.new(0,12,0,55)
+        List.BackgroundTransparency = 1
+        List.BorderSizePixel = 0
+        List.ScrollBarThickness = 3
+        List.ZIndex = 51
+        List.Parent = Popup
 
-            local T = Instance.new("TextLabel")
-            T.Size = UDim2.new(1, -60, 0, 35)
-            T.Position = UDim2.new(0, 18, 0, 10)
-            T.BackgroundTransparency = 1
-            T.Text = "Casas"
-            T.TextColor3 = Color3.fromRGB(230,236,248)
-            T.Font = Enum.Font.GothamBold
-            T.TextSize = 20
-            T.TextXAlignment = Enum.TextXAlignment.Left
-            T.ZIndex = 51
-            T.Parent = Popup
+        local L = Instance.new("UIListLayout")
+        L.Padding = UDim.new(0,6)
+        L.Parent = List
 
-            local CloseHouse = Instance.new("TextButton")
-            CloseHouse.Size = UDim2.new(0,32,0,32)
-            CloseHouse.Position = UDim2.new(1,-44,0,10)
-            CloseHouse.Text = "Ã—"
-            CloseHouse.TextSize = 20
-            CloseHouse.BackgroundColor3 = Theme.Panel
-            CloseHouse.TextColor3 = Color3.fromRGB(235,240,250)
-            CloseHouse.BorderSizePixel = 0
-            CloseHouse.ZIndex = 51
-            CloseHouse.Parent = Popup
-
-            Corner(CloseHouse,8)
-
-            CloseHouse.MouseButton1Click:Connect(function()
-                Popup:Destroy()
-            end)
-
-            local List = Instance.new("ScrollingFrame")
-            List.Size = UDim2.new(1,-24,1,-60)
-            List.Position = UDim2.new(0,12,0,55)
-            List.BackgroundTransparency = 1
-            List.BorderSizePixel = 0
-            List.ScrollBarThickness = 3
-            List.ZIndex = 51
-            List.Parent = Popup
-
-            local L = Instance.new("UIListLayout")
-            L.Padding = UDim.new(0,6)
-            L.Parent = List
-
-            for i = 1, 12 do
-
-                local Owner = Players:GetPlayers()[i]
-
-                local Text = "Casa "..i
-
-                if Owner then
-                    Text = Text.."   â€¢   "..Owner.Name
-                else
-                    Text = Text.."   â€¢   Vazia"
-                end
-
-                local House = Instance.new("TextButton")
-                House.Size = UDim2.new(1,-5,0,44)
-                House.BackgroundColor3 = Theme.Panel
-                House.BorderSizePixel = 0
-                House.Text = Text
-                House.TextColor3 = Color3.fromRGB(225,232,245)
-                House.Font = Enum.Font.Gotham
-                House.TextSize = 14
-                House.TextXAlignment = Enum.TextXAlignment.Left
-                House.ZIndex = 52
-                House.Parent = List
-
-                Corner(House,9)
-
+        for i = 1, 12 do
+            local Owner = Players:GetPlayers()[i]
+            local Text = "Casa "..i
+            if Owner then
+                Text = Text.."   •   "..Owner.Name
+            else
+                Text = Text.."   •   Vazia"
             end
-
+            local House = Instance.new("TextButton")
+            House.Size = UDim2.new(1,-5,0,44)
+            House.BackgroundColor3 = Theme.Panel
+            House.BorderSizePixel = 0
+            House.Text = Text
+            House.TextColor3 = Color3.fromRGB(225,232,245)
+            House.Font = Enum.Font.Gotham
+            House.TextSize = 14
+            House.TextXAlignment = Enum.TextXAlignment.Left
+            House.ZIndex = 52
+            House.Parent = List
+            Corner(House,9)
         end
-    )
-
+    end)
     Button("Atualizar Casas", "Atualizar a lista")
-
-    Button("TP para Cofre",
-        "DisponÃ­vel para implementaÃ§Ã£o no seu prÃ³prio jogo")
-
-    Button("Teleporta para Casa",
-        "DisponÃ­vel para implementaÃ§Ã£o no seu prÃ³prio jogo")
-
+    Button("TP para Cofre", "Disponível para implementação no seu próprio jogo")
+    Button("Teleporta para Casa", "Disponível para implementação no seu próprio jogo")
     Toggle("Atravessar Porta", false)
-
     Toggle("Loop Campainha", false)
-
     Toggle("Loop Bater na Porta", false)
-
 end
 
 Pages.Car = function()
-
-    Header("Car", "ConfiguraÃ§Ãµes do veÃ­culo")
-
-    Input("Velocidade MÃ¡xima", "Ex.: 1000")
-
-    Button("Aplicar Velocidade",
-        "Aplicar no veÃ­culo do seu prÃ³prio jogo")
-
+    Header("Car", "Configurações do veículo")
+    Input("Velocidade Máxima", "Ex.: 1000")
+    Button("Aplicar Velocidade", "Aplicar no veículo do seu próprio jogo")
     Toggle("Anti-Capotar", false)
-
-    Toggle("Freio de AviÃ£o", false)
-
+    Toggle("Freio de Avião", false)
 end
 
 Pages.Music = function()
-
-    Header("Music", "Insira o ID do Ã¡udio")
-
-    Input("ID da MÃºsica", "Ex.: 123456789")
-
-    Button("Tocar MÃºsica",
-        "Controle de mÃºsica para seu prÃ³prio jogo")
-
-    Button("Parar MÃºsica",
-        "Parar Ã¡udio")
-
+    Header("Music", "Insira o ID do áudio")
+    Input("ID da Música", "Ex.: 123456789")
+    Button("Tocar Música", "Controle de música para seu próprio jogo")
+    Button("Parar Música", "Parar áudio")
 end
 
 Pages.Troll = function()
-
     Header("Troll", "Escolha um jogador")
-
-    Button("Selecionar Jogador",
-        "Clique para abrir a lista",
-        function()
-
-            PlayerPopup(function(Player)
-
-                print("Troll selecionado:", Player.Name)
-
-            end)
-
-        end
-    )
-
-    Header("MÃ©todo", "Escolha um objeto")
-
-    Button("SofÃ¡",
-        "MÃ©todo selecionado")
-
-    Button("Bola V2",
-        "MÃ©todo selecionado")
-
-    Button("Ã”nibus",
-        "MÃ©todo selecionado")
-
+    Button("Selecionar Jogador", "Clique para abrir a lista", function()
+        PlayerPopup(function(Player)
+            print("Troll selecionado:", Player.Name)
+        end)
+    end)
+    Header("Método", "Escolha um objeto")
+    Button("Sofá", "Método selecionado")
+    Button("Bola V2", "Método selecionado")
+    Button("Ônibus", "Método selecionado")
     Toggle("Ativar Fling", false)
-
 end
 
 Pages.Settings = function()
-
     Header("Settings", "Personalize o painel")
-
-    Button("Preto",
-        "Tema preto",
-        function()
-
-            CurrentTheme = "Preto"
-            Theme = Themes[CurrentTheme]
-
-        end
-    )
-
-    Button("Azul escuro",
-        "Tema azul escuro",
-        function()
-
-            CurrentTheme = "Azul escuro"
-            Theme = Themes[CurrentTheme]
-
-        end
-    )
-
-    Button("Verde",
-        "Tema verde",
-        function()
-
-            CurrentTheme = "Verde"
-            Theme = Themes[CurrentTheme]
-
-        end
-    )
-
-    Button("Amarelo",
-        "Tema amarelo",
-        function()
-
-            CurrentTheme = "Amarelo"
-            Theme = Themes[CurrentTheme]
-
-        end
-    )
-
-    Button("Branco",
-        "Tema branco",
-        function()
-
-            CurrentTheme = "Branco"
-            Theme = Themes[CurrentTheme]
-
-        end
-    )
-
-    Toggle("AnimaÃ§Ãµes", true)
-
-    Toggle("NotificaÃ§Ãµes", true)
-
+    Button("Preto", "Tema preto")
+    Button("Azul escuro", "Tema azul escuro")
+    Button("Verde", "Tema verde")
+    Button("Amarelo", "Tema amarelo")
+    Button("Branco", "Tema branco")
+    Toggle("Animações", true)
+    Toggle("Notificações", true)
 end
 
 --==================================================
@@ -892,41 +727,24 @@ local Names = {
 local NavButtons = {}
 
 local function ShowPage(Name)
-
     ClearPage()
-
     local Page = Pages[Name]
-
     if Page then
-
         local Success, Error = pcall(Page)
-
         if not Success then
-
             Header("Erro", tostring(Error))
-
         end
-
     end
-
     for Name2, ButtonObject in pairs(NavButtons) do
-
         if Name2 == Name then
-
             ButtonObject.BackgroundColor3 = Theme.Hover
-
         else
-
             ButtonObject.BackgroundColor3 = Theme.Panel
-
         end
-
     end
-
 end
 
 for Index, Name in ipairs(Names) do
-
     local Nav = Instance.new("TextButton")
     Nav.Size = UDim2.new(1, -18, 0, 42)
     Nav.Position = UDim2.new(0, 9, 0, 8 + ((Index - 1) * 46))
@@ -939,15 +757,12 @@ for Index, Name in ipairs(Names) do
     Nav.TextXAlignment = Enum.TextXAlignment.Left
     Nav.AutoButtonColor = false
     Nav.Parent = Sidebar
-
     Corner(Nav, 10)
 
     NavButtons[Name] = Nav
-
     Nav.MouseButton1Click:Connect(function()
         ShowPage(Name)
     end)
-
 end
 
 --==================================================
@@ -959,62 +774,46 @@ local DragStart
 local StartPosition
 
 Top.InputBegan:Connect(function(Input)
-
     if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-
         Dragging = true
         DragStart = Input.Position
         StartPosition = Window.Position
-
     end
-
 end)
 
 UserInputService.InputChanged:Connect(function(Input)
-
     if Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
-
         local Delta = Input.Position - DragStart
-
         Window.Position = UDim2.new(
             StartPosition.X.Scale,
             StartPosition.X.Offset + Delta.X,
             StartPosition.Y.Scale,
             StartPosition.Y.Offset + Delta.Y
         )
-
     end
-
 end)
 
 UserInputService.InputEnded:Connect(function(Input)
-
     if Input.UserInputType == Enum.UserInputType.MouseButton1 then
         Dragging = false
     end
-
 end)
 
 --==================================================
--- CLOSE
+-- TECLA F PARA ABRIR/FECHAR
 --==================================================
 
+UserInputService.InputBegan:Connect(function(Input, GameProcessed)
+    if GameProcessed then return end
+    
+    if Input.KeyCode == Enum.KeyCode.F then
+        Window.Visible = not Window.Visible
+    end
+end)
+
+-- Fechar com o botão X
 Close.MouseButton1Click:Connect(function()
-
-    local Animation = Tween(
-        Window,
-        {
-            Size = UDim2.new(0, 850, 0, 0),
-            BackgroundTransparency = 1
-        },
-        .2
-    )
-
-    Animation:Play()
-    Animation.Completed:Wait()
-
-    ScreenGui:Destroy()
-
+    Window.Visible = false
 end)
 
 --==================================================
@@ -1022,3 +821,8 @@ end)
 --==================================================
 
 ShowPage("Credits")
+
+print("========================================")
+print("⚡ SHADOW LIFE HUB CARREGADO ⚡")
+print("✅ Pressione [F] para abrir/fechar")
+print("========================================")
