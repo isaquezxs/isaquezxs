@@ -54,7 +54,7 @@ local ChatTitle = Instance.new("TextLabel")
 ChatTitle.Size = UDim2.new(1, -50, 1, 0)
 ChatTitle.Position = UDim2.new(0, 15, 0, 0)
 ChatTitle.BackgroundTransparency = 1
-ChatTitle.Text = "🤖 IA REAL (GPT-OSS)"
+ChatTitle.Text = "🤖 IA Shadow (SHADOW AI V1)"
 ChatTitle.TextColor3 = Colors.Text
 ChatTitle.Font = Enum.Font.GothamBold
 ChatTitle.TextSize = 14
@@ -116,7 +116,8 @@ addCorner(SendBtn, 8)
 
 local function AddMessage(text, isUser)
     local msg = Instance.new("TextLabel")
-    msg.Size = UDim2.new(1, -10, 0, 40)
+    -- Ajusta a altura do painel baseado no tamanho do texto
+    msg.Size = UDim2.new(1, -10, 0, isUser and 30 or 60) 
     msg.BackgroundColor3 = isUser and Color3.fromRGB(40, 40, 60) or Colors.Panel
     msg.TextColor3 = isUser and Colors.Text or Colors.Accent
     msg.Font = Enum.Font.Gotham
@@ -173,8 +174,9 @@ local function SpawnClone()
     end
 
     local bill = Instance.new("BillboardGui")
-    bill.Size = UDim2.new(0, 200, 0, 50)
-    bill.StudsOffset = Vector3.new(0, 2.5, 0)
+    -- Aumentei o tamanho do balão e a distância para o texto não vazar
+    bill.Size = UDim2.new(0, 250, 0, 80)
+    bill.StudsOffset = Vector3.new(0, 3, 0)
     bill.AlwaysOnTop = true
     
     CloneChatText = Instance.new("TextLabel")
@@ -183,8 +185,9 @@ local function SpawnClone()
     CloneChatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     CloneChatText.TextColor3 = Colors.Accent
     CloneChatText.TextScaled = true
+    CloneChatText.TextWrapped = true -- Permite que o texto quebre linha
     CloneChatText.Font = Enum.Font.GothamBold
-    CloneChatText.Text = "🤖 Olá! Sou uma IA de verdade."
+    CloneChatText.Text = "😎 Olá! Sou a IA Shadow oq pode ajudar?."
     CloneChatText.Parent = bill
     addCorner(CloneChatText, 8)
     
@@ -235,7 +238,7 @@ local function AskAI(message)
     local data = {
         model = MODELO, -- Usando o modelo GPT-OSS ativo
         messages = {
-            { role = "system", content = "Você é um clone amigável dentro do jogo Roblox. Responda de forma curta, divertida e em português." },
+            { role = "system", content = "Você é um clone amigável dentro do jogo Roblox. Responda de forma completa, clara e em português. Não use emojis em excesso." },
             { role = "user", content = message }
         },
         max_tokens = 150,
@@ -263,7 +266,11 @@ local function AskAI(message)
                 local reply = decoded.choices[1].message.content
                 
                 reply = reply:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
-                if #reply > 100 then reply = reply:sub(1, 100) .. "..." end
+                
+                -- 🔥 CORREÇÃO AQUI: Limite aumentado para 1000 caracteres
+                if #reply > 1000 then 
+                    reply = reply:sub(1, 1000) .. "..." 
+                end
                 
                 AddMessage(reply, false)
                 if CloneChatText then CloneChatText.Text = "💬 " .. reply end
