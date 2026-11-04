@@ -1,74 +1,339 @@
--- Carrega a UI Rayfield
-loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+--// SHADOW LIFE - Clone com IA Real (Groq GPT-OSS Corrigido)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
 
-local Window = Rayfield:CreateWindow({
-    Name = "Brookhaven -- Carrega a UI Rayfield
-loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+-- ⚠️ COLE SUA CHAVE DA GROQ AQUI (começa com "gsk_")
+local API_KEY = "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"
+-- Modelo ativo recomendado pela Groq (substituto do antigo Llama 8B)
+local MODELO = "openai/gpt-oss-20b" 
 
-local Window = Rayfield:CreateWindow({
-    Name = "Brookhaven Hub",
-    LoadingTitle = "Brookhaven Hub",
-    LoadingSubtitle = "By SeuNome",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = false
-})
+-- Cores
+local Colors = {
+    Background = Color3.fromRGB(15, 15, 25),
+    Panel = Color3.fromRGB(25, 25, 40),
+    Accent = Color3.fromRGB(0, 255, 150),
+    Text = Color3.fromRGB(255, 255, 255),
+    Red = Color3.fromRGB(255, 80, 80)
+}
 
--- Primeira aba
-local MainTab = Window:CreateTab("Principal", 4483362458)
+-- Criar GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ShadowLifeRealAI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
 
--- Teleporte rápido
-MainTab:CreateButton({
-    Name = "Ir para o Cofre do Banco",
-    Callback = function()
-        game.Players.LocalPlayer.Character:MoveTo(Vector3.new(-507, 22, -285))
-    end,
-})
+local function addCorner(obj, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = obj
+end
 
--- Ganhar velocidade
-MainTab:CreateSlider({
-    Name = "Velocidade do Jogador",
-    Range = {16, 100},
-    Increment = 1,
-    CurrentValue = 16,
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end,
-})
+-- ==========================================
+-- SISTEMA DE CHAT
+-- ==========================================
+local ChatWindow = Instance.new("Frame")
+ChatWindow.Size = UDim2.new(0, 350, 0, 420)
+ChatWindow.Position = UDim2.new(0.5, -175, 0.5, -210)
+ChatWindow.BackgroundColor3 = Colors.Background
+ChatWindow.BorderSizePixel = 0
+ChatWindow.Parent = ScreenGui
+addCorner(ChatWindow, 12)
 
--- Super pulo
-MainTab:CreateSlider({
-    Name = "Altura do Pulo",
-    Range = {50, 150},
-    Increment = 1,
-    CurrentValue = 50,
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-    end,
-})
+local ChatTopBar = Instance.new("Frame")
+ChatTopBar.Size = UDim2.new(1, 0, 0, 40)
+ChatTopBar.BackgroundColor3 = Colors.Panel
+ChatTopBar.BorderSizePixel = 0
+ChatTopBar.Parent = ChatWindow
+addCorner(ChatTopBar, 12)
 
--- Invencibilidade falsa (anti-ragdoll)
-MainTab:CreateToggle({
-    Name = "Anti-Ragdoll (anti queda)",
-    CurrentValue = false,
-    Callback = function(Value)
-        if Value then
-            local char = game.Players.LocalPlayer.Character
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("Motor6D") and v.Name == "RagdollConstraint" then
-                    v:Destroy()
+local ChatTitle = Instance.new("TextLabel")
+ChatTitle.Size = UDim2.new(1, -50, 1, 0)
+ChatTitle.Position = UDim2.new(0, 15, 0, 0)
+ChatTitle.BackgroundTransparency = 1
+ChatTitle.Text = "🤖 IA REAL (GPT-OSS)"
+ChatTitle.TextColor3 = Colors.Text
+ChatTitle.Font = Enum.Font.GothamBold
+ChatTitle.TextSize = 14
+ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
+ChatTitle.Parent = ChatTopBar
+
+local CloseChatBtn = Instance.new("TextButton")
+CloseChatBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseChatBtn.Position = UDim2.new(1, -35, 0, 7)
+CloseChatBtn.BackgroundColor3 = Colors.Red
+CloseChatBtn.BorderSizePixel = 0
+CloseChatBtn.Text = "✕"
+CloseChatBtn.TextColor3 = Colors.Text
+CloseChatBtn.TextSize = 14
+CloseChatBtn.Font = Enum.Font.GothamBold
+CloseChatBtn.Parent = ChatTopBar
+addCorner(CloseChatBtn, 12)
+
+CloseChatBtn.MouseButton1Click:Connect(function() ChatWindow.Visible = false end)
+
+local ChatScroll = Instance.new("ScrollingFrame")
+ChatScroll.Size = UDim2.new(1, -20, 1, -100)
+ChatScroll.Position = UDim2.new(0, 10, 0, 45)
+ChatScroll.BackgroundTransparency = 1
+ChatScroll.BorderSizePixel = 0
+ChatScroll.ScrollBarThickness = 2
+ChatScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+ChatScroll.Parent = ChatWindow
+
+local ChatLayout = Instance.new("UIListLayout")
+ChatLayout.Padding = UDim.new(0, 5)
+ChatLayout.Parent = ChatScroll
+
+local ChatInput = Instance.new("TextBox")
+ChatInput.Size = UDim2.new(1, -70, 0, 35)
+ChatInput.Position = UDim2.new(0, 10, 1, -45)
+ChatInput.BackgroundColor3 = Colors.Panel
+ChatInput.BorderSizePixel = 0
+ChatInput.PlaceholderText = "Digite sua mensagem..."
+ChatInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+ChatInput.Text = ""
+ChatInput.TextColor3 = Colors.Text
+ChatInput.Font = Enum.Font.Gotham
+ChatInput.TextSize = 13
+ChatInput.Parent = ChatWindow
+addCorner(ChatInput, 8)
+
+local SendBtn = Instance.new("TextButton")
+SendBtn.Size = UDim2.new(0, 50, 0, 35)
+SendBtn.Position = UDim2.new(1, -60, 1, -45)
+SendBtn.BackgroundColor3 = Colors.Accent
+SendBtn.BorderSizePixel = 0
+SendBtn.Text = "Enviar"
+SendBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+SendBtn.Font = Enum.Font.GothamBold
+SendBtn.TextSize = 12
+SendBtn.Parent = ChatWindow
+addCorner(SendBtn, 8)
+
+local function AddMessage(text, isUser)
+    local msg = Instance.new("TextLabel")
+    msg.Size = UDim2.new(1, -10, 0, 40)
+    msg.BackgroundColor3 = isUser and Color3.fromRGB(40, 40, 60) or Colors.Panel
+    msg.TextColor3 = isUser and Colors.Text or Colors.Accent
+    msg.Font = Enum.Font.Gotham
+    msg.TextSize = 12
+    msg.TextWrapped = true
+    msg.Text = (isUser and "Você: " or "IA: ") .. text
+    msg.Parent = ChatScroll
+    addCorner(msg, 6)
+    
+    ChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        ChatScroll.CanvasSize = UDim2.new(0, 0, 0, ChatLayout.AbsoluteContentSize.Y + 10)
+    end)
+end
+
+-- ==========================================
+-- SISTEMA DO CLONE
+-- ==========================================
+local CloneObj, CloneHumanoid, CloneRoot, CloneChatText, AI_Connection = nil, nil, nil, nil, nil
+
+local function RemoveClone()
+    if CloneObj then CloneObj:Destroy(); CloneObj = nil end
+    if AI_Connection then AI_Connection:Disconnect(); AI_Connection = nil end
+end
+
+local function SpawnClone()
+    RemoveClone()
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    char.Archivable = true
+    local clone = char:Clone()
+    clone.Name = "RealAI_Clone"
+    
+    for _, v in ipairs(clone:GetDescendants()) do
+        if v:IsA("Script") or v:IsA("LocalScript") then
+            if v.Name ~= "Animate" then v:Destroy() end
+        end
+    end
+
+    local root = char.HumanoidRootPart
+    clone:PivotTo(root.CFrame * CFrame.new(0, 0, 5))
+    
+    for _, part in ipairs(clone:GetDescendants()) do
+        if part:IsA("BasePart") then part.CanCollide = false end
+    end
+
+    CloneHumanoid = clone:FindFirstChildOfClass("Humanoid")
+    CloneRoot = clone:FindFirstChild("HumanoidRootPart")
+    CloneObj = clone
+
+    if CloneHumanoid then
+        CloneHumanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+        CloneHumanoid.WalkSpeed = 20
+    end
+
+    local bill = Instance.new("BillboardGui")
+    bill.Size = UDim2.new(0, 200, 0, 50)
+    bill.StudsOffset = Vector3.new(0, 2.5, 0)
+    bill.AlwaysOnTop = true
+    
+    CloneChatText = Instance.new("TextLabel")
+    CloneChatText.Size = UDim2.new(1, 0, 1, 0)
+    CloneChatText.BackgroundTransparency = 0.3
+    CloneChatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    CloneChatText.TextColor3 = Colors.Accent
+    CloneChatText.TextScaled = true
+    CloneChatText.Font = Enum.Font.GothamBold
+    CloneChatText.Text = "🤖 Olá! Sou uma IA de verdade."
+    CloneChatText.Parent = bill
+    addCorner(CloneChatText, 8)
+    
+    local head = clone:FindFirstChild("Head")
+    if head then bill.Parent = head end
+    clone.Parent = Workspace
+
+    AI_Connection = RunService.Heartbeat:Connect(function()
+        if not CloneObj or not CloneObj.Parent or not CloneHumanoid or not CloneRoot then return end
+        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+        
+        local myRoot = LocalPlayer.Character.HumanoidRootPart
+        if (CloneRoot.Position - myRoot.Position).Magnitude > 6 then
+            CloneHumanoid:MoveTo(myRoot.Position)
+        else
+            CloneHumanoid:MoveTo(CloneRoot.Position)
+            CloneRoot.CFrame = CFrame.lookAt(CloneRoot.Position, myRoot.Position)
+        end
+    end)
+end
+
+-- ==========================================
+-- INTEGRAÇÃO COM A IA REAL
+-- ==========================================
+local function GetRequestFunction()
+    return (syn and syn.request) or (http and http.request) or http_request or request
+end
+
+local function AskAI(message)
+    AddMessage(message, true)
+    ChatInput.Text = ""
+    
+    if CloneChatText then CloneChatText.Text = "🤖 Pensando..." end
+
+    if API_KEY == "COLE_SUA_CHAVE_AQUI" or #API_KEY < 10 then
+        AddMessage("Erro: Coloque uma API KEY válida da Groq no script!", false)
+        if CloneChatText then CloneChatText.Text = "❌ Falta a API Key." end
+        return
+    end
+
+    local requestFunc = GetRequestFunction()
+    if not requestFunc then
+        AddMessage("Seu executor não suporta requisições HTTP (request).", false)
+        if CloneChatText then CloneChatText.Text = "❌ Executor sem suporte." end
+        return
+    end
+
+    local data = {
+        model = MODELO, -- Usando o modelo GPT-OSS ativo
+        messages = {
+            { role = "system", content = "Você é um clone amigável dentro do jogo Roblox. Responda de forma curta, divertida e em português." },
+            { role = "user", content = message }
+        },
+        max_tokens = 150,
+        temperature = 0.7
+    }
+
+    local body = HttpService:JSONEncode(data)
+    
+    task.spawn(function()
+        local success, response = pcall(function()
+            return requestFunc({
+                Url = "https://api.groq.com/openai/v1/chat/completions",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "Bearer " .. API_KEY
+                },
+                Body = body
+            })
+        end)
+
+        if success and response then
+            if response.StatusCode == 200 then
+                local decoded = HttpService:JSONDecode(response.Body)
+                local reply = decoded.choices[1].message.content
+                
+                reply = reply:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
+                if #reply > 100 then reply = reply:sub(1, 100) .. "..." end
+                
+                AddMessage(reply, false)
+                if CloneChatText then CloneChatText.Text = "💬 " .. reply end
+            else
+                AddMessage("Erro da API: Código " .. tostring(response.StatusCode), false)
+                if CloneChatText then CloneChatText.Text = "❌ Erro " .. tostring(response.StatusCode) end
+                
+                if response.Body then
+                    local errDecoded = HttpService:JSONDecode(response.Body)
+                    if errDecoded.error and errDecoded.error.message then
+                        AddMessage("Detalhe: " .. errDecoded.error.message, false)
+                    end
                 end
             end
+        else
+            AddMessage("Falha na conexão. Verifique sua internet ou executor.", false)
+            if CloneChatText then CloneChatText.Text = "❌ Falha de rede." end
         end
-    end,
-})
+    end)
+end
 
--- Créditos
-Window:CreateTab("Créditos", 4483362458):CreateParagraph({
-    Title = "Feito por",
-    Content = "SeuNome - Hub para Brookhaven sem chave!"
-})
+-- Botão de Teste Rápido da API
+local TestBtn = Instance.new("TextButton")
+TestBtn.Size = UDim2.new(0, 100, 0, 25)
+TestBtn.Position = UDim2.new(1, -110, 0, 45)
+TestBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+TestBtn.Text = "Testar API"
+TestBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+TestBtn.Font = Enum.Font.GothamBold
+TestBtn.TextSize = 10
+TestBtn.Parent = ChatTopBar
+addCorner(TestBtn, 8)
+
+TestBtn.MouseButton1Click:Connect(function()
+    AskAI("Diga apenas 'API OK' para testar a conexão.")
+end)
+
+-- Eventos de envio
+SendBtn.MouseButton1Click:Connect(function()
+    if ChatInput.Text ~= "" then AskAI(ChatInput.Text) end
+end)
+
+ChatInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed and ChatInput.Text ~= "" then AskAI(ChatInput.Text) end
+end)
+
+-- Botão de Spawnar
+local SpawnBtn = Instance.new("TextButton")
+SpawnBtn.Size = UDim2.new(0, 150, 0, 40)
+SpawnBtn.Position = UDim2.new(0.5, -75, 0.1, 0)
+SpawnBtn.BackgroundColor3 = Colors.Accent
+SpawnBtn.Text = "Spawnar Clone com IA Real"
+SpawnBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+SpawnBtn.Font = Enum.Font.GothamBold
+SpawnBtn.Parent = ScreenGui
+addCorner(SpawnBtn, 8)
+
+SpawnBtn.MouseButton1Click:Connect(function()
+    SpawnClone()
+    ChatWindow.Visible = true
+    SpawnBtn.Visible = false
+end)
+
+-- Atalho F
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F then
+        ChatWindow.Visible = not ChatWindow.Visible
+        SpawnBtn.Visible = not SpawnBtn.Visible
+    end
+end)
+
+print("✅ Clone com IA Real (GPT-OSS) carregado!")
