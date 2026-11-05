@@ -1,4 +1,4 @@
---// SHADOW LIFE - Clone com IA Real (Multiplayer Criptografado)
+--// SHADOW LIFE - Clone com IA Real (Sistema de Ver Clone de Amigos)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -33,9 +33,9 @@ local RandomWalkTimer = 0
 local CurrentEmote = nil
 local isPlayingEmote = false
 
--- Variáveis do Multiplayer
+-- Variáveis do Multiplayer (APENAS PARA VER O CLONE)
 local SyncEnabled = false
-local OutrosClones = {}
+local ClonesAmigos = {} -- Tabela para guardar os clones dos amigos
 local SyncLoop = nil
 local UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
 
@@ -51,28 +51,6 @@ local Colors = {
     Purple = Color3.fromRGB(180, 100, 255),
     SyncColor = Color3.fromRGB(0, 255, 255)
 }
-
--- ==========================================
--- CRIPTOGRAFIA PARA O CHAT (BURLAR FILTRO)
--- ==========================================
-local letras = {"a","b","c","d","e","f","g","h","i","j","k","l"}
-local numeros = {"0","1","2","3","4","5","6","7","8","9","-","."}
-
-local function Encode(str)
-    str = tostring(str)
-    for i = 1, 12 do
-        str = string.gsub(str, numeros[i], letras[i])
-    end
-    return str
-end
-
-local function Decode(str)
-    str = tostring(str)
-    for i = 1, 12 do
-        str = string.gsub(str, letras[i], numeros[i])
-    end
-    return str
-end
 
 -- ==========================================
 -- SISTEMA DE INTERFACE
@@ -259,7 +237,7 @@ local SyncBtn = Instance.new("TextButton")
 SyncBtn.Size = UDim2.new(0, 150, 0, 25)
 SyncBtn.Position = UDim2.new(0.5, -75, 0.1, 40)
 SyncBtn.BackgroundColor3 = Colors.SyncColor
-SyncBtn.Text = "Ativar Multiplayer"
+SyncBtn.Text = "Ativar Multiplayer (Ver Clones)"
 SyncBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 SyncBtn.Font = Enum.Font.GothamBold
 SyncBtn.Visible = false
@@ -413,6 +391,7 @@ SendBtn.TextSize = 12
 SendBtn.Parent = ChatWindow
 addCorner(SendBtn, 8)
 
+-- BOTÃO SALVAR CONVERSA
 local SaveLogBtn = Instance.new("TextButton")
 SaveLogBtn.Size = UDim2.new(0, 50, 0, 35)
 SaveLogBtn.Position = UDim2.new(1, -60, 1, -45)
@@ -570,7 +549,6 @@ local function PlayCloneEmote(animId, emoji)
     CurrentEmote.Looped = true
     CurrentEmote:Play(0.1)
     if CloneChatText and emoji then CloneChatText.Text = emoji end
-    UltimaMensagemIA = emoji
 end
 
 local function StopEmote()
@@ -581,6 +559,7 @@ local function StopEmote()
     if CloneHumanoid then CloneHumanoid.Sit = false end
 end
 
+-- BOTÕES DO MENU H
 local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 35) 
@@ -601,13 +580,11 @@ local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
             CloneParado = false
             CloneAndandoAleatorio = false
             if CloneChatText then CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "." end
-            UltimaMensagemIA = "😎 Olá! Sou " .. CloneName .. "."
             
         elseif action == "jump" then
             if CloneHumanoid then 
                 CloneHumanoid:ChangeState(Enum.HumanoidStateType.Jumping) 
                 if CloneChatText then CloneChatText.Text = "🦘 Pulando!" end
-                UltimaMensagemIA = "🦘"
             end
             
         elseif action == "random_walk" then
@@ -615,28 +592,24 @@ local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
             CloneParado = false
             CloneAndandoAleatorio = true
             if CloneChatText then CloneChatText.Text = "🚶 Andando por aí..." end
-            UltimaMensagemIA = "🚶"
             
         elseif action == "stop_follow" then
             StopEmote()
             CloneParado = true
             CloneAndandoAleatorio = false
             if CloneChatText then CloneChatText.Text = "🛑 Parado." end
-            UltimaMensagemIA = "🛑"
             
         elseif action == "follow" then
             StopEmote()
             CloneParado = false
             CloneAndandoAleatorio = false
             if CloneChatText then CloneChatText.Text = "🏃 Seguindo." end
-            UltimaMensagemIA = "🏃"
             
         elseif isSit then
             StopEmote()
             CloneParado = true
             if CloneHumanoid then CloneHumanoid.Sit = true end
             if CloneChatText then CloneChatText.Text = emoji end
-            UltimaMensagemIA = emoji
             
         else
             if CloneHumanoid then CloneHumanoid.Sit = false end
@@ -702,109 +675,93 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==========================================
--- SISTEMA MULTIPLAYER (VIA CHAT CRIPTOGRAFADO)
+-- SISTEMA DE VER CLONES DE AMIGOS (ESPELHAMENTO)
 -- ==========================================
-local function ProcessarPacoteRemoto(nomeJogador, x, y, z, mensagem)
-    if nomeJogador == LocalPlayer.Name then return end
-    if not OutrosClones[nomeJogador] then
-        local player = Players:FindFirstChild(nomeJogador)
-        if not player or not player.Character then return end
-        
-        local clone = player.Character:Clone()
-        clone.Name = "RemoteAI_" .. nomeJogador
-        for _, v in ipairs(clone:GetDescendants()) do
-            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
-            if v:IsA("BasePart") then v.CanCollide = false; v.Anchored = true end
-        end
-        
-        local bill = Instance.new("BillboardGui")
-        bill.Size = UDim2.new(0, 250, 0, 80)
-        bill.StudsOffset = Vector3.new(0, 3, 0)
-        bill.AlwaysOnTop = true
-        
-        local chatText = Instance.new("TextLabel")
-        chatText.Name = "ChatText"
-        chatText.Size = UDim2.new(1, 0, 1, 0)
-        chatText.BackgroundTransparency = 0.3
-        chatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        chatText.TextColor3 = Colors.SyncColor
-        chatText.TextScaled = true
-        chatText.TextWrapped = true
-        chatText.Font = Enum.Font.GothamBold
-        chatText.Text = mensagem
-        chatText.Parent = bill
-        addCorner(chatText, 8)
-        
-        local head = clone:FindFirstChild("Head")
-        if head then bill.Parent = head end
-        
-        clone.Parent = Workspace
-        OutrosClones[nomeJogador] = {Objeto = clone, ChatText = chatText}
-    end
-    
-    local data = OutrosClones[nomeJogador]
-    if data and data.Objeto and data.Objeto.Parent then
-        data.Objeto:PivotTo(CFrame.new(x, y, z))
-        data.ChatText.Text = mensagem
-    end
-end
-
 local function IniciarSync()
     if SyncLoop then SyncLoop:Disconnect() end
     
-    -- Envia os dados para o chat de forma criptografada
+    -- 1. Envia o sinal de que está usando o script (invisível)
     SyncLoop = task.spawn(function()
         while SyncEnabled do
-            if CloneObj and CloneRoot and LocalPlayer.Character then
-                local pos = CloneRoot.Position
-                local msg = UltimaMensagemIA:gsub("~", ""):gsub("\n", " ")
-                
-                -- Criptografa as coordenadas
-                local encX = Encode(math.floor(pos.X))
-                local encY = Encode(math.floor(pos.Y))
-                local encZ = Encode(math.floor(pos.Z))
-                
-                -- Formato: [AI]~Nome~X~Y~Z~Mensagem
-                local pacote = string.format("[AI]~%s~%s~%s~%s~%s", LocalPlayer.Name, encX, encY, encZ, msg)
-                
-                pcall(function()
-                    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                        TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync(pacote)
-                    else
-                        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(pacote, "All")
-                    end
-                end)
-            end
-            task.wait(0.3) -- Envia a cada 0.3 segundos para não tomar mute
+            pcall(function()
+                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync("!shadow_clone_on")
+                end
+            end)
+            task.wait(2) -- Envia a cada 2 segundos para não dar mute
         end
     end)
 
-    -- Recebe as mensagens do chat
+    -- 2. Ouve o sinal e cria o clone espelhado
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         TextChatService.OnIncomingMessage = function(message)
-            local text = message.Text
-            if string.sub(text, 1, 4) == "[AI]~" then
-                local partes = string.split(text, "~")
-                if #partes >= 6 then
-                    local nome = partes[2]
-                    local encX = partes[3]
-                    local encY = partes[4]
-                    local encZ = partes[5]
-                    local fala = partes[6]
-                    
-                    -- Descriptografa
-                    local x = tonumber(Decode(encX)) or 0
-                    local y = tonumber(Decode(encY)) or 0
-                    local z = tonumber(Decode(encZ)) or 0
-                    
-                    ProcessarPacoteRemoto(nome, x, y, z, fala)
+            if message.Text == "!shadow_clone_on" then
+                local sender = Players:FindFirstChild(message.TextSource.Name)
+                
+                if sender and sender ~= LocalPlayer and sender.Character then
+                    -- Se já não tiver um clone desse amigo, cria
+                    if not ClonesAmigos[sender.Name] then
+                        local clone = sender.Character:Clone()
+                        clone.Name = "Clone_" .. sender.Name
+                        
+                        -- Deixa o clone visual apenas, sem scripts e sem colisão
+                        for _, v in ipairs(clone:GetDescendants()) do
+                            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
+                            if v:IsA("BasePart") then 
+                                v.CanCollide = false 
+                                v.Anchored = true 
+                            end
+                        end
+
+                        -- Balão indicando que é o clone do amigo
+                        local bill = Instance.new("BillboardGui")
+                        bill.Size = UDim2.new(0, 200, 0, 50)
+                        bill.StudsOffset = Vector3.new(0, 3, 0)
+                        bill.AlwaysOnTop = true
+                        
+                        local nameTag = Instance.new("TextLabel")
+                        nameTag.Size = UDim2.new(1, 0, 1, 0)
+                        nameTag.BackgroundTransparency = 1
+                        nameTag.Text = "👥 " .. sender.Name .. " (Clone IA)"
+                        nameTag.TextColor3 = Colors.SyncColor
+                        nameTag.TextScaled = true
+                        nameTag.Font = Enum.Font.GothamBold
+                        nameTag.Parent = bill
+                        
+                        local head = clone:FindFirstChild("Head")
+                        if head then bill.Parent = head end
+
+                        clone.Parent = Workspace
+                        ClonesAmigos[sender.Name] = clone
+                    end
                 end
+                
+                -- Esconde a mensagem no chat
                 local properties = Instance.new("TextChatMessageProperties")
-                properties.Text = "" -- Esconde a mensagem
+                properties.Text = "" 
                 return properties
             end
         end
     end
+
+    -- 3. Atualiza a posição do clone para seguir o amigo perfeitamente
+    task.spawn(function()
+        while SyncEnabled do
+            for name, clone in pairs(ClonesAmigos) do
+                local player = Players:FindFirstChild(name)
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    if clone and clone:FindFirstChild("HumanoidRootPart") then
+                        clone:PivotTo(player.Character.HumanoidRootPart.CFrame)
+                    end
+                else
+                    -- Se o amigo sair do jogo, deleta o clone
+                    if clone then clone:Destroy() end
+                    ClonesAmigos[name] = nil
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
 end
 
 local function soltarClone()
@@ -1086,7 +1043,6 @@ local function ProcessCommand(message)
     elseif cmd == "parar" or cmd == "normal" then
         StopEmote()
         if CloneChatText then CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "." end
-        UltimaMensagemIA = "😎 Olá! Sou " .. CloneName .. "."
         AddMessage("Comando: Voltando ao normal.", true)
         return true
     elseif cmd == "pula" or cmd == "pular" then
@@ -1108,7 +1064,6 @@ local function AskAI(message)
     AddMessage(message, true)
     ChatInput.Text = ""
     if CloneChatText then CloneChatText.Text = "🤖 Pensando..." end
-    UltimaMensagemIA = "🤖 Pensando..."
     
     if API_KEY == "" or #API_KEY < 10 then
         AddMessage("Erro: Coloque uma API KEY válida!", false)
@@ -1157,7 +1112,6 @@ local function AskAI(message)
             
             AddMessage(reply, false)
             if CloneChatText then CloneChatText.Text = "💬 " .. reply end
-            UltimaMensagemIA = reply
         else
             AddMessage("Erro da API: Verifique sua chave ou internet.", false)
         end
@@ -1186,10 +1140,20 @@ SyncBtn.MouseButton1Click:Connect(function()
         SyncBtn.BackgroundColor3 = Colors.Accent
         IniciarSync()
     else
-        SyncBtn.Text = "Ativar Multiplayer"
+        SyncBtn.Text = "Ativar Multiplayer (Ver Clones)"
         SyncBtn.BackgroundColor3 = Colors.SyncColor
-        for _, data in pairs(OutrosClones) do if data.Objeto then data.Objeto:Destroy() end end
-        OutrosClones = {}
+        -- Limpa os clones dos amigos
+        for _, clone in pairs(ClonesAmigos) do
+            if clone then clone:Destroy() end
+        end
+        ClonesAmigos = {}
+        
+        -- Avisa que saiu
+        pcall(function()
+            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync("!shadow_clone_off")
+            end
+        end)
     end
 end)
 
@@ -1226,4 +1190,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ Multiplayer Criptografado (Burlar Chat) Carregado!")
+print("✅ Sistema de Espelhamento (Ver Clone de Amigos) Carregado!")
