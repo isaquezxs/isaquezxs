@@ -1,10 +1,9 @@
---// SHADOW LIFE - Clone com IA Real (ORDEM CORRIGIDA)
+--// SHADOW LIFE - Clone com IA Real (Memória + Salvar + Multiplayer)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
-local TextChatService = game:GetService("TextChatService")
 local LocalPlayer = Players.LocalPlayer
 
 local API_KEY = ""
@@ -20,6 +19,11 @@ local lastMove = 0
 local tracksDoClone = {}
 local modoCarregar = nil
 local CloneAnimator = nil
+
+-- NOVAS VARIÁVEIS (Nome e Histórico)
+local CloneName = "Shadow"
+local historicoConversa = {}
+local LogSalvo = ""
 
 local CloneParado = false
 local CloneDevagar = false
@@ -293,15 +297,38 @@ addCorner(ChatTopBar, 12)
 makeDraggable(ChatWindow, ChatTopBar)
 
 local ChatTitle = Instance.new("TextLabel")
-ChatTitle.Size = UDim2.new(1, -50, 1, 0)
+ChatTitle.Size = UDim2.new(0.5, 0, 1, 0)
 ChatTitle.Position = UDim2.new(0, 15, 0, 0)
 ChatTitle.BackgroundTransparency = 1
-ChatTitle.Text = "🤖 IA Shadow (Aperte 'G' p/ Menu)"
+ChatTitle.Text = "🤖 Chat"
 ChatTitle.TextColor3 = Colors.Text
 ChatTitle.Font = Enum.Font.GothamBold
 ChatTitle.TextSize = 13
 ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
 ChatTitle.Parent = ChatTopBar
+
+-- CAMPO DE NOME DO CLONE (NOVO)
+local NameInput = Instance.new("TextBox")
+NameInput.Size = UDim2.new(0.35, 0, 0, 25)
+NameInput.Position = UDim2.new(0.45, 0, 0.5, -12)
+NameInput.BackgroundColor3 = Colors.Background
+NameInput.BorderSizePixel = 0
+NameInput.PlaceholderText = "Nome do Clone"
+NameInput.Text = "Shadow"
+NameInput.TextColor3 = Colors.SyncColor
+NameInput.Font = Enum.Font.GothamBold
+NameInput.TextSize = 11
+NameInput.Parent = ChatTopBar
+addCorner(NameInput, 6)
+
+NameInput.FocusLost:Connect(function()
+    if NameInput.Text ~= "" then
+        CloneName = NameInput.Text
+        if CloneChatText then
+            CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "."
+        end
+    end
+end)
 
 local CloseChatBtn = Instance.new("TextButton")
 CloseChatBtn.Size = UDim2.new(0, 25, 0, 25)
@@ -332,11 +359,11 @@ ChatLayout.Padding = UDim.new(0, 5)
 ChatLayout.Parent = ChatScroll
 
 local ChatInput = Instance.new("TextBox")
-ChatInput.Size = UDim2.new(1, -70, 0, 35)
+ChatInput.Size = UDim2.new(1, -120, 0, 35)
 ChatInput.Position = UDim2.new(0, 10, 1, -45)
 ChatInput.BackgroundColor3 = Colors.Panel
 ChatInput.BorderSizePixel = 0
-ChatInput.PlaceholderText = "Digite 'choro', 'feliz', 'gato'..."
+ChatInput.PlaceholderText = "Digite para conversar..."
 ChatInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 ChatInput.Text = ""
 ChatInput.TextColor3 = Colors.Text
@@ -347,7 +374,7 @@ addCorner(ChatInput, 8)
 
 local SendBtn = Instance.new("TextButton")
 SendBtn.Size = UDim2.new(0, 50, 0, 35)
-SendBtn.Position = UDim2.new(1, -60, 1, -45)
+SendBtn.Position = UDim2.new(1, -110, 1, -45)
 SendBtn.BackgroundColor3 = Colors.Accent
 SendBtn.BorderSizePixel = 0
 SendBtn.Text = "Enviar"
@@ -357,6 +384,20 @@ SendBtn.TextSize = 12
 SendBtn.Parent = ChatWindow
 addCorner(SendBtn, 8)
 
+-- BOTÃO SALVAR CONVERSA (NOVO)
+local SaveLogBtn = Instance.new("TextButton")
+SaveLogBtn.Size = UDim2.new(0, 50, 0, 35)
+SaveLogBtn.Position = UDim2.new(1, -60, 1, -45)
+SaveLogBtn.BackgroundColor3 = Colors.Blue
+SaveLogBtn.BorderSizePixel = 0
+SaveLogBtn.Text = "Salvar"
+SaveLogBtn.TextColor3 = Colors.Text
+SaveLogBtn.Font = Enum.Font.GothamBold
+SaveLogBtn.TextSize = 11
+SaveLogBtn.Parent = ChatWindow
+addCorner(SaveLogBtn, 8)
+
+-- FUNÇÃO DE ADICIONAR MENSAGEM E SALVAR NO HISTÓRICO
 local function AddMessage(text, isUser)
     local msg = Instance.new("TextLabel")
     msg.Size = UDim2.new(1, -10, 0, 50)
@@ -366,10 +407,43 @@ local function AddMessage(text, isUser)
     msg.Font = Enum.Font.Gotham
     msg.TextSize = 12
     msg.TextWrapped = true
-    msg.Text = (isUser and "Você: " or "IA: ") .. text
+    msg.Text = (isUser and "Você: " or CloneName .. ": ") .. text
     msg.Parent = ChatScroll
     addCorner(msg, 6)
+    
+    -- Salva no log visual
+    LogSalvo = LogSalvo .. (isUser and "Você: " or CloneName .. ": ") .. text .. "\n"
+
+    -- Salva no histórico de memória da IA (Mantém só as últimas 10 para não estourar o limite)
+    if isUser then
+        table.insert(historicoConversa, {role = "user", content = text})
+    else
+        table.insert(historicoConversa, {role = "assistant", content = text})
+    end
+    
+    if #historicoConversa > 10 then
+        table.remove(historicoConversa, 1)
+    end
 end
+
+-- AÇÃO DO BOTÃO SALVAR
+SaveLogBtn.MouseButton1Click:Connect(function()
+    local sucesso, erro = pcall(function()
+        if writefile then
+            writefile("Conversa_" .. CloneName .. ".txt", LogSalvo)
+        end
+    end)
+    
+    if sucesso then
+        SaveLogBtn.Text = "Salvo!"
+        SaveLogBtn.BackgroundColor3 = Colors.Accent
+        task.wait(2)
+        SaveLogBtn.Text = "Salvar"
+        SaveLogBtn.BackgroundColor3 = Colors.Blue
+    else
+        SaveLogBtn.Text = "Erro"
+    end
+end)
 
 -- MENU CARREGAR
 local CarryMenu = Instance.new("Frame")
@@ -414,7 +488,7 @@ local BtnOmbros = criarBotaoCarregar("Ombros", 10, Color3.fromRGB(0, 180, 255))
 local BtnMachucado = criarBotaoCarregar("Machucado", 105, Color3.fromRGB(255, 80, 80))
 local BtnCostas = criarBotaoCarregar("Costas", 200, Color3.fromRGB(0, 255, 150))
 
--- MENU PERSONALIDADE (Agora definido ANTES dos botões que o usam)
+-- MENU PERSONALIDADE
 local PersonalityMenu = Instance.new("Frame")
 PersonalityMenu.Size = UDim2.new(0.9, 0, 0.8, 0)
 PersonalityMenu.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -483,7 +557,7 @@ local function StopEmote()
     if CloneHumanoid then CloneHumanoid.Sit = false end
 end
 
--- BOTÕES DO MENU H (Agora podem usar PlayCloneEmote sem erro)
+-- BOTÕES DO MENU H
 local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 35) 
@@ -503,8 +577,8 @@ local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
             if CloneHumanoid then CloneHumanoid.Sit = false end
             CloneParado = false
             CloneAndandoAleatorio = false
-            if CloneChatText then CloneChatText.Text = "😎 Olá! Sou a IA Shadow." end
-            UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
+            if CloneChatText then CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "." end
+            UltimaMensagemIA = "😎 Olá! Sou " .. CloneName .. "."
             
         elseif action == "jump" then
             if CloneHumanoid then 
@@ -557,8 +631,8 @@ criarBotaoH("Parar de Seguir 🛑", 2, Colors.Red, "stop_follow")
 criarBotaoH("Voltar a Seguir 🏃", 3, Colors.Accent, "follow")
 criarBotaoH("Ficar Feliz 😊", 4, Colors.Yellow, "emote", "rbxassetid://507770677", false, "😊")
 criarBotaoH("Sentar 🪑", 5, Color3.fromRGB(200, 200, 200), "sit", "rbxassetid://2506281703", false, "🪑")
-criarBotaoH("goodbye 👋", 6, Color3.fromRGB(100, 150, 255), "emote", "rbxassetid://507770239", false, "👋")
-criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019", false, "😎")
+criarBotaoH("Chorar 😭", 6, Color3.fromRGB(100, 150, 255), "emote", "rbxassetid://507770239", false, "😭")
+criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019", false, "😀")
 criarBotaoH("Imitar Cachorro 🐶", 8, Colors.Orange, "emote", "rbxassetid://5918726674", false, "🐶")
 criarBotaoH("Parar Tudo 🔄", 9, Color3.fromRGB(180, 180, 180), "stop_all")
 
@@ -569,15 +643,12 @@ criarBotaoH("Parar Tudo 🔄", 9, Color3.fromRGB(180, 180, 180), "stop_all")
 FloatBtn.MouseButton1Click:Connect(ToggleUI)
 FloatBtn.TouchTap:Connect(ToggleUI)
 
--- Conectando o Botão de Personalidade agora que o menu já existe!
 PersonalityFloatBtn.MouseButton1Click:Connect(function()
-    print("Clicou no botão de personalidade!")
     if CloneObj and CloneObj.Parent then
         PersonalityMenu.Visible = not PersonalityMenu.Visible
     end
 end)
 PersonalityFloatBtn.TouchTap:Connect(function()
-    print("Clicou no botão de personalidade! (Touch)")
     if CloneObj and CloneObj.Parent then
         PersonalityMenu.Visible = not PersonalityMenu.Visible
     end
@@ -609,7 +680,7 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==========================================
--- SISTEMA MULTIPLAYER E CLONE
+-- SISTEMA MULTIPLAYER (VIA ATTRIBUTES)
 -- ==========================================
 local function ProcessarPacoteRemoto(nomeJogador, x, y, z, mensagem)
     if nomeJogador == LocalPlayer.Name then return end
@@ -661,39 +732,31 @@ local function IniciarSync()
     
     SyncLoop = task.spawn(function()
         while SyncEnabled do
-            if CloneObj and CloneRoot then
-                local pos = CloneRoot.Position
-                local msg = UltimaMensagemIA:gsub("[|]", ""):gsub("\n", " ")
-                local pacote = string.format("[AI_SYNC]|%s|%f,%f,%f|%s", LocalPlayer.Name, pos.X, pos.Y, pos.Z, msg)
+            if CloneObj and CloneRoot and LocalPlayer.Character then
                 pcall(function()
-                    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                        TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync(pacote)
-                    end
+                    LocalPlayer.Character:SetAttribute("ShadowAI_Pos", CloneRoot.Position)
+                    LocalPlayer.Character:SetAttribute("ShadowAI_Msg", UltimaMensagemIA)
                 end)
             end
             task.wait(0.2)
         end
     end)
-    
-    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-        TextChatService.OnIncomingMessage = function(message)
-            if string.sub(message.Text, 1, 9) == "[AI_SYNC]" then
-                local partes = string.split(message.Text, "|")
-                if #partes >= 5 then
-                    local nome = partes[2]
-                    local coords = string.split(partes[3], ",")
-                    local x = tonumber(coords[1]) or 0
-                    local y = tonumber(coords[2]) or 0
-                    local z = tonumber(coords[3]) or 0
-                    local fala = partes[4]
-                    ProcessarPacoteRemoto(nome, x, y, z, fala)
+
+    task.spawn(function()
+        while SyncEnabled do
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local pos = player.Character:GetAttribute("ShadowAI_Pos")
+                    local msg = player.Character:GetAttribute("ShadowAI_Msg")
+                    
+                    if pos and msg then
+                        ProcessarPacoteRemoto(player.Name, pos.X, pos.Y, pos.Z, msg)
+                    end
                 end
-                local properties = Instance.new("TextChatMessageProperties")
-                properties.Text = "" 
-                return properties
             end
+            task.wait(0.2)
         end
-    end
+    end)
 end
 
 local function soltarClone()
@@ -773,6 +836,11 @@ local function RemoveClone()
     PersonalityMenu.Visible = false
     PersonalityFloatBtn.Visible = false
     if CurrentEmote then CurrentEmote:Stop() CurrentEmote = nil end
+    
+    if LocalPlayer.Character then
+        LocalPlayer.Character:SetAttribute("ShadowAI_Pos", nil)
+        LocalPlayer.Character:SetAttribute("ShadowAI_Msg", nil)
+    end
 end
 
 local function SpawnClone()
@@ -856,7 +924,7 @@ local function SpawnClone()
     CloneChatText.TextScaled = true
     CloneChatText.TextWrapped = true
     CloneChatText.Font = Enum.Font.GothamBold
-    CloneChatText.Text = "😎 Olá! Sou a IA Shadow."
+    CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "."
     CloneChatText.Parent = bill
     addCorner(CloneChatText, 8)
     
@@ -938,8 +1006,8 @@ end
 local function ProcessCommand(message)
     local cmd = string.lower(string.gsub(message, "[^%a%s]", "")):gsub("^%s*(.-)%s*$", "%1")
     
-    if cmd == "choro" or cmd == "goodbye" then
-        PlayCloneEmote("rbxassetid://507770239", "👋")
+    if cmd == "choro" or cmd == "chorar" then
+        PlayCloneEmote("rbxassetid://507770239", "😭")
         AddMessage("Comando: Chorando.", true)
         return true
     elseif cmd == "feliz" or cmd == "comemorar" then
@@ -962,8 +1030,8 @@ local function ProcessCommand(message)
         return true
     elseif cmd == "parar" or cmd == "normal" then
         StopEmote()
-        if CloneChatText then CloneChatText.Text = "😎 Olá! Sou a IA Shadow." end
-        UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
+        if CloneChatText then CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "." end
+        UltimaMensagemIA = "😎 Olá! Sou " .. CloneName .. "."
         AddMessage("Comando: Voltando ao normal.", true)
         return true
     elseif cmd == "pula" or cmd == "pular" then
@@ -997,12 +1065,19 @@ local function AskAI(message)
     
     isThinking = true
     SendBtn.Text = "..."
+    
+    -- Monta a tabela de mensagens incluindo o histórico salvo
+    local mensagensParaEnviar = {
+        { role = "system", content = "Você é um clone amigável no Roblox chamado " .. CloneName .. ". Responda de forma curta, completa, clara e em português." }
+    }
+    
+    for _, msgHist in ipairs(historicoConversa) do
+        table.insert(mensagensParaEnviar, msgHist)
+    end
+    
     local data = {
         model = MODELO,
-        messages = {
-            { role = "system", content = "Você é um clone amigável no Roblox. Responda de forma curta, completa, clara e em português." },
-            { role = "user", content = message }
-        },
+        messages = mensagensParaEnviar,
         max_tokens = 300,
         temperature = 0.7
     }
@@ -1026,7 +1101,7 @@ local function AskAI(message)
             
             if #reply > 3000 then reply = reply:sub(1, 3000) .. "..." end
             
-            AddMessage(reply, false)
+            AddMessage(reply, false) -- AddMessage agora salva no histórico automaticamente
             if CloneChatText then CloneChatText.Text = "💬 " .. reply end
             UltimaMensagemIA = reply
         else
@@ -1061,6 +1136,11 @@ SyncBtn.MouseButton1Click:Connect(function()
         SyncBtn.BackgroundColor3 = Colors.SyncColor
         for _, data in pairs(OutrosClones) do if data.Objeto then data.Objeto:Destroy() end end
         OutrosClones = {}
+        
+        if LocalPlayer.Character then
+            LocalPlayer.Character:SetAttribute("ShadowAI_Pos", nil)
+            LocalPlayer.Character:SetAttribute("ShadowAI_Msg", nil)
+        end
     end
 end)
 
@@ -1097,4 +1177,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ Código Reorganizado! O botão de personalidade deve funcionar agora.")
+print("✅ Memória de Conversa + Sistema de Salvar Carregados!")
