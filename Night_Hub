@@ -422,10 +422,10 @@ local function criarBotaoH(texto, posY, cor, animId, isSit, emoji)
     end)
 end
 
-criarBotaoH("Chorar 😭", 0, Color3.fromRGB(100, 150, 255), "rbxassetid://507770239", false, "😭")
+criarBotaoH("goodbye 👋 ", 0, Color3.fromRGB(100, 150, 255), "rbxassetid://507770239", false, "👋")
 criarBotaoH("Ficar Feliz 😊", 1, Colors.Yellow, "rbxassetid://507770677", false, "😊")
 criarBotaoH("Sentar 🪑", 2, Color3.fromRGB(200, 200, 200), "rbxassetid://2506281703", false, "🪑")
-criarBotaoH("Imitar Gato 🐱", 3, Colors.Purple, "rbxassetid://507771019", false, "🐱")
+criarBotaoH("dançar 🎵", 3, Colors.Purple, "rbxassetid://507771019", false, "😀")
 criarBotaoH("Imitar Cachorro 🐶", 4, Colors.Orange, "rbxassetid://5918726674", false, "🐶")
 criarBotaoH("Parar Tudo 🛑", 5, Colors.Red, nil, false, "")
 
