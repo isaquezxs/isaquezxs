@@ -1,9 +1,10 @@
---// SHADOW LIFE - Clone com IA Real + Comandos (ORDEM CORRIGIDA)
+--// SHADOW LIFE - Clone com IA Real + Comandos (MULTIPLAYER + VELOCIDADE)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
+local TextChatService = game:GetService("TextChatService") -- Necessário para o Multiplayer
 local LocalPlayer = Players.LocalPlayer
 
 local API_KEY = ""
@@ -25,6 +26,13 @@ local CloneDevagar = false
 local CurrentEmote = nil
 local isPlayingEmote = false
 
+-- Variáveis do Multiplayer
+local SyncEnabled = false
+local OutrosClones = {}
+local SyncLoop = nil
+local ChatConnection = nil
+local UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
+
 local Colors = {
     Background = Color3.fromRGB(15, 15, 25),
     Panel = Color3.fromRGB(25, 25, 40),
@@ -34,7 +42,8 @@ local Colors = {
     Orange = Color3.fromRGB(255, 150, 50),
     Blue = Color3.fromRGB(0, 150, 255),
     Yellow = Color3.fromRGB(255, 215, 0),
-    Purple = Color3.fromRGB(180, 100, 255)
+    Purple = Color3.fromRGB(180, 100, 255),
+    SyncColor = Color3.fromRGB(0, 255, 255)
 }
 
 -- ==========================================
@@ -59,6 +68,7 @@ local function PlayCloneEmote(animId, emoji)
     CurrentEmote:Play(0.1)
     
     if CloneChatText and emoji then CloneChatText.Text = emoji end
+    UltimaMensagemIA = emoji -- Atualiza para o multiplayer ver
 end
 
 local function StopEmote()
@@ -173,7 +183,7 @@ ChatWindow.Parent = ScreenGui
 addCorner(ChatWindow, 12)
 
 local SpawnBtn = Instance.new("TextButton")
-SpawnBtn.Size = UDim2.new(0, 150, 0, 40)
+SpawnBtn.Size = UDim2.new(0, 150, 0, 35)
 SpawnBtn.Position = UDim2.new(0.5, -75, 0.1, 0)
 SpawnBtn.BackgroundColor3 = Colors.Accent
 SpawnBtn.Text = "Spawnar Clone com IA Real"
@@ -183,9 +193,21 @@ SpawnBtn.Visible = false
 SpawnBtn.Parent = ScreenGui
 addCorner(SpawnBtn, 8)
 
+-- BOTÃO MULTIPLAYER ADICIONADO AQUI
+local SyncBtn = Instance.new("TextButton")
+SyncBtn.Size = UDim2.new(0, 150, 0, 25)
+SyncBtn.Position = UDim2.new(0.5, -75, 0.1, 40)
+SyncBtn.BackgroundColor3 = Colors.SyncColor
+SyncBtn.Text = "Ativar Multiplayer"
+SyncBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+SyncBtn.Font = Enum.Font.GothamBold
+SyncBtn.Visible = false
+SyncBtn.Parent = ScreenGui
+addCorner(SyncBtn, 8)
+
 local CarryBtn = Instance.new("TextButton")
-CarryBtn.Size = UDim2.new(0, 150, 0, 30)
-CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 45)
+CarryBtn.Size = UDim2.new(0, 150, 0, 25)
+CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 70)
 CarryBtn.BackgroundColor3 = Colors.Orange
 CarryBtn.Text = "Pegar Clone"
 CarryBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -216,6 +238,7 @@ SaveKeyBtn.MouseButton1Click:Connect(function()
     LoginWindow.Visible = false
     ChatWindow.Visible = true
     SpawnBtn.Visible = true
+    SyncBtn.Visible = true
     ChangeKeyBtn.Visible = true
     ErrorText.Text = ""
 end)
@@ -225,6 +248,7 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
     ChangeKeyBtn.Visible = false
     SpawnBtn.Visible = false
     CarryBtn.Visible = false
+    SyncBtn.Visible = false
     KeyInput.Text = ""
     ErrorText.Text = ""
 end)
@@ -410,11 +434,13 @@ local function criarBotaoH(texto, posY, cor, animId, isSit, emoji)
             if CloneHumanoid then CloneHumanoid.Sit = false end
             CloneParado = false
             if CloneChatText then CloneChatText.Text = "😎 Olá! Sou a IA Shadow." end
+            UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
         elseif isSit then
             StopEmote()
             CloneParado = true
             if CloneHumanoid then CloneHumanoid.Sit = true end
             if CloneChatText then CloneChatText.Text = emoji end
+            UltimaMensagemIA = emoji
         else
             if CloneHumanoid then CloneHumanoid.Sit = false end
             PlayCloneEmote(animId, emoji)
@@ -430,8 +456,92 @@ criarBotaoH("Imitar Cachorro 🐶", 4, Colors.Orange, "rbxassetid://5918726674",
 criarBotaoH("Parar Tudo 🛑", 5, Colors.Red, nil, false, "")
 
 -- ==========================================
--- FUNÇÕES DO CLONE
+-- SISTEMA MULTIPLAYER E CLONE (INTEGRADO)
 -- ==========================================
+local function ProcessarPacoteRemoto(nomeJogador, x, y, z, mensagem)
+    if nomeJogador == LocalPlayer.Name then return end
+    if not OutrosClones[nomeJogador] then
+        local player = Players:FindFirstChild(nomeJogador)
+        if not player or not player.Character then return end
+        
+        local clone = player.Character:Clone()
+        clone.Name = "RemoteAI_" .. nomeJogador
+        for _, v in ipairs(clone:GetDescendants()) do
+            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
+            if v:IsA("BasePart") then v.CanCollide = false; v.Anchored = true end
+        end
+        
+        local bill = Instance.new("BillboardGui")
+        bill.Size = UDim2.new(0, 250, 0, 80)
+        bill.StudsOffset = Vector3.new(0, 3, 0)
+        bill.AlwaysOnTop = true
+        
+        local chatText = Instance.new("TextLabel")
+        chatText.Name = "ChatText"
+        chatText.Size = UDim2.new(1, 0, 1, 0)
+        chatText.BackgroundTransparency = 0.3
+        chatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        chatText.TextColor3 = Colors.SyncColor
+        chatText.TextScaled = true
+        chatText.TextWrapped = true
+        chatText.Font = Enum.Font.GothamBold
+        chatText.Text = mensagem
+        chatText.Parent = bill
+        addCorner(chatText, 8)
+        
+        local head = clone:FindFirstChild("Head")
+        if head then bill.Parent = head end
+        
+        clone.Parent = Workspace
+        OutrosClones[nomeJogador] = {Objeto = clone, ChatText = chatText}
+    end
+    
+    local data = OutrosClones[nomeJogador]
+    if data and data.Objeto and data.Objeto.Parent then
+        data.Objeto:PivotTo(CFrame.new(x, y, z))
+        data.ChatText.Text = mensagem
+    end
+end
+
+local function IniciarSync()
+    if SyncLoop then SyncLoop:Disconnect() end
+    if ChatConnection then ChatConnection:Disconnect() end
+    
+    SyncLoop = task.spawn(function()
+        while SyncEnabled do
+            if CloneObj and CloneRoot then
+                local pos = CloneRoot.Position
+                local msg = UltimaMensagemIA:gsub("[|]", ""):gsub("\n", " ")
+                local pacote = string.format("[AI_SYNC]|%s|%f,%f,%f|%s", LocalPlayer.Name, pos.X, pos.Y, pos.Z, msg)
+                pcall(function()
+                    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                        TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync(pacote)
+                    end
+                end)
+            end
+            task.wait(0.2)
+        end
+    end)
+    
+    ChatConnection = TextChatService.OnIncomingMessage:Connect(function(message)
+        if string.sub(message.Text, 1, 9) == "[AI_SYNC]" then
+            local partes = string.split(message.Text, "|")
+            if #partes >= 5 then
+                local nome = partes[2]
+                local coords = string.split(partes[3], ",")
+                local x = tonumber(coords[1]) or 0
+                local y = tonumber(coords[2]) or 0
+                local z = tonumber(coords[3]) or 0
+                local fala = partes[4]
+                ProcessarPacoteRemoto(nome, x, y, z, fala)
+            end
+            local properties = Instance.new("TextChatMessageProperties")
+            properties.Text = "" 
+            return properties
+        end
+    end)
+end
+
 local function soltarClone()
     if CarryWeld then CarryWeld:Destroy() CarryWeld = nil end
     isCarrying = false
@@ -533,7 +643,7 @@ local function SpawnClone()
 
     if CloneHumanoid then
         CloneHumanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-        CloneHumanoid.WalkSpeed = 18 
+        CloneHumanoid.WalkSpeed = 12 -- 🔥 DIMINUÍDO AQUI (Era 18)
         CloneHumanoid.AutoRotate = true
         CloneHumanoid.PlatformStand = false
     end
@@ -625,9 +735,10 @@ local function SpawnClone()
         local distance = (CloneRoot.Position - myRoot.Position).Magnitude
 
         if CloneDevagar then
-            CloneHumanoid.WalkSpeed = 8
+            CloneHumanoid.WalkSpeed = 6 -- 🔥 DIMINUÍDO AQUI (Era 8)
         else
-            CloneHumanoid.WalkSpeed = myHumanoid.WalkSpeed + 4
+            -- 🔥 VELOCIDADE MENOR QUE A SUA (Era +4)
+            CloneHumanoid.WalkSpeed = math.max(8, myHumanoid.WalkSpeed - 4) 
         end
 
         if distance > 50 then
@@ -680,13 +791,13 @@ local function ProcessCommand(message)
     elseif cmd == "sentar" or cmd == "senta" then
         StopEmote()
         CloneParado = true
-        -- Colocando a animação de sentar em vez de forçar o Roblox
         PlayCloneEmote("rbxassetid://2506281703", "🪑")
         AddMessage("Comando: Sentando.", true)
         return true
     elseif cmd == "parar" or cmd == "normal" then
         StopEmote()
         if CloneChatText then CloneChatText.Text = "😎 Olá! Sou a IA Shadow." end
+        UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
         AddMessage("Comando: Voltando ao normal.", true)
         return true
     elseif cmd == "pula" or cmd == "pular" then
@@ -708,6 +819,7 @@ local function AskAI(message)
     AddMessage(message, true)
     ChatInput.Text = ""
     if CloneChatText then CloneChatText.Text = "🤖 Pensando..." end
+    UltimaMensagemIA = "🤖 Pensando..."
     
     if API_KEY == "" or #API_KEY < 10 then
         AddMessage("Erro: Coloque uma API KEY válida!", false)
@@ -750,6 +862,7 @@ local function AskAI(message)
             
             AddMessage(reply, false)
             if CloneChatText then CloneChatText.Text = "💬 " .. reply end
+            UltimaMensagemIA = reply
         else
             AddMessage("Erro da API: Verifique sua chave ou internet.", false)
         end
@@ -769,6 +882,21 @@ SpawnBtn.MouseButton1Click:Connect(function()
     ChatWindow.Visible = true
     SpawnBtn.Visible = false
     CarryBtn.Visible = true
+end)
+
+-- ATIVAÇÃO DO MULTIPLAYER
+SyncBtn.MouseButton1Click:Connect(function()
+    SyncEnabled = not SyncEnabled
+    if SyncEnabled then
+        SyncBtn.Text = "Multiplayer: ON"
+        SyncBtn.BackgroundColor3 = Colors.Accent
+        IniciarSync()
+    else
+        SyncBtn.Text = "Ativar Multiplayer"
+        SyncBtn.BackgroundColor3 = Colors.SyncColor
+        for _, data in pairs(OutrosClones) do if data.Objeto then data.Objeto:Destroy() end end
+        OutrosClones = {}
+    end
 end)
 
 CarryBtn.MouseButton1Click:Connect(function()
@@ -804,4 +932,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ Sistema de Emotes e Comandos Corrigido e Carregado!")
+print("✅ Multiplayer Ativado + Velocidade Reduzida!")
