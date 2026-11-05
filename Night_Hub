@@ -558,7 +558,7 @@ criarBotaoH("Voltar a Seguir 🏃", 3, Colors.Accent, "follow")
 criarBotaoH("Ficar Feliz 😊", 4, Colors.Yellow, "emote", "rbxassetid://507770677", false, "😊")
 criarBotaoH("Sentar 🪑", 5, Color3.fromRGB(200, 200, 200), "sit", "rbxassetid://2506281703", false, "🪑")
 criarBotaoH("goodbye 👋", 6, Color3.fromRGB(100, 150, 255), "emote", "rbxassetid://507770239", false, "👋")
-criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019", false, "😀")
+criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019", false, "😎")
 criarBotaoH("Imitar Cachorro 🐶", 8, Colors.Orange, "emote", "rbxassetid://5918726674", false, "🐶")
 criarBotaoH("Parar Tudo 🔄", 9, Color3.fromRGB(180, 180, 180), "stop_all")
 
