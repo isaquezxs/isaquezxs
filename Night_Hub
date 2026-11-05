@@ -1,4 +1,4 @@
---// SHADOW LIFE - Clone com IA Real (MULTIPLAYER CORRIGIDO)
+--// SHADOW LIFE - Clone com IA Real (ORDEM CORRIGIDA)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -48,35 +48,6 @@ local Colors = {
 }
 
 -- ==========================================
--- FUNÇÕES DE EMOTE
--- ==========================================
-local function PlayCloneEmote(animId, emoji)
-    if not CloneAnimator then return end
-    for _, track in ipairs(CloneAnimator:GetPlayingAnimationTracks()) do
-        track:Stop(0.1)
-    end
-    isPlayingEmote = true
-    CloneParado = true
-    CloneAndandoAleatorio = false
-    local anim = Instance.new("Animation")
-    anim.AnimationId = animId
-    CurrentEmote = CloneAnimator:LoadAnimation(anim)
-    CurrentEmote.Priority = Enum.AnimationPriority.Action4
-    CurrentEmote.Looped = true
-    CurrentEmote:Play(0.1)
-    if CloneChatText and emoji then CloneChatText.Text = emoji end
-    UltimaMensagemIA = emoji
-end
-
-local function StopEmote()
-    if CurrentEmote then CurrentEmote:Stop() CurrentEmote = nil end
-    isPlayingEmote = false
-    CloneParado = false
-    CloneAndandoAleatorio = false
-    if CloneHumanoid then CloneHumanoid.Sit = false end
-end
-
--- ==========================================
 -- SISTEMA DE INTERFACE
 -- ==========================================
 local ScreenGui = Instance.new("ScreenGui")
@@ -121,12 +92,17 @@ end
 
 -- TELA DE LOGIN
 local LoginWindow = Instance.new("Frame")
-LoginWindow.Size = UDim2.new(0, 350, 0, 260)
-LoginWindow.Position = UDim2.new(0.5, -175, 0.5, -130)
+LoginWindow.Size = UDim2.new(0.85, 0, 0, 260)
+LoginWindow.Position = UDim2.new(0.5, 0, 0.5, 0)
+LoginWindow.AnchorPoint = Vector2.new(0.5, 0.5)
 LoginWindow.BackgroundColor3 = Colors.Background
 LoginWindow.BorderSizePixel = 0
 LoginWindow.Parent = ScreenGui
 addCorner(LoginWindow, 12)
+
+local LoginConstraint = Instance.new("UISizeConstraint")
+LoginConstraint.MaxSize = Vector2.new(350, 300)
+LoginConstraint.Parent = LoginWindow
 
 local LoginTitle = Instance.new("TextLabel")
 LoginTitle.Size = UDim2.new(1, 0, 0, 40)
@@ -202,37 +178,42 @@ end)
 
 -- MENU PRINCIPAL
 local ChatWindow = Instance.new("Frame")
-ChatWindow.Size = UDim2.new(0, 500, 0, 600) 
-ChatWindow.Position = UDim2.new(0.5, -250, 0.5, -300)
+ChatWindow.Size = UDim2.new(0.9, 0, 0.8, 0)
+ChatWindow.Position = UDim2.new(0.5, 0, 0.5, 0)
+ChatWindow.AnchorPoint = Vector2.new(0.5, 0.5)
 ChatWindow.BackgroundColor3 = Colors.Background
 ChatWindow.BorderSizePixel = 0
 ChatWindow.Visible = false
 ChatWindow.Parent = ScreenGui
 addCorner(ChatWindow, 12)
 
+local ChatConstraint = Instance.new("UISizeConstraint")
+ChatConstraint.MaxSize = Vector2.new(500, 600)
+ChatConstraint.Parent = ChatWindow
+
 -- BOTÕES FLUTUANTES (MOBILE)
 local FloatBtn = Instance.new("TextButton")
-FloatBtn.Size = UDim2.new(0, 60, 0, 60)
-FloatBtn.Position = UDim2.new(0.8, 0, 0.7, 0)
+FloatBtn.Size = UDim2.new(0, 50, 0, 50)
+FloatBtn.Position = UDim2.new(0.85, 0, 0.7, 0)
 FloatBtn.BackgroundColor3 = Colors.Accent
 FloatBtn.Text = "🤖"
-FloatBtn.TextSize = 30
+FloatBtn.TextSize = 25
 FloatBtn.Font = Enum.Font.GothamBold
 FloatBtn.Visible = false
 FloatBtn.Parent = ScreenGui
-addCorner(FloatBtn, 30)
+addCorner(FloatBtn, 25)
 makeDraggable(FloatBtn, FloatBtn)
 
 local PersonalityFloatBtn = Instance.new("TextButton")
-PersonalityFloatBtn.Size = UDim2.new(0, 60, 0, 60)
-PersonalityFloatBtn.Position = UDim2.new(0.8, 0, 0.7, 70)
+PersonalityFloatBtn.Size = UDim2.new(0, 50, 0, 50)
+PersonalityFloatBtn.Position = UDim2.new(0.85, 0, 0.7, 60)
 PersonalityFloatBtn.BackgroundColor3 = Colors.Purple
 PersonalityFloatBtn.Text = "🎭"
-PersonalityFloatBtn.TextSize = 30
+PersonalityFloatBtn.TextSize = 25
 PersonalityFloatBtn.Font = Enum.Font.GothamBold
 PersonalityFloatBtn.Visible = false
 PersonalityFloatBtn.Parent = ScreenGui
-addCorner(PersonalityFloatBtn, 30)
+addCorner(PersonalityFloatBtn, 25)
 makeDraggable(PersonalityFloatBtn, PersonalityFloatBtn)
 
 -- BOTÕES DA INTERFACE
@@ -301,46 +282,6 @@ local function ToggleUI()
         PersonalityFloatBtn.Visible = false 
     end
 end
-
--- CONECTANDO OS BOTÕES FLUTUANTES
-FloatBtn.MouseButton1Click:Connect(ToggleUI)
-FloatBtn.TouchTap:Connect(ToggleUI)
-
-PersonalityFloatBtn.MouseButton1Click:Connect(function()
-    if CloneObj and CloneObj.Parent then
-        PersonalityMenu.Visible = not PersonalityMenu.Visible
-    end
-end)
-PersonalityFloatBtn.TouchTap:Connect(function()
-    if CloneObj and CloneObj.Parent then
-        PersonalityMenu.Visible = not PersonalityMenu.Visible
-    end
-end)
-
-SaveKeyBtn.MouseButton1Click:Connect(function()
-    local key = KeyInput.Text
-    if key == "" or #key < 20 or not string.find(key, "gsk_") then
-        ErrorText.Text = "Chave inválida! Deve começar com gsk_."
-        return
-    end
-    API_KEY = key
-    LoginWindow.Visible = false
-    FloatBtn.Visible = true
-    ErrorText.Text = ""
-end)
-
-ChangeKeyBtn.MouseButton1Click:Connect(function()
-    LoginWindow.Visible = true
-    ChatWindow.Visible = false
-    SpawnBtn.Visible = false
-    CarryBtn.Visible = false
-    SyncBtn.Visible = false
-    ChangeKeyBtn.Visible = false
-    FloatBtn.Visible = false
-    PersonalityFloatBtn.Visible = false
-    KeyInput.Text = ""
-    ErrorText.Text = ""
-end)
 
 -- CHAT
 local ChatTopBar = Instance.new("Frame")
@@ -441,48 +382,53 @@ CarryMenu.Parent = ScreenGui
 
 local function criarBotaoCarregar(texto, posX, cor)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 95, 0, 95)
+    btn.Size = UDim2.new(0, 80, 0, 80)
     btn.Position = UDim2.new(0, posX, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     btn.Text = ""
     btn.ZIndex = 11
     btn.Parent = CarryMenu
-    addCorner(btn, 50)
+    addCorner(btn, 40)
     local circulo = Instance.new("Frame")
     circulo.Size = UDim2.new(1, 0, 1, 0)
     circulo.BackgroundColor3 = cor
     circulo.BackgroundTransparency = 0.2
     circulo.ZIndex = 11
     circulo.Parent = btn
-    addCorner(circulo, 50)
+    addCorner(circulo, 40)
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Size = UDim2.new(1, 0, 0, 25)
     label.Position = UDim2.new(0, 0, 1, 5)
     label.BackgroundTransparency = 1
     label.Text = texto
     label.TextColor3 = Colors.Text
     label.Font = Enum.Font.GothamBold
-    label.TextSize = 13
+    label.TextSize = 11
     label.TextWrapped = true
     label.ZIndex = 12
     label.Parent = btn
     return btn
 end
 
-local BtnOmbros = criarBotaoCarregar("Ombros", 0, Color3.fromRGB(0, 180, 255))
-local BtnMachucado = criarBotaoCarregar("Carregar Machucado", 112, Color3.fromRGB(255, 80, 80))
-local BtnCostas = criarBotaoCarregar("Apoio nas Costas", 224, Color3.fromRGB(0, 255, 150))
+local BtnOmbros = criarBotaoCarregar("Ombros", 10, Color3.fromRGB(0, 180, 255))
+local BtnMachucado = criarBotaoCarregar("Machucado", 105, Color3.fromRGB(255, 80, 80))
+local BtnCostas = criarBotaoCarregar("Costas", 200, Color3.fromRGB(0, 255, 150))
 
--- MENU PERSONALIDADE
+-- MENU PERSONALIDADE (Agora definido ANTES dos botões que o usam)
 local PersonalityMenu = Instance.new("Frame")
-PersonalityMenu.Size = UDim2.new(0, 400, 0, 600)
-PersonalityMenu.Position = UDim2.new(0.5, -200, 0.5, -300)
+PersonalityMenu.Size = UDim2.new(0.9, 0, 0.8, 0)
+PersonalityMenu.Position = UDim2.new(0.5, 0, 0.5, 0)
+PersonalityMenu.AnchorPoint = Vector2.new(0.5, 0.5)
 PersonalityMenu.BackgroundColor3 = Colors.Background
 PersonalityMenu.BorderSizePixel = 0
 PersonalityMenu.Visible = false
 PersonalityMenu.ZIndex = 50
 PersonalityMenu.Parent = ScreenGui
 addCorner(PersonalityMenu, 12)
+
+local PersonaConstraint = Instance.new("UISizeConstraint")
+PersonaConstraint.MaxSize = Vector2.new(400, 600)
+PersonaConstraint.Parent = PersonalityMenu
 
 local PersonaTitle = Instance.new("TextLabel")
 PersonaTitle.Size = UDim2.new(1, 0, 0, 40)
@@ -508,16 +454,45 @@ addCorner(PersonaClose, 12)
 PersonaClose.MouseButton1Click:Connect(function() PersonalityMenu.Visible = false end)
 PersonaClose.TouchTap:Connect(function() PersonalityMenu.Visible = false end)
 
--- BOTÕES DE AÇÃO NA PERSONALIDADE
+-- ==========================================
+-- FUNÇÕES DE EMOTE
+-- ==========================================
+local function PlayCloneEmote(animId, emoji)
+    if not CloneAnimator then return end
+    for _, track in ipairs(CloneAnimator:GetPlayingAnimationTracks()) do
+        track:Stop(0.1)
+    end
+    isPlayingEmote = true
+    CloneParado = true
+    CloneAndandoAleatorio = false
+    local anim = Instance.new("Animation")
+    anim.AnimationId = animId
+    CurrentEmote = CloneAnimator:LoadAnimation(anim)
+    CurrentEmote.Priority = Enum.AnimationPriority.Action4
+    CurrentEmote.Looped = true
+    CurrentEmote:Play(0.1)
+    if CloneChatText and emoji then CloneChatText.Text = emoji end
+    UltimaMensagemIA = emoji
+end
+
+local function StopEmote()
+    if CurrentEmote then CurrentEmote:Stop() CurrentEmote = nil end
+    isPlayingEmote = false
+    CloneParado = false
+    CloneAndandoAleatorio = false
+    if CloneHumanoid then CloneHumanoid.Sit = false end
+end
+
+-- BOTÕES DO MENU H (Agora podem usar PlayCloneEmote sem erro)
 local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 40)
-    btn.Position = UDim2.new(0.05, 0, 0, 45 + (posY * 45))
+    btn.Size = UDim2.new(0.9, 0, 0, 35) 
+    btn.Position = UDim2.new(0.05, 0, 0, 40 + (posY * 38)) 
     btn.BackgroundColor3 = cor
     btn.Text = texto
     btn.TextColor3 = Color3.fromRGB(0, 0, 0)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
+    btn.TextSize = 12
     btn.ZIndex = 51
     btn.Parent = PersonalityMenu
     addCorner(btn, 8)
@@ -587,6 +562,52 @@ criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019",
 criarBotaoH("Imitar Cachorro 🐶", 8, Colors.Orange, "emote", "rbxassetid://5918726674", false, "🐶")
 criarBotaoH("Parar Tudo 🔄", 9, Color3.fromRGB(180, 180, 180), "stop_all")
 
+
+-- ==========================================
+-- EVENTOS DE ABERTURA DE MENU
+-- ==========================================
+FloatBtn.MouseButton1Click:Connect(ToggleUI)
+FloatBtn.TouchTap:Connect(ToggleUI)
+
+-- Conectando o Botão de Personalidade agora que o menu já existe!
+PersonalityFloatBtn.MouseButton1Click:Connect(function()
+    print("Clicou no botão de personalidade!")
+    if CloneObj and CloneObj.Parent then
+        PersonalityMenu.Visible = not PersonalityMenu.Visible
+    end
+end)
+PersonalityFloatBtn.TouchTap:Connect(function()
+    print("Clicou no botão de personalidade! (Touch)")
+    if CloneObj and CloneObj.Parent then
+        PersonalityMenu.Visible = not PersonalityMenu.Visible
+    end
+end)
+
+SaveKeyBtn.MouseButton1Click:Connect(function()
+    local key = KeyInput.Text
+    if key == "" or #key < 20 or not string.find(key, "gsk_") then
+        ErrorText.Text = "Chave inválida! Deve começar com gsk_."
+        return
+    end
+    API_KEY = key
+    LoginWindow.Visible = false
+    FloatBtn.Visible = true
+    ErrorText.Text = ""
+end)
+
+ChangeKeyBtn.MouseButton1Click:Connect(function()
+    LoginWindow.Visible = true
+    ChatWindow.Visible = false
+    SpawnBtn.Visible = false
+    CarryBtn.Visible = false
+    SyncBtn.Visible = false
+    ChangeKeyBtn.Visible = false
+    FloatBtn.Visible = false
+    PersonalityFloatBtn.Visible = false
+    KeyInput.Text = ""
+    ErrorText.Text = ""
+end)
+
 -- ==========================================
 -- SISTEMA MULTIPLAYER E CLONE
 -- ==========================================
@@ -654,7 +675,6 @@ local function IniciarSync()
         end
     end)
     
-    -- 🔥 AQUI ESTÁ A CORREÇÃO DO ERRO DO TEXTOCHATSERVICE 🔥
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         TextChatService.OnIncomingMessage = function(message)
             if string.sub(message.Text, 1, 9) == "[AI_SYNC]" then
@@ -918,8 +938,8 @@ end
 local function ProcessCommand(message)
     local cmd = string.lower(string.gsub(message, "[^%a%s]", "")):gsub("^%s*(.-)%s*$", "%1")
     
-    if cmd == "choro" or cmd == "chorar" then
-        PlayCloneEmote("rbxassetid://507770239", "😭")
+    if cmd == "choro" or cmd == "goodbye" then
+        PlayCloneEmote("rbxassetid://507770239", "👋")
         AddMessage("Comando: Chorando.", true)
         return true
     elseif cmd == "feliz" or cmd == "comemorar" then
@@ -1077,4 +1097,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ Multiplayer Corrigido e Carregado com Sucesso!")
+print("✅ Código Reorganizado! O botão de personalidade deve funcionar agora.")
