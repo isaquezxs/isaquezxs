@@ -1,4 +1,4 @@
---// SHADOW LIFE - Clone com IA Real + Ver Boneco do Amigo
+--// SHADOW LIFE - Clone com IA Real (Memória + Salvar + Multiplayer + Nome na Cabeça)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -10,10 +10,6 @@ local API_KEY = ""
 local MODELO = "openai/gpt-oss-20b"
 local LINK_API = "https://console.groq.com/keys"
 
--- SISTEMA DE NICKS
-local MeuNick = LocalPlayer.Name
-local AmigoNick = (MeuNick == "bloxfruitsbr9" and "hehejide1") or (MeuNick == "hehejide1" and "bloxfruitsbr9") or "hehejide1"
-
 -- Variáveis de Controle
 local CloneObj, CloneHumanoid, CloneRoot, CloneChatText, AI_Connection = nil, nil, nil, nil, nil
 local isCarrying = false
@@ -24,6 +20,7 @@ local tracksDoClone = {}
 local modoCarregar = nil
 local CloneAnimator = nil
 
+-- NOVAS VARIÁVEIS (Nome e Histórico)
 local CloneName = "Shadow"
 local historicoConversa = {}
 local LogSalvo = ""
@@ -35,9 +32,11 @@ local RandomWalkTimer = 0
 local CurrentEmote = nil
 local isPlayingEmote = false
 
--- VARIÁVEIS DO AMIGO
-local CloneAmigo = nil
-local VerAmigoAtivado = false
+-- Variáveis do Multiplayer
+local SyncEnabled = false
+local OutrosClones = {}
+local SyncLoop = nil
+local UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
 
 local Colors = {
     Background = Color3.fromRGB(15, 15, 25),
@@ -196,7 +195,7 @@ local ChatConstraint = Instance.new("UISizeConstraint")
 ChatConstraint.MaxSize = Vector2.new(500, 600)
 ChatConstraint.Parent = ChatWindow
 
--- BOTÕES FLUTUANTES
+-- BOTÕES FLUTUANTES (MOBILE)
 local FloatBtn = Instance.new("TextButton")
 FloatBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatBtn.Position = UDim2.new(0.85, 0, 0.7, 0)
@@ -237,7 +236,7 @@ local SyncBtn = Instance.new("TextButton")
 SyncBtn.Size = UDim2.new(0, 150, 0, 25)
 SyncBtn.Position = UDim2.new(0.5, -75, 0.1, 40)
 SyncBtn.BackgroundColor3 = Colors.SyncColor
-SyncBtn.Text = "Ativar Ver Amigo"
+SyncBtn.Text = "Ativar Multiplayer"
 SyncBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 SyncBtn.Font = Enum.Font.GothamBold
 SyncBtn.Visible = false
@@ -246,7 +245,7 @@ addCorner(SyncBtn, 8)
 
 local CarryBtn = Instance.new("TextButton")
 CarryBtn.Size = UDim2.new(0, 150, 0, 25)
-CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 75)
+CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 70)
 CarryBtn.BackgroundColor3 = Colors.Orange
 CarryBtn.Text = "Pegar Clone"
 CarryBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -308,6 +307,7 @@ ChatTitle.TextSize = 13
 ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
 ChatTitle.Parent = ChatTopBar
 
+-- CAMPO DE NOME DO CLONE
 local NameInput = Instance.new("TextBox")
 NameInput.Size = UDim2.new(0.35, 0, 0, 25)
 NameInput.Position = UDim2.new(0.45, 0, 0.5, -12)
@@ -321,12 +321,14 @@ NameInput.TextSize = 11
 NameInput.Parent = ChatTopBar
 addCorner(NameInput, 6)
 
+-- ATUALIZA O NOME EM TEMPO REAL
 NameInput.FocusLost:Connect(function()
     if NameInput.Text ~= "" then
         CloneName = NameInput.Text
         if CloneChatText then
             CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "."
         end
+        -- ATUALIZA O NOME ACIMA DA CABEÇA SE O CLONE EXISTIR
         if CloneObj and CloneObj:FindFirstChild("Head") then
             local bill = CloneObj.Head:FindFirstChildOfClass("BillboardGui")
             if bill and bill:FindFirstChild("NameTag") then
@@ -390,6 +392,7 @@ SendBtn.TextSize = 12
 SendBtn.Parent = ChatWindow
 addCorner(SendBtn, 8)
 
+-- BOTÃO SALVAR CONVERSA
 local SaveLogBtn = Instance.new("TextButton")
 SaveLogBtn.Size = UDim2.new(0, 50, 0, 35)
 SaveLogBtn.Position = UDim2.new(1, -60, 1, -45)
@@ -402,6 +405,7 @@ SaveLogBtn.TextSize = 11
 SaveLogBtn.Parent = ChatWindow
 addCorner(SaveLogBtn, 8)
 
+-- FUNÇÃO DE ADICIONAR MENSAGEM E SALVAR NO HISTÓRICO
 local function AddMessage(text, isUser)
     local msg = Instance.new("TextLabel")
     msg.Size = UDim2.new(1, -10, 0, 50)
@@ -415,8 +419,10 @@ local function AddMessage(text, isUser)
     msg.Parent = ChatScroll
     addCorner(msg, 6)
     
+    -- Salva no log visual
     LogSalvo = LogSalvo .. (isUser and "Você: " or CloneName .. ": ") .. text .. "\n"
 
+    -- Salva no histórico de memória da IA
     if isUser then
         table.insert(historicoConversa, {role = "user", content = text})
     else
@@ -428,6 +434,7 @@ local function AddMessage(text, isUser)
     end
 end
 
+-- AÇÃO DO BOTÃO SALVAR
 SaveLogBtn.MouseButton1Click:Connect(function()
     local sucesso, erro = pcall(function()
         if writefile then
@@ -529,7 +536,9 @@ addCorner(PersonaClose, 12)
 PersonaClose.MouseButton1Click:Connect(function() PersonalityMenu.Visible = false end)
 PersonaClose.TouchTap:Connect(function() PersonalityMenu.Visible = false end)
 
+-- ==========================================
 -- FUNÇÕES DE EMOTE
+-- ==========================================
 local function PlayCloneEmote(animId, emoji)
     if not CloneAnimator then return end
     for _, track in ipairs(CloneAnimator:GetPlayingAnimationTracks()) do
@@ -545,6 +554,7 @@ local function PlayCloneEmote(animId, emoji)
     CurrentEmote.Looped = true
     CurrentEmote:Play(0.1)
     if CloneChatText and emoji then CloneChatText.Text = emoji end
+    UltimaMensagemIA = emoji
 end
 
 local function StopEmote()
@@ -576,11 +586,13 @@ local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
             CloneParado = false
             CloneAndandoAleatorio = false
             if CloneChatText then CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "." end
+            UltimaMensagemIA = "😎 Olá! Sou " .. CloneName .. "."
             
         elseif action == "jump" then
             if CloneHumanoid then 
                 CloneHumanoid:ChangeState(Enum.HumanoidStateType.Jumping) 
                 if CloneChatText then CloneChatText.Text = "🦘 Pulando!" end
+                UltimaMensagemIA = "🦘"
             end
             
         elseif action == "random_walk" then
@@ -588,24 +600,28 @@ local function criarBotaoH(texto, posY, cor, action, animId, isSit, emoji)
             CloneParado = false
             CloneAndandoAleatorio = true
             if CloneChatText then CloneChatText.Text = "🚶 Andando por aí..." end
+            UltimaMensagemIA = "🚶"
             
         elseif action == "stop_follow" then
             StopEmote()
             CloneParado = true
             CloneAndandoAleatorio = false
             if CloneChatText then CloneChatText.Text = "🛑 Parado." end
+            UltimaMensagemIA = "🛑"
             
         elseif action == "follow" then
             StopEmote()
             CloneParado = false
             CloneAndandoAleatorio = false
             if CloneChatText then CloneChatText.Text = "🏃 Seguindo." end
+            UltimaMensagemIA = "🏃"
             
         elseif isSit then
             StopEmote()
             CloneParado = true
             if CloneHumanoid then CloneHumanoid.Sit = true end
             if CloneChatText then CloneChatText.Text = emoji end
+            UltimaMensagemIA = emoji
             
         else
             if CloneHumanoid then CloneHumanoid.Sit = false end
@@ -628,7 +644,10 @@ criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019",
 criarBotaoH("Imitar Cachorro 🐶", 8, Colors.Orange, "emote", "rbxassetid://5918726674", false, "🐶")
 criarBotaoH("Parar Tudo 🔄", 9, Color3.fromRGB(180, 180, 180), "stop_all")
 
+
+-- ==========================================
 -- EVENTOS DE ABERTURA DE MENU
+-- ==========================================
 FloatBtn.MouseButton1Click:Connect(ToggleUI)
 FloatBtn.TouchTap:Connect(ToggleUI)
 
@@ -669,76 +688,85 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==========================================
--- SISTEMA DE VER O BONECO DO AMIGO (VISUAL APENAS)
+-- SISTEMA MULTIPLAYER (VIA ATTRIBUTES)
 -- ==========================================
-local function IniciarVerAmigo()
-    if not VerAmigoAtivado then
-        VerAmigoAtivado = true
+local function ProcessarPacoteRemoto(nomeJogador, x, y, z, mensagem)
+    if nomeJogador == LocalPlayer.Name then return end
+    if not OutrosClones[nomeJogador] then
+        local player = Players:FindFirstChild(nomeJogador)
+        if not player or not player.Character then return end
         
-        task.spawn(function()
-            while VerAmigoAtivado do
-                local jogador = Players:FindFirstChild(AmigoNick)
-                
-                if jogador and jogador.Character and jogador.Character:FindFirstChild("HumanoidRootPart") then
-                    if not CloneAmigo then
-                        -- Garante que pode clonar
-                        jogador.Character.Archivable = true
-                        CloneAmigo = jogador.Character:Clone()
-                        CloneAmigo.Name = "BonecoDoAmigo"
-                        
-                        for _, v in ipairs(CloneAmigo:GetDescendants()) do
-                            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
-                            if v:IsA("BasePart") then 
-                                v.CanCollide = false 
-                                v.Anchored = true 
-                            end
-                        end
-                        
-                        local bill = Instance.new("BillboardGui")
-                        bill.Size = UDim2.new(0, 200, 0, 50)
-                        bill.StudsOffset = Vector3.new(0, 3, 0)
-                        bill.AlwaysOnTop = true
-                        
-                        local NameTag = Instance.new("TextLabel")
-                        NameTag.Size = UDim2.new(1, 0, 1, 0)
-                        NameTag.BackgroundTransparency = 1
-                        NameTag.Text = "👤 " .. AmigoNick .. " (Clone)"
-                        NameTag.TextColor3 = Colors.SyncColor
-                        NameTag.TextScaled = true
-                        NameTag.Font = Enum.Font.GothamBold
-                        NameTag.Parent = bill
-                        
-                        local head = CloneAmigo:FindFirstChild("Head")
-                        if head then bill.Parent = head end
-                        
-                        CloneAmigo.Parent = Workspace
-                    end
+        local clone = player.Character:Clone()
+        clone.Name = "RemoteAI_" .. nomeJogador
+        for _, v in ipairs(clone:GetDescendants()) do
+            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
+            if v:IsA("BasePart") then v.CanCollide = false; v.Anchored = true end
+        end
+        
+        local bill = Instance.new("BillboardGui")
+        bill.Size = UDim2.new(0, 250, 0, 80)
+        bill.StudsOffset = Vector3.new(0, 3, 0)
+        bill.AlwaysOnTop = true
+        
+        local chatText = Instance.new("TextLabel")
+        chatText.Name = "ChatText"
+        chatText.Size = UDim2.new(1, 0, 1, 0)
+        chatText.BackgroundTransparency = 0.3
+        chatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        chatText.TextColor3 = Colors.SyncColor
+        chatText.TextScaled = true
+        chatText.TextWrapped = true
+        chatText.Font = Enum.Font.GothamBold
+        chatText.Text = mensagem
+        chatText.Parent = bill
+        addCorner(chatText, 8)
+        
+        local head = clone:FindFirstChild("Head")
+        if head then bill.Parent = head end
+        
+        clone.Parent = Workspace
+        OutrosClones[nomeJogador] = {Objeto = clone, ChatText = chatText}
+    end
+    
+    local data = OutrosClones[nomeJogador]
+    if data and data.Objeto and data.Objeto.Parent then
+        data.Objeto:PivotTo(CFrame.new(x, y, z))
+        data.ChatText.Text = mensagem
+    end
+end
+
+local function IniciarSync()
+    if SyncLoop then SyncLoop:Disconnect() end
+    
+    SyncLoop = task.spawn(function()
+        while SyncEnabled do
+            if CloneObj and CloneRoot and LocalPlayer.Character then
+                pcall(function()
+                    LocalPlayer.Character:SetAttribute("ShadowAI_Pos", CloneRoot.Position)
+                    LocalPlayer.Character:SetAttribute("ShadowAI_Msg", UltimaMensagemIA)
+                end)
+            end
+            task.wait(0.2)
+        end
+    end)
+
+    task.spawn(function()
+        while SyncEnabled do
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local pos = player.Character:GetAttribute("ShadowAI_Pos")
+                    local msg = player.Character:GetAttribute("ShadowAI_Msg")
                     
-                    -- Faz o clone seguir a posição do jogador
-                    CloneAmigo:PivotTo(jogador.Character.HumanoidRootPart.CFrame)
-                else
-                    -- Se o jogador sair, deleta o clone
-                    if CloneAmigo then
-                        CloneAmigo:Destroy()
-                        CloneAmigo = nil
+                    if pos and msg then
+                        ProcessarPacoteRemoto(player.Name, pos.X, pos.Y, pos.Z, msg)
                     end
                 end
-                
-                task.wait(0.1)
             end
-        end)
-    end
+            task.wait(0.2)
+        end
+    end)
 end
 
-local function PararVerAmigo()
-    VerAmigoAtivado = false
-    if CloneAmigo then
-        CloneAmigo:Destroy()
-        CloneAmigo = nil
-    end
-end
-
--- FUNÇÕES DO CLONE LOCAL
 local function soltarClone()
     if CarryWeld then CarryWeld:Destroy() CarryWeld = nil end
     isCarrying = false
@@ -816,6 +844,11 @@ local function RemoveClone()
     PersonalityMenu.Visible = false
     PersonalityFloatBtn.Visible = false
     if CurrentEmote then CurrentEmote:Stop() CurrentEmote = nil end
+    
+    if LocalPlayer.Character then
+        LocalPlayer.Character:SetAttribute("ShadowAI_Pos", nil)
+        LocalPlayer.Character:SetAttribute("ShadowAI_Msg", nil)
+    end
 end
 
 local function SpawnClone()
@@ -888,14 +921,15 @@ local function SpawnClone()
     end
 
     local bill = Instance.new("BillboardGui")
-    bill.Size = UDim2.new(0, 250, 0, 100)
-    bill.StudsOffset = Vector3.new(0, 3.5, 0)
+    bill.Size = UDim2.new(0, 250, 0, 100) -- Aumentei a altura para caber o nome e a fala
+    bill.StudsOffset = Vector3.new(0, 3.5, 0) -- Subi um pouco mais
     bill.AlwaysOnTop = true
     
+    -- 1. NOME ACIMA DA CABEÇA
     local NameTag = Instance.new("TextLabel")
     NameTag.Name = "NameTag"
     NameTag.Size = UDim2.new(1, 0, 0, 30)
-    NameTag.Position = UDim2.new(0, 0, 0, 0)
+    NameTag.Position = UDim2.new(0, 0, 0, 0) -- Fica na parte de cima do balão
     NameTag.BackgroundTransparency = 1
     NameTag.Text = CloneName
     NameTag.TextColor3 = Colors.SyncColor
@@ -903,9 +937,10 @@ local function SpawnClone()
     NameTag.Font = Enum.Font.GothamBold
     NameTag.Parent = bill
 
+    -- 2. BALÃO DE FALA (O que já existia, mas ajustei a posição para baixo)
     CloneChatText = Instance.new("TextLabel")
     CloneChatText.Size = UDim2.new(1, 0, 0, 60)
-    CloneChatText.Position = UDim2.new(0, 0, 0, 35)
+    CloneChatText.Position = UDim2.new(0, 0, 0, 35) -- Fica na parte de baixo do balão
     CloneChatText.BackgroundTransparency = 0.3
     CloneChatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     CloneChatText.TextColor3 = Colors.Accent
@@ -982,7 +1017,9 @@ local function SpawnClone()
     end)
 end
 
+-- ==========================================
 -- COMANDOS DE CHAT
+-- ==========================================
 local isThinking = false
 local function GetRequestFunction()
     return (syn and syn.request) or (http and http.request) or http_request or request
@@ -1016,6 +1053,7 @@ local function ProcessCommand(message)
     elseif cmd == "parar" or cmd == "normal" then
         StopEmote()
         if CloneChatText then CloneChatText.Text = "😎 Olá! Sou " .. CloneName .. "." end
+        UltimaMensagemIA = "😎 Olá! Sou " .. CloneName .. "."
         AddMessage("Comando: Voltando ao normal.", true)
         return true
     elseif cmd == "pula" or cmd == "pular" then
@@ -1037,6 +1075,7 @@ local function AskAI(message)
     AddMessage(message, true)
     ChatInput.Text = ""
     if CloneChatText then CloneChatText.Text = "🤖 Pensando..." end
+    UltimaMensagemIA = "🤖 Pensando..."
     
     if API_KEY == "" or #API_KEY < 10 then
         AddMessage("Erro: Coloque uma API KEY válida!", false)
@@ -1085,6 +1124,7 @@ local function AskAI(message)
             
             AddMessage(reply, false)
             if CloneChatText then CloneChatText.Text = "💬 " .. reply end
+            UltimaMensagemIA = reply
         else
             AddMessage("Erro da API: Verifique sua chave ou internet.", false)
         end
@@ -1105,16 +1145,23 @@ SpawnBtn.MouseButton1Click:Connect(function()
     CarryBtn.Visible = true
 end)
 
--- ATIVAÇÃO DO VER AMIGO (SIMPLES)
+-- ATIVAÇÃO DO MULTIPLAYER
 SyncBtn.MouseButton1Click:Connect(function()
-    if not VerAmigoAtivado then
-        SyncBtn.Text = "Amigo: ON"
+    SyncEnabled = not SyncEnabled
+    if SyncEnabled then
+        SyncBtn.Text = "Multiplayer: ON"
         SyncBtn.BackgroundColor3 = Colors.Accent
-        IniciarVerAmigo()
+        IniciarSync()
     else
-        SyncBtn.Text = "Ativar Ver Amigo"
+        SyncBtn.Text = "Ativar Multiplayer"
         SyncBtn.BackgroundColor3 = Colors.SyncColor
-        PararVerAmigo()
+        for _, data in pairs(OutrosClones) do if data.Objeto then data.Objeto:Destroy() end end
+        OutrosClones = {}
+        
+        if LocalPlayer.Character then
+            LocalPlayer.Character:SetAttribute("ShadowAI_Pos", nil)
+            LocalPlayer.Character:SetAttribute("ShadowAI_Msg", nil)
+        end
     end
 end)
 
@@ -1151,4 +1198,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ Sistema de Ver Boneco do Amigo (" .. AmigoNick .. ") Carregado!")
+print("✅ Nome na Cabeça + Memória + Salvar Carregados!")
