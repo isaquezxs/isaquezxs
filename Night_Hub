@@ -1,4 +1,4 @@
---// SHADOW LIFE - Clone com IA Real (Sistema de Ver Clone de Amigos)
+--// SHADOW LIFE - Clone com IA Real (Sincronização Automática por Nick)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -11,6 +11,10 @@ local API_KEY = ""
 local MODELO = "openai/gpt-oss-20b"
 local LINK_API = "https://console.groq.com/keys"
 
+-- SISTEMA AUTOMÁTICO DE VER O AMIGO
+local MeuNick = LocalPlayer.Name
+local AmigoNick = (MeuNick == "bloxfruitsbr9" and "hehejide1") or (MeuNick == "hehejide1" and "bloxfruitsbr9")
+
 -- Variáveis de Controle
 local CloneObj, CloneHumanoid, CloneRoot, CloneChatText, AI_Connection = nil, nil, nil, nil, nil
 local isCarrying = false
@@ -21,7 +25,6 @@ local tracksDoClone = {}
 local modoCarregar = nil
 local CloneAnimator = nil
 
--- NOVAS VARIÁVEIS (Nome e Histórico)
 local CloneName = "Shadow"
 local historicoConversa = {}
 local LogSalvo = ""
@@ -33,11 +36,10 @@ local RandomWalkTimer = 0
 local CurrentEmote = nil
 local isPlayingEmote = false
 
--- Variáveis do Multiplayer (APENAS PARA VER O CLONE)
-local SyncEnabled = false
-local ClonesAmigos = {} -- Tabela para guardar os clones dos amigos
-local SyncLoop = nil
-local UltimaMensagemIA = "😎 Olá! Sou a IA Shadow."
+-- VARIÁVEIS DO AMIGO (AUTOMÁTICO)
+local CloneAmigo = nil
+local ChatAmigo = nil
+local AmigoFalando = "😎 Olá!"
 
 local Colors = {
     Background = Color3.fromRGB(15, 15, 25),
@@ -196,7 +198,7 @@ local ChatConstraint = Instance.new("UISizeConstraint")
 ChatConstraint.MaxSize = Vector2.new(500, 600)
 ChatConstraint.Parent = ChatWindow
 
--- BOTÕES FLUTUANTES (MOBILE)
+-- BOTÕES FLUTUANTES
 local FloatBtn = Instance.new("TextButton")
 FloatBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatBtn.Position = UDim2.new(0.85, 0, 0.7, 0)
@@ -233,20 +235,9 @@ SpawnBtn.Visible = false
 SpawnBtn.Parent = ScreenGui
 addCorner(SpawnBtn, 8)
 
-local SyncBtn = Instance.new("TextButton")
-SyncBtn.Size = UDim2.new(0, 150, 0, 25)
-SyncBtn.Position = UDim2.new(0.5, -75, 0.1, 40)
-SyncBtn.BackgroundColor3 = Colors.SyncColor
-SyncBtn.Text = "Ativar Multiplayer (Ver Clones)"
-SyncBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-SyncBtn.Font = Enum.Font.GothamBold
-SyncBtn.Visible = false
-SyncBtn.Parent = ScreenGui
-addCorner(SyncBtn, 8)
-
 local CarryBtn = Instance.new("TextButton")
 CarryBtn.Size = UDim2.new(0, 150, 0, 25)
-CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 70)
+CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 45)
 CarryBtn.BackgroundColor3 = Colors.Orange
 CarryBtn.Text = "Pegar Clone"
 CarryBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -272,7 +263,6 @@ local function ToggleUI()
     if ChatWindow.Visible then
         ChatWindow.Visible = false
         SpawnBtn.Visible = false
-        SyncBtn.Visible = false
         CarryBtn.Visible = false
         ChangeKeyBtn.Visible = false
         FloatBtn.Visible = true
@@ -280,7 +270,6 @@ local function ToggleUI()
     else
         ChatWindow.Visible = true
         SpawnBtn.Visible = not CloneObj 
-        SyncBtn.Visible = true
         CarryBtn.Visible = CloneObj ~= nil
         ChangeKeyBtn.Visible = true
         FloatBtn.Visible = false
@@ -308,7 +297,6 @@ ChatTitle.TextSize = 13
 ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
 ChatTitle.Parent = ChatTopBar
 
--- CAMPO DE NOME DO CLONE
 local NameInput = Instance.new("TextBox")
 NameInput.Size = UDim2.new(0.35, 0, 0, 25)
 NameInput.Position = UDim2.new(0.45, 0, 0.5, -12)
@@ -391,7 +379,6 @@ SendBtn.TextSize = 12
 SendBtn.Parent = ChatWindow
 addCorner(SendBtn, 8)
 
--- BOTÃO SALVAR CONVERSA
 local SaveLogBtn = Instance.new("TextButton")
 SaveLogBtn.Size = UDim2.new(0, 50, 0, 35)
 SaveLogBtn.Position = UDim2.new(1, -60, 1, -45)
@@ -531,9 +518,7 @@ addCorner(PersonaClose, 12)
 PersonaClose.MouseButton1Click:Connect(function() PersonalityMenu.Visible = false end)
 PersonaClose.TouchTap:Connect(function() PersonalityMenu.Visible = false end)
 
--- ==========================================
 -- FUNÇÕES DE EMOTE
--- ==========================================
 local function PlayCloneEmote(animId, emoji)
     if not CloneAnimator then return end
     for _, track in ipairs(CloneAnimator:GetPlayingAnimationTracks()) do
@@ -632,9 +617,7 @@ criarBotaoH("Dançar 🎵", 7, Colors.Purple, "emote", "rbxassetid://507771019",
 criarBotaoH("Imitar Cachorro 🐶", 8, Colors.Orange, "emote", "rbxassetid://5918726674", false, "🐶")
 criarBotaoH("Parar Tudo 🔄", 9, Color3.fromRGB(180, 180, 180), "stop_all")
 
--- ==========================================
 -- EVENTOS DE ABERTURA DE MENU
--- ==========================================
 FloatBtn.MouseButton1Click:Connect(ToggleUI)
 FloatBtn.TouchTap:Connect(ToggleUI)
 
@@ -666,7 +649,6 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
     ChatWindow.Visible = false
     SpawnBtn.Visible = false
     CarryBtn.Visible = false
-    SyncBtn.Visible = false
     ChangeKeyBtn.Visible = false
     FloatBtn.Visible = false
     PersonalityFloatBtn.Visible = false
@@ -675,88 +657,83 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==========================================
--- SISTEMA DE VER CLONES DE AMIGOS (ESPELHAMENTO)
+-- SISTEMA AUTOMÁTICO DE VER O AMIGO
 -- ==========================================
-local function IniciarSync()
-    if SyncLoop then SyncLoop:Disconnect() end
-    
-    -- 1. Envia o sinal de que está usando o script (invisível)
-    SyncLoop = task.spawn(function()
-        while SyncEnabled do
-            pcall(function()
-                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                    TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync("!shadow_clone_on")
-                end
-            end)
-            task.wait(2) -- Envia a cada 2 segundos para não dar mute
-        end
-    end)
-
-    -- 2. Ouve o sinal e cria o clone espelhado
+if AmigoNick then
+    -- Lê as mensagens do chat para pegar a fala da IA do amigo
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         TextChatService.OnIncomingMessage = function(message)
-            if message.Text == "!shadow_clone_on" then
-                local sender = Players:FindFirstChild(message.TextSource.Name)
-                
-                if sender and sender ~= LocalPlayer and sender.Character then
-                    -- Se já não tiver um clone desse amigo, cria
-                    if not ClonesAmigos[sender.Name] then
-                        local clone = sender.Character:Clone()
-                        clone.Name = "Clone_" .. sender.Name
-                        
-                        -- Deixa o clone visual apenas, sem scripts e sem colisão
-                        for _, v in ipairs(clone:GetDescendants()) do
-                            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
-                            if v:IsA("BasePart") then 
-                                v.CanCollide = false 
-                                v.Anchored = true 
-                            end
-                        end
-
-                        -- Balão indicando que é o clone do amigo
-                        local bill = Instance.new("BillboardGui")
-                        bill.Size = UDim2.new(0, 200, 0, 50)
-                        bill.StudsOffset = Vector3.new(0, 3, 0)
-                        bill.AlwaysOnTop = true
-                        
-                        local nameTag = Instance.new("TextLabel")
-                        nameTag.Size = UDim2.new(1, 0, 1, 0)
-                        nameTag.BackgroundTransparency = 1
-                        nameTag.Text = "👥 " .. sender.Name .. " (Clone IA)"
-                        nameTag.TextColor3 = Colors.SyncColor
-                        nameTag.TextScaled = true
-                        nameTag.Font = Enum.Font.GothamBold
-                        nameTag.Parent = bill
-                        
-                        local head = clone:FindFirstChild("Head")
-                        if head then bill.Parent = head end
-
-                        clone.Parent = Workspace
-                        ClonesAmigos[sender.Name] = clone
+            if message.Text:sub(1, 5) == "[IA] " and message.TextSource then
+                if message.TextSource.Name == AmigoNick then
+                    AmigoFalando = message.Text:sub(6)
+                    if ChatAmigo then
+                        ChatAmigo.Text = AmigoFalando
                     end
                 end
-                
-                -- Esconde a mensagem no chat
                 local properties = Instance.new("TextChatMessageProperties")
-                properties.Text = "" 
+                properties.Text = "" -- Esconde a mensagem
                 return properties
             end
         end
     end
 
-    -- 3. Atualiza a posição do clone para seguir o amigo perfeitamente
+    -- Loop que cria e move o clone do amigo automaticamente
     task.spawn(function()
-        while SyncEnabled do
-            for name, clone in pairs(ClonesAmigos) do
-                local player = Players:FindFirstChild(name)
-                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    if clone and clone:FindFirstChild("HumanoidRootPart") then
-                        clone:PivotTo(player.Character.HumanoidRootPart.CFrame)
+        while true do
+            local jogador = Players:FindFirstChild(AmigoNick)
+            
+            if jogador and jogador.Character and jogador.Character:FindFirstChild("HumanoidRootPart") then
+                if not CloneAmigo then
+                    CloneAmigo = jogador.Character:Clone()
+                    CloneAmigo.Name = "Clone_" .. AmigoNick
+                    
+                    for _, v in ipairs(CloneAmigo:GetDescendants()) do
+                        if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
+                        if v:IsA("BasePart") then 
+                            v.CanCollide = false 
+                            v.Anchored = true 
+                        end
                     end
-                else
-                    -- Se o amigo sair do jogo, deleta o clone
-                    if clone then clone:Destroy() end
-                    ClonesAmigos[name] = nil
+                    
+                    local bill = Instance.new("BillboardGui")
+                    bill.Size = UDim2.new(0, 250, 0, 100)
+                    bill.StudsOffset = Vector3.new(0, 3.5, 0)
+                    bill.AlwaysOnTop = true
+                    
+                    local NameTag = Instance.new("TextLabel")
+                    NameTag.Size = UDim2.new(1, 0, 0, 30)
+                    NameTag.Position = UDim2.new(0, 0, 0, 0)
+                    NameTag.BackgroundTransparency = 1
+                    NameTag.Text = "👤 " .. AmigoNick .. " (Clone)"
+                    NameTag.TextColor3 = Colors.SyncColor
+                    NameTag.TextScaled = true
+                    NameTag.Font = Enum.Font.GothamBold
+                    NameTag.Parent = bill
+                    
+                    ChatAmigo = Instance.new("TextLabel")
+                    ChatAmigo.Size = UDim2.new(1, 0, 0, 60)
+                    ChatAmigo.Position = UDim2.new(0, 0, 0, 35)
+                    ChatAmigo.BackgroundTransparency = 0.3
+                    ChatAmigo.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+                    ChatAmigo.TextColor3 = Colors.Accent
+                    ChatAmigo.TextScaled = true
+                    ChatAmigo.TextWrapped = true
+                    ChatAmigo.Font = Enum.Font.GothamBold
+                    ChatAmigo.Text = AmigoFalando
+                    ChatAmigo.Parent = bill
+                    
+                    local head = CloneAmigo:FindFirstChild("Head")
+                    if head then bill.Parent = head end
+                    
+                    CloneAmigo.Parent = Workspace
+                end
+                
+                CloneAmigo:PivotTo(jogador.Character.HumanoidRootPart.CFrame)
+            else
+                if CloneAmigo then
+                    CloneAmigo:Destroy()
+                    CloneAmigo = nil
+                    ChatAmigo = nil
                 end
             end
             task.wait(0.1)
@@ -764,6 +741,7 @@ local function IniciarSync()
     end)
 end
 
+-- FUNÇÕES DO CLONE LOCAL
 local function soltarClone()
     if CarryWeld then CarryWeld:Destroy() CarryWeld = nil end
     isCarrying = false
@@ -1007,9 +985,7 @@ local function SpawnClone()
     end)
 end
 
--- ==========================================
 -- COMANDOS DE CHAT
--- ==========================================
 local isThinking = false
 local function GetRequestFunction()
     return (syn and syn.request) or (http and http.request) or http_request or request
@@ -1112,6 +1088,13 @@ local function AskAI(message)
             
             AddMessage(reply, false)
             if CloneChatText then CloneChatText.Text = "💬 " .. reply end
+            
+            -- ENVIA A FALA DA IA PARA O CHAT (PARA O AMIGO VER)
+            pcall(function()
+                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync("[IA] " .. reply)
+                end
+            end)
         else
             AddMessage("Erro da API: Verifique sua chave ou internet.", false)
         end
@@ -1130,31 +1113,6 @@ SpawnBtn.MouseButton1Click:Connect(function()
     SpawnClone()
     SpawnBtn.Visible = false
     CarryBtn.Visible = true
-end)
-
--- ATIVAÇÃO DO MULTIPLAYER
-SyncBtn.MouseButton1Click:Connect(function()
-    SyncEnabled = not SyncEnabled
-    if SyncEnabled then
-        SyncBtn.Text = "Multiplayer: ON"
-        SyncBtn.BackgroundColor3 = Colors.Accent
-        IniciarSync()
-    else
-        SyncBtn.Text = "Ativar Multiplayer (Ver Clones)"
-        SyncBtn.BackgroundColor3 = Colors.SyncColor
-        -- Limpa os clones dos amigos
-        for _, clone in pairs(ClonesAmigos) do
-            if clone then clone:Destroy() end
-        end
-        ClonesAmigos = {}
-        
-        -- Avisa que saiu
-        pcall(function()
-            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                TextChatService.ChatChannels:FindFirstChild("RBXGeneral"):SendAsync("!shadow_clone_off")
-            end
-        end)
-    end
 end)
 
 CarryBtn.MouseButton1Click:Connect(function()
@@ -1190,4 +1148,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ Sistema de Espelhamento (Ver Clone de Amigos) Carregado!")
+print("✅ Sincronização Automática Ativada para: " .. (AmigoNick or "Nenhum amigo detectado"))
