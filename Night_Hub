@@ -1,4 +1,4 @@
---// SHADOW LIFE - Clone com IA Real (Groq GPT-OSS Corrigido)
+--// SHADOW LIFE - Clone com IA Real + Sistema de Key (Com Copiar Link)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -6,21 +6,21 @@ local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
--- ⚠️ COLE SUA CHAVE DA GROQ AQUI (começa com "gsk_")
-local API_KEY = "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"
--- Modelo ativo recomendado pela Groq (substituto do antigo Llama 8B)
-local MODELO = "openai/gpt-oss-20b" 
+-- Variável que vai guardar a chave
+local API_KEY = ""
+local MODELO = "openai/gpt-oss-20b"
+local LINK_API = "https://console.groq.com/keys" -- Link da API
 
--- Cores
 local Colors = {
     Background = Color3.fromRGB(15, 15, 25),
     Panel = Color3.fromRGB(25, 25, 40),
     Accent = Color3.fromRGB(0, 255, 150),
     Text = Color3.fromRGB(255, 255, 255),
-    Red = Color3.fromRGB(255, 80, 80)
+    Red = Color3.fromRGB(255, 80, 80),
+    Orange = Color3.fromRGB(255, 150, 50),
+    Blue = Color3.fromRGB(0, 150, 255)
 }
 
--- Criar GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ShadowLifeRealAI"
 ScreenGui.ResetOnSpawn = false
@@ -33,16 +33,169 @@ local function addCorner(obj, radius)
 end
 
 -- ==========================================
--- SISTEMA DE CHAT
+-- TELA DE LOGIN (API KEY)
 -- ==========================================
+local LoginWindow = Instance.new("Frame")
+LoginWindow.Size = UDim2.new(0, 300, 0, 240) -- Aumentei a altura
+LoginWindow.Position = UDim2.new(0.5, -150, 0.5, -120)
+LoginWindow.BackgroundColor3 = Colors.Background
+LoginWindow.BorderSizePixel = 0
+LoginWindow.Parent = ScreenGui
+addCorner(LoginWindow, 12)
+
+local LoginTitle = Instance.new("TextLabel")
+LoginTitle.Size = UDim2.new(1, 0, 0, 40)
+LoginTitle.BackgroundTransparency = 1
+LoginTitle.Text = "🔑 INSIRA SUA API KEY (GROQ)"
+LoginTitle.TextColor3 = Colors.Text
+LoginTitle.Font = Enum.Font.GothamBold
+LoginTitle.TextSize = 14
+LoginTitle.Parent = LoginWindow
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(1, -20, 0, 35)
+KeyInput.Position = UDim2.new(0, 10, 0, 45)
+KeyInput.BackgroundColor3 = Colors.Panel
+KeyInput.BorderSizePixel = 0
+KeyInput.PlaceholderText = "Cole sua chave gsk_..."
+KeyInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+KeyInput.Text = ""
+KeyInput.TextColor3 = Colors.Text
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.TextSize = 12
+KeyInput.Parent = LoginWindow
+addCorner(KeyInput, 8)
+
+-- BOTÃO DE COPIAR O LINK
+local CopyLinkBtn = Instance.new("TextButton")
+CopyLinkBtn.Size = UDim2.new(1, -20, 0, 30)
+CopyLinkBtn.Position = UDim2.new(0, 10, 0, 90)
+CopyLinkBtn.BackgroundColor3 = Colors.Blue
+CopyLinkBtn.BorderSizePixel = 0
+CopyLinkBtn.Text = "📋 Copiar Link (console.groq.com)"
+CopyLinkBtn.TextColor3 = Colors.Text
+CopyLinkBtn.Font = Enum.Font.GothamBold
+CopyLinkBtn.TextSize = 12
+CopyLinkBtn.Parent = LoginWindow
+addCorner(CopyLinkBtn, 8)
+
+local SaveKeyBtn = Instance.new("TextButton")
+SaveKeyBtn.Size = UDim2.new(1, -20, 0, 35)
+SaveKeyBtn.Position = UDim2.new(0, 10, 0, 130)
+SaveKeyBtn.BackgroundColor3 = Colors.Accent
+SaveKeyBtn.BorderSizePixel = 0
+SaveKeyBtn.Text = "Salvar e Liberar"
+SaveKeyBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+SaveKeyBtn.Font = Enum.Font.GothamBold
+SaveKeyBtn.TextSize = 13
+SaveKeyBtn.Parent = LoginWindow
+addCorner(SaveKeyBtn, 8)
+
+local ErrorText = Instance.new("TextLabel")
+ErrorText.Size = UDim2.new(1, 0, 0, 30)
+ErrorText.Position = UDim2.new(0, 0, 0, 175)
+ErrorText.BackgroundTransparency = 1
+ErrorText.Text = ""
+ErrorText.TextColor3 = Colors.Red
+ErrorText.Font = Enum.Font.Gotham
+ErrorText.TextSize = 11
+ErrorText.TextWrapped = true
+ErrorText.Parent = LoginWindow
+
+-- Função para copiar o link
+CopyLinkBtn.MouseButton1Click:Connect(function()
+    local success = pcall(function()
+        setclipboard(LINK_API)
+    end)
+
+    if success then
+        CopyLinkBtn.Text = "✅ Link Copiado!"
+        CopyLinkBtn.BackgroundColor3 = Colors.Accent
+        CopyLinkBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        
+        task.wait(2)
+        CopyLinkBtn.Text = "📋 Copiar Link (console.groq.com)"
+        CopyLinkBtn.BackgroundColor3 = Colors.Blue
+        CopyLinkBtn.TextColor3 = Colors.Text
+    else
+        CopyLinkBtn.Text = "❌ Falha ao copiar (Copie manualmente)"
+    end
+end)
+
+-- Elementos do menu principal (começam invisíveis)
 local ChatWindow = Instance.new("Frame")
 ChatWindow.Size = UDim2.new(0, 350, 0, 420)
 ChatWindow.Position = UDim2.new(0.5, -175, 0.5, -210)
 ChatWindow.BackgroundColor3 = Colors.Background
 ChatWindow.BorderSizePixel = 0
+ChatWindow.Visible = false
 ChatWindow.Parent = ScreenGui
 addCorner(ChatWindow, 12)
 
+local SpawnBtn = Instance.new("TextButton")
+SpawnBtn.Size = UDim2.new(0, 150, 0, 40)
+SpawnBtn.Position = UDim2.new(0.5, -75, 0.1, 0)
+SpawnBtn.BackgroundColor3 = Colors.Accent
+SpawnBtn.Text = "Spawnar Clone com IA Real"
+SpawnBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+SpawnBtn.Font = Enum.Font.GothamBold
+SpawnBtn.Visible = false
+SpawnBtn.Parent = ScreenGui
+addCorner(SpawnBtn, 8)
+
+local CarryBtn = Instance.new("TextButton")
+CarryBtn.Size = UDim2.new(0, 150, 0, 30)
+CarryBtn.Position = UDim2.new(0.5, -75, 0.1, 45)
+CarryBtn.BackgroundColor3 = Colors.Orange
+CarryBtn.Text = "Pegar Clone"
+CarryBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+CarryBtn.Font = Enum.Font.GothamBold
+CarryBtn.Visible = false
+CarryBtn.Parent = ScreenGui
+addCorner(CarryBtn, 8)
+
+local ChangeKeyBtn = Instance.new("TextButton")
+ChangeKeyBtn.Size = UDim2.new(0, 100, 0, 25)
+ChangeKeyBtn.Position = UDim2.new(0, 10, 1, -35)
+ChangeKeyBtn.BackgroundColor3 = Colors.Panel
+ChangeKeyBtn.Text = "Mudar API Key"
+ChangeKeyBtn.TextColor3 = Colors.Text
+ChangeKeyBtn.Font = Enum.Font.GothamBold
+ChangeKeyBtn.TextSize = 11
+ChangeKeyBtn.Visible = false
+ChangeKeyBtn.Parent = ScreenGui
+addCorner(ChangeKeyBtn, 8)
+
+-- Função para validar e salvar a chave
+SaveKeyBtn.MouseButton1Click:Connect(function()
+    local key = KeyInput.Text
+    
+    if key == "" or #key < 20 or not string.find(key, "gsk_") then
+        ErrorText.Text = "Chave inválida! Deve começar com gsk_."
+        return
+    end
+    
+    API_KEY = key
+    LoginWindow.Visible = false
+    ChatWindow.Visible = true
+    SpawnBtn.Visible = true
+    ChangeKeyBtn.Visible = true
+    ErrorText.Text = ""
+end)
+
+-- Botão para mudar a chave depois
+ChangeKeyBtn.MouseButton1Click:Connect(function()
+    LoginWindow.Visible = true
+    ChangeKeyBtn.Visible = false
+    SpawnBtn.Visible = false
+    CarryBtn.Visible = false
+    KeyInput.Text = ""
+    ErrorText.Text = ""
+end)
+
+-- ==========================================
+-- SISTEMA DE CHAT (Oculto até logar)
+-- ==========================================
 local ChatTopBar = Instance.new("Frame")
 ChatTopBar.Size = UDim2.new(1, 0, 0, 40)
 ChatTopBar.BackgroundColor3 = Colors.Panel
@@ -72,7 +225,6 @@ CloseChatBtn.TextSize = 14
 CloseChatBtn.Font = Enum.Font.GothamBold
 CloseChatBtn.Parent = ChatTopBar
 addCorner(CloseChatBtn, 12)
-
 CloseChatBtn.MouseButton1Click:Connect(function() ChatWindow.Visible = false end)
 
 local ChatScroll = Instance.new("ScrollingFrame")
@@ -82,6 +234,7 @@ ChatScroll.BackgroundTransparency = 1
 ChatScroll.BorderSizePixel = 0
 ChatScroll.ScrollBarThickness = 2
 ChatScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+ChatScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 ChatScroll.Parent = ChatWindow
 
 local ChatLayout = Instance.new("UIListLayout")
@@ -116,8 +269,8 @@ addCorner(SendBtn, 8)
 
 local function AddMessage(text, isUser)
     local msg = Instance.new("TextLabel")
-    -- Ajusta a altura do painel baseado no tamanho do texto
-    msg.Size = UDim2.new(1, -10, 0, isUser and 30 or 60) 
+    msg.Size = UDim2.new(1, -10, 0, 50)
+    msg.AutomaticSize = Enum.AutomaticSize.Y
     msg.BackgroundColor3 = isUser and Color3.fromRGB(40, 40, 60) or Colors.Panel
     msg.TextColor3 = isUser and Colors.Text or Colors.Accent
     msg.Font = Enum.Font.Gotham
@@ -126,20 +279,140 @@ local function AddMessage(text, isUser)
     msg.Text = (isUser and "Você: " or "IA: ") .. text
     msg.Parent = ChatScroll
     addCorner(msg, 6)
-    
-    ChatLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        ChatScroll.CanvasSize = UDim2.new(0, 0, 0, ChatLayout.AbsoluteContentSize.Y + 10)
-    end)
 end
 
--- ==========================================
--- SISTEMA DO CLONE
--- ==========================================
+-- ===== CLONE E MENU DE CARREGAR =====
 local CloneObj, CloneHumanoid, CloneRoot, CloneChatText, AI_Connection = nil, nil, nil, nil, nil
+local isCarrying = false
+local CarryWeld = nil
+local seguindo = false
+local lastMove = 0
+local tracksDoClone = {}
+local modoCarregar = nil
+
+local CarryMenu = Instance.new("Frame")
+CarryMenu.Size = UDim2.new(0, 320, 0, 110)
+CarryMenu.Position = UDim2.new(0.5, -160, 0.5, -150)
+CarryMenu.BackgroundTransparency = 1
+CarryMenu.Visible = false
+CarryMenu.ZIndex = 10
+CarryMenu.Parent = ScreenGui
+
+local function criarBotaoCarregar(texto, posX, cor)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 95, 0, 95)
+    btn.Position = UDim2.new(0, posX, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    btn.Text = ""
+    btn.ZIndex = 11
+    btn.Parent = CarryMenu
+    addCorner(btn, 50)
+    local circulo = Instance.new("Frame")
+    circulo.Size = UDim2.new(1, 0, 1, 0)
+    circulo.BackgroundColor3 = cor
+    circulo.BackgroundTransparency = 0.2
+    circulo.ZIndex = 11
+    circulo.Parent = btn
+    addCorner(circulo, 50)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Position = UDim2.new(0, 0, 1, 5)
+    label.BackgroundTransparency = 1
+    label.Text = texto
+    label.TextColor3 = Colors.Text
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 13
+    label.TextWrapped = true
+    label.ZIndex = 12
+    label.Parent = btn
+    return btn
+end
+
+local BtnOmbros = criarBotaoCarregar("Ombros", 0, Color3.fromRGB(0, 180, 255))
+local BtnMachucado = criarBotaoCarregar("Carregar Machucado", 112, Color3.fromRGB(255, 80, 80))
+local BtnCostas = criarBotaoCarregar("Apoio nas Costas", 224, Color3.fromRGB(0, 255, 150))
+
+local BtnFecharMenu = Instance.new("TextButton")
+BtnFecharMenu.Size = UDim2.new(0, 30, 0, 30)
+BtnFecharMenu.Position = UDim2.new(1, -15, 0, -10)
+BtnFecharMenu.BackgroundColor3 = Colors.Red
+BtnFecharMenu.Text = "✕"
+BtnFecharMenu.TextColor3 = Colors.Text
+BtnFecharMenu.ZIndex = 12
+BtnFecharMenu.Parent = CarryMenu
+addCorner(BtnFecharMenu, 15)
+BtnFecharMenu.MouseButton1Click:Connect(function() CarryMenu.Visible = false end)
+
+local function soltarClone()
+    if CarryWeld then CarryWeld:Destroy() CarryWeld = nil end
+    isCarrying = false
+    modoCarregar = nil
+    if CloneHumanoid then
+        CloneHumanoid.PlatformStand = false
+        CloneHumanoid.AutoRotate = true
+    end
+    if CloneRoot and LocalPlayer.Character then
+        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if myRoot then
+            CloneRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, 15) 
+            task.wait(0.1)
+            if CloneHumanoid then CloneHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp) end
+        end
+    end
+    CarryMenu.Visible = false
+end
+
+local function pegarClone(modo)
+    local myChar = LocalPlayer.Character
+    if not myChar or not CloneObj then return end
+    local myTorso = myChar:FindFirstChild("UpperTorso") or myChar:FindFirstChild("Torso")
+    if not myTorso then return end
+
+    if isCarrying and modoCarregar == modo then soltarClone() return end
+    if CarryWeld then CarryWeld:Destroy() end
+
+    isCarrying = true
+    modoCarregar = modo
+    CloneHumanoid.PlatformStand = true
+    CloneHumanoid.AutoRotate = false
+    CarryMenu.Visible = false
+
+    for _, p in ipairs(CloneObj:GetDescendants()) do
+        if p:IsA("BasePart") then p.CanCollide = false p.Massless = true end
+    end
+
+    CarryWeld = Instance.new("Weld")
+    CarryWeld.Part0 = myTorso
+    CarryWeld.Part1 = CloneRoot
+    CarryWeld.Parent = myTorso
+
+    if modo == "Ombros" then
+        CloneRoot.CFrame = myChar.HumanoidRootPart.CFrame * CFrame.new(0, 2.5, 0.2)
+        CarryWeld.C0 = CFrame.new(0, 1.8, 0.2)
+        CarryWeld.C1 = CFrame.new(0, -0.5, 0)
+    elseif modo == "Machucado" then
+        CloneRoot.CFrame = myChar.HumanoidRootPart.CFrame * CFrame.new(0, 0.5, -1.8)
+        CarryWeld.C0 = CFrame.new(0, 0.2, -1.6) * CFrame.Angles(math.rad(90), 0, math.rad(90))
+        CarryWeld.C1 = CFrame.new(0, 0, 0)
+    elseif modo == "Costas" then
+        CloneRoot.CFrame = myChar.HumanoidRootPart.CFrame * CFrame.new(0, 1.8, 1.6)
+        CarryWeld.C0 = CFrame.new(0, 1.0, 1.6)
+        CarryWeld.C1 = CFrame.new(0, 0, 0)
+    end
+end
+
+BtnOmbros.MouseButton1Click:Connect(function() pegarClone("Ombros") end)
+BtnMachucado.MouseButton1Click:Connect(function() pegarClone("Machucado") end)
+BtnCostas.MouseButton1Click:Connect(function() pegarClone("Costas") end)
 
 local function RemoveClone()
-    if CloneObj then CloneObj:Destroy(); CloneObj = nil end
-    if AI_Connection then AI_Connection:Disconnect(); AI_Connection = nil end
+    if CarryWeld then CarryWeld:Destroy() CarryWeld = nil end
+    if CloneObj then CloneObj:Destroy() CloneObj = nil end
+    if AI_Connection then AI_Connection:Disconnect() AI_Connection = nil end
+    isCarrying = false
+    seguindo = false
+    tracksDoClone = {}
+    CarryMenu.Visible = false
 end
 
 local function SpawnClone()
@@ -149,18 +422,14 @@ local function SpawnClone()
 
     char.Archivable = true
     local clone = char:Clone()
+    if not clone then return end
+    
     clone.Name = "RealAI_Clone"
-    
-    for _, v in ipairs(clone:GetDescendants()) do
-        if v:IsA("Script") or v:IsA("LocalScript") then
-            if v.Name ~= "Animate" then v:Destroy() end
-        end
-    end
 
-    local root = char.HumanoidRootPart
-    clone:PivotTo(root.CFrame * CFrame.new(0, 0, 5))
-    
     for _, part in ipairs(clone:GetDescendants()) do
+        if part:IsA("Script") or part:IsA("LocalScript") then
+            if part.Name ~= "Animate" then part:Destroy() end
+        end
         if part:IsA("BasePart") then part.CanCollide = false end
     end
 
@@ -170,81 +439,159 @@ local function SpawnClone()
 
     if CloneHumanoid then
         CloneHumanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-        CloneHumanoid.WalkSpeed = 20
+        CloneHumanoid.WalkSpeed = 18 
+        CloneHumanoid.AutoRotate = true
+        CloneHumanoid.PlatformStand = false
+    end
+
+    -- Sistema de Animação
+    local meuHumanoid = char:FindFirstChildOfClass("Humanoid")
+    local meuAnimator = meuHumanoid and meuHumanoid:FindFirstChildOfClass("Animator")
+    local cloneAnimator = CloneHumanoid:FindFirstChildOfClass("Animator")
+    if not cloneAnimator then
+        cloneAnimator = Instance.new("Animator")
+        cloneAnimator.Parent = CloneHumanoid
+    end
+
+    local function copiarAnimacao(animId)
+        if tracksDoClone[animId] then return tracksDoClone[animId] end
+        local anim = Instance.new("Animation")
+        anim.AnimationId = animId
+        local track = cloneAnimator:LoadAnimation(anim)
+        track.Priority = Enum.AnimationPriority.Action
+        track.Looped = true
+        tracksDoClone[animId] = track
+        return track
+    end
+
+    if meuAnimator then
+        meuAnimator.AnimationPlayed:Connect(function(track)
+            if not CloneObj or not CloneObj.Parent then return end
+            if not track or not track.Animation then return end
+            local novo = copiarAnimacao(track.Animation.AnimationId)
+            novo:Play(0.1)
+            novo:AdjustSpeed(track.Speed)
+            track.Stopped:Connect(function()
+                if novo.IsPlaying then novo:Stop(0.1) end
+            end)
+        end)
+        for _, track in pairs(meuAnimator:GetPlayingAnimationTracks()) do
+            if track and track.Animation then
+                local novo = copiarAnimacao(track.Animation.AnimationId)
+                novo:Play(0.1)
+            end
+        end
     end
 
     local bill = Instance.new("BillboardGui")
-    -- Aumentei o tamanho do balão e a distância para o texto não vazar
     bill.Size = UDim2.new(0, 250, 0, 80)
     bill.StudsOffset = Vector3.new(0, 3, 0)
     bill.AlwaysOnTop = true
-    
     CloneChatText = Instance.new("TextLabel")
     CloneChatText.Size = UDim2.new(1, 0, 1, 0)
     CloneChatText.BackgroundTransparency = 0.3
     CloneChatText.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     CloneChatText.TextColor3 = Colors.Accent
     CloneChatText.TextScaled = true
-    CloneChatText.TextWrapped = true -- Permite que o texto quebre linha
+    CloneChatText.TextWrapped = true
     CloneChatText.Font = Enum.Font.GothamBold
-    CloneChatText.Text = "😎 Olá! Sou a IA Shadow oq pode ajudar?."
+    CloneChatText.Text = "😎 Olá! Sou a IA Shadow."
     CloneChatText.Parent = bill
     addCorner(CloneChatText, 8)
     
     local head = clone:FindFirstChild("Head")
     if head then bill.Parent = head end
+
+    local click = Instance.new("ClickDetector")
+    click.MaxActivationDistance = 20
+    click.Parent = CloneRoot
+    click.MouseClick:Connect(function()
+        if isCarrying then
+            soltarClone()
+        else
+            CarryMenu.Visible = not CarryMenu.Visible
+        end
+    end)
+
+    clone:PivotTo(char.HumanoidRootPart.CFrame * CFrame.new(0, 0, 15))
     clone.Parent = Workspace
 
+    -- Loop de Seguir
     AI_Connection = RunService.Heartbeat:Connect(function()
-        if not CloneObj or not CloneObj.Parent or not CloneHumanoid or not CloneRoot then return end
-        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+        if not CloneObj or not CloneObj.Parent then return end
+        if not LocalPlayer.Character then return end
         
-        local myRoot = LocalPlayer.Character.HumanoidRootPart
-        if (CloneRoot.Position - myRoot.Position).Magnitude > 6 then
-            CloneHumanoid:MoveTo(myRoot.Position)
+        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myHumanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        
+        if not myRoot or not myHumanoid then return end 
+        if isCarrying then return end
+
+        local distance = (CloneRoot.Position - myRoot.Position).Magnitude
+        CloneHumanoid.WalkSpeed = myHumanoid.WalkSpeed + 4
+
+        if distance > 50 then
+            CloneRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, 15)
+            seguindo = false
+            return
+        end
+
+        if distance > 12 then 
+            seguindo = true 
+        elseif distance < 8 then 
+            seguindo = false 
+        end
+
+        if seguindo then
+            if tick() - lastMove > 0.1 then 
+                lastMove = tick()
+                CloneHumanoid:MoveTo(myRoot.Position)
+            end
         else
             CloneHumanoid:MoveTo(CloneRoot.Position)
-            CloneRoot.CFrame = CFrame.lookAt(CloneRoot.Position, myRoot.Position)
+        end
+
+        local myState = myHumanoid:GetState()
+        local cloneState = CloneHumanoid:GetState()
+        if myState == Enum.HumanoidStateType.Jumping or myState == Enum.HumanoidStateType.Freefall then
+            if cloneState == Enum.HumanoidStateType.Running or cloneState == Enum.HumanoidStateType.Landed then
+                CloneHumanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end
     end)
 end
 
--- ==========================================
--- INTEGRAÇÃO COM A IA REAL
--- ==========================================
+-- ===== IA =====
+local isThinking = false
 local function GetRequestFunction()
     return (syn and syn.request) or (http and http.request) or http_request or request
 end
 
 local function AskAI(message)
+    if isThinking then return end
     AddMessage(message, true)
     ChatInput.Text = ""
-    
     if CloneChatText then CloneChatText.Text = "🤖 Pensando..." end
-
-    if API_KEY == "COLE_SUA_CHAVE_AQUI" or #API_KEY < 10 then
-        AddMessage("Erro: Coloque uma API KEY válida da Groq no script!", false)
-        if CloneChatText then CloneChatText.Text = "❌ Falta a API Key." end
+    
+    if API_KEY == "" or #API_KEY < 10 then
+        AddMessage("Erro: Coloque uma API KEY válida!", false)
         return
     end
-
+    
     local requestFunc = GetRequestFunction()
-    if not requestFunc then
-        AddMessage("Seu executor não suporta requisições HTTP (request).", false)
-        if CloneChatText then CloneChatText.Text = "❌ Executor sem suporte." end
-        return
-    end
-
+    if not requestFunc then AddMessage("Executor sem request.", false) return end
+    
+    isThinking = true
+    SendBtn.Text = "..."
     local data = {
-        model = MODELO, -- Usando o modelo GPT-OSS ativo
+        model = MODELO,
         messages = {
-            { role = "system", content = "Você é um clone amigável dentro do jogo Roblox. Responda de forma completa, clara e em português. Não use emojis em excesso." },
+            { role = "system", content = "Você é um clone amigável no Roblox. Responda de forma curta, completa, clara e em português." },
             { role = "user", content = message }
         },
-        max_tokens = 150,
+        max_tokens = 300,
         temperature = 0.7
     }
-
     local body = HttpService:JSONEncode(data)
     
     task.spawn(function()
@@ -252,95 +599,73 @@ local function AskAI(message)
             return requestFunc({
                 Url = "https://api.groq.com/openai/v1/chat/completions",
                 Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json",
-                    ["Authorization"] = "Bearer " .. API_KEY
-                },
+                Headers = { ["Content-Type"] = "application/json", ["Authorization"] = "Bearer " .. API_KEY },
                 Body = body
             })
         end)
-
-        if success and response then
-            if response.StatusCode == 200 then
-                local decoded = HttpService:JSONDecode(response.Body)
-                local reply = decoded.choices[1].message.content
-                
-                reply = reply:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
-                
-                -- 🔥 CORREÇÃO AQUI: Limite aumentado para 1000 caracteres
-                if #reply > 1000 then 
-                    reply = reply:sub(1, 1000) .. "..." 
-                end
-                
-                AddMessage(reply, false)
-                if CloneChatText then CloneChatText.Text = "💬 " .. reply end
-            else
-                AddMessage("Erro da API: Código " .. tostring(response.StatusCode), false)
-                if CloneChatText then CloneChatText.Text = "❌ Erro " .. tostring(response.StatusCode) end
-                
-                if response.Body then
-                    local errDecoded = HttpService:JSONDecode(response.Body)
-                    if errDecoded.error and errDecoded.error.message then
-                        AddMessage("Detalhe: " .. errDecoded.error.message, false)
-                    end
-                end
+        isThinking = false
+        SendBtn.Text = "Enviar"
+        if success and response and response.StatusCode == 200 then
+            local decoded = HttpService:JSONDecode(response.Body)
+            local reply = decoded.choices[1].message.content
+            reply = reply:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
+            
+            if #reply > 1000 then 
+                reply = reply:sub(1, 1000) .. "..." 
             end
+            
+            AddMessage(reply, false)
+            if CloneChatText then CloneChatText.Text = "💬 " .. reply end
         else
-            AddMessage("Falha na conexão. Verifique sua internet ou executor.", false)
-            if CloneChatText then CloneChatText.Text = "❌ Falha de rede." end
+            AddMessage("Erro da API: Verifique sua chave ou internet.", false)
         end
     end)
 end
 
--- Botão de Teste Rápido da API
-local TestBtn = Instance.new("TextButton")
-TestBtn.Size = UDim2.new(0, 100, 0, 25)
-TestBtn.Position = UDim2.new(1, -110, 0, 45)
-TestBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-TestBtn.Text = "Testar API"
-TestBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-TestBtn.Font = Enum.Font.GothamBold
-TestBtn.TextSize = 10
-TestBtn.Parent = ChatTopBar
-addCorner(TestBtn, 8)
-
-TestBtn.MouseButton1Click:Connect(function()
-    AskAI("Diga apenas 'API OK' para testar a conexão.")
-end)
-
--- Eventos de envio
 SendBtn.MouseButton1Click:Connect(function()
     if ChatInput.Text ~= "" then AskAI(ChatInput.Text) end
 end)
-
-ChatInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed and ChatInput.Text ~= "" then AskAI(ChatInput.Text) end
+ChatInput.FocusLost:Connect(function(enter)
+    if enter and ChatInput.Text ~= "" then AskAI(ChatInput.Text) end
 end)
 
--- Botão de Spawnar
-local SpawnBtn = Instance.new("TextButton")
-SpawnBtn.Size = UDim2.new(0, 150, 0, 40)
-SpawnBtn.Position = UDim2.new(0.5, -75, 0.1, 0)
-SpawnBtn.BackgroundColor3 = Colors.Accent
-SpawnBtn.Text = "Spawnar Clone com IA Real"
-SpawnBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-SpawnBtn.Font = Enum.Font.GothamBold
-SpawnBtn.Parent = ScreenGui
-addCorner(SpawnBtn, 8)
-
+-- ===== BOTÕES DE AÇÃO =====
 SpawnBtn.MouseButton1Click:Connect(function()
     SpawnClone()
     ChatWindow.Visible = true
     SpawnBtn.Visible = false
+    CarryBtn.Visible = true
 end)
 
--- Atalho F
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.F then
-        ChatWindow.Visible = not ChatWindow.Visible
-        SpawnBtn.Visible = not SpawnBtn.Visible
+CarryBtn.MouseButton1Click:Connect(function()
+    if isCarrying then
+        soltarClone()
+        CarryBtn.Text = "Pegar Clone"
+    else
+        CarryMenu.Visible = not CarryMenu.Visible
     end
 end)
 
-print("✅ Clone com IA Real (GPT-OSS) carregado!")
+-- Atalhos
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if ChatInput:IsFocused() then return end
+
+    if input.KeyCode == Enum.KeyCode.F then
+        if not LoginWindow.Visible then
+            ChatWindow.Visible = not ChatWindow.Visible
+        end
+    elseif input.KeyCode == Enum.KeyCode.M then
+        if CloneObj and CloneObj.Parent then
+            if isCarrying then return end
+            CarryMenu.Visible = not CarryMenu.Visible
+        end
+    elseif input.KeyCode == Enum.KeyCode.N then
+        if isCarrying then
+            soltarClone()
+            if CarryBtn then CarryBtn.Text = "Pegar Clone" end
+        end
+    end
+end)
+
+print("✅ Sistema de Key + Clone IA Carregado!")
