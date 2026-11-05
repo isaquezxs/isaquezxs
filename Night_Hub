@@ -1,4 +1,4 @@
---// SHADOW LIFE - Clone com IA Real + Sistema de Key (Com Copiar Link)
+--// SHADOW LIFE - Clone com IA Real + Comandos (ORDEM CORRIGIDA)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -6,10 +6,24 @@ local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
--- Variável que vai guardar a chave
 local API_KEY = ""
 local MODELO = "openai/gpt-oss-20b"
-local LINK_API = "https://console.groq.com/keys" -- Link da API
+local LINK_API = "https://console.groq.com/keys"
+
+-- Variáveis de Controle
+local CloneObj, CloneHumanoid, CloneRoot, CloneChatText, AI_Connection = nil, nil, nil, nil, nil
+local isCarrying = false
+local CarryWeld = nil
+local seguindo = false
+local lastMove = 0
+local tracksDoClone = {}
+local modoCarregar = nil
+local CloneAnimator = nil
+
+local CloneParado = false
+local CloneDevagar = false
+local CurrentEmote = nil
+local isPlayingEmote = false
 
 local Colors = {
     Background = Color3.fromRGB(15, 15, 25),
@@ -18,9 +32,45 @@ local Colors = {
     Text = Color3.fromRGB(255, 255, 255),
     Red = Color3.fromRGB(255, 80, 80),
     Orange = Color3.fromRGB(255, 150, 50),
-    Blue = Color3.fromRGB(0, 150, 255)
+    Blue = Color3.fromRGB(0, 150, 255),
+    Yellow = Color3.fromRGB(255, 215, 0),
+    Purple = Color3.fromRGB(180, 100, 255)
 }
 
+-- ==========================================
+-- FUNÇÕES DE EMOTE (MOVIDAS PARA CIMA)
+-- ==========================================
+local function PlayCloneEmote(animId, emoji)
+    if not CloneAnimator then return end
+    
+    -- Para todas as animações atuais para não bugar
+    for _, track in ipairs(CloneAnimator:GetPlayingAnimationTracks()) do
+        track:Stop(0.1)
+    end
+    
+    isPlayingEmote = true
+    CloneParado = true
+    
+    local anim = Instance.new("Animation")
+    anim.AnimationId = animId
+    CurrentEmote = CloneAnimator:LoadAnimation(anim)
+    CurrentEmote.Priority = Enum.AnimationPriority.Action4
+    CurrentEmote.Looped = true
+    CurrentEmote:Play(0.1)
+    
+    if CloneChatText and emoji then CloneChatText.Text = emoji end
+end
+
+local function StopEmote()
+    if CurrentEmote then CurrentEmote:Stop() CurrentEmote = nil end
+    isPlayingEmote = false
+    CloneParado = false
+    if CloneHumanoid then CloneHumanoid.Sit = false end
+end
+
+-- ==========================================
+-- SISTEMA DE INTERFACE
+-- ==========================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ShadowLifeRealAI"
 ScreenGui.ResetOnSpawn = false
@@ -32,11 +82,9 @@ local function addCorner(obj, radius)
     corner.Parent = obj
 end
 
--- ==========================================
--- TELA DE LOGIN (API KEY)
--- ==========================================
+-- TELA DE LOGIN
 local LoginWindow = Instance.new("Frame")
-LoginWindow.Size = UDim2.new(0, 300, 0, 240) -- Aumentei a altura
+LoginWindow.Size = UDim2.new(0, 300, 0, 240)
 LoginWindow.Position = UDim2.new(0.5, -150, 0.5, -120)
 LoginWindow.BackgroundColor3 = Colors.Background
 LoginWindow.BorderSizePixel = 0
@@ -66,7 +114,6 @@ KeyInput.TextSize = 12
 KeyInput.Parent = LoginWindow
 addCorner(KeyInput, 8)
 
--- BOTÃO DE COPIAR O LINK
 local CopyLinkBtn = Instance.new("TextButton")
 CopyLinkBtn.Size = UDim2.new(1, -20, 0, 30)
 CopyLinkBtn.Position = UDim2.new(0, 10, 0, 90)
@@ -102,27 +149,20 @@ ErrorText.TextSize = 11
 ErrorText.TextWrapped = true
 ErrorText.Parent = LoginWindow
 
--- Função para copiar o link
 CopyLinkBtn.MouseButton1Click:Connect(function()
-    local success = pcall(function()
-        setclipboard(LINK_API)
-    end)
-
+    local success = pcall(function() setclipboard(LINK_API) end)
     if success then
         CopyLinkBtn.Text = "✅ Link Copiado!"
         CopyLinkBtn.BackgroundColor3 = Colors.Accent
         CopyLinkBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-        
         task.wait(2)
         CopyLinkBtn.Text = "📋 Copiar Link (console.groq.com)"
         CopyLinkBtn.BackgroundColor3 = Colors.Blue
         CopyLinkBtn.TextColor3 = Colors.Text
-    else
-        CopyLinkBtn.Text = "❌ Falha ao copiar (Copie manualmente)"
     end
 end)
 
--- Elementos do menu principal (começam invisíveis)
+-- MENU PRINCIPAL
 local ChatWindow = Instance.new("Frame")
 ChatWindow.Size = UDim2.new(0, 350, 0, 420)
 ChatWindow.Position = UDim2.new(0.5, -175, 0.5, -210)
@@ -166,15 +206,12 @@ ChangeKeyBtn.Visible = false
 ChangeKeyBtn.Parent = ScreenGui
 addCorner(ChangeKeyBtn, 8)
 
--- Função para validar e salvar a chave
 SaveKeyBtn.MouseButton1Click:Connect(function()
     local key = KeyInput.Text
-    
     if key == "" or #key < 20 or not string.find(key, "gsk_") then
         ErrorText.Text = "Chave inválida! Deve começar com gsk_."
         return
     end
-    
     API_KEY = key
     LoginWindow.Visible = false
     ChatWindow.Visible = true
@@ -183,7 +220,6 @@ SaveKeyBtn.MouseButton1Click:Connect(function()
     ErrorText.Text = ""
 end)
 
--- Botão para mudar a chave depois
 ChangeKeyBtn.MouseButton1Click:Connect(function()
     LoginWindow.Visible = true
     ChangeKeyBtn.Visible = false
@@ -193,9 +229,7 @@ ChangeKeyBtn.MouseButton1Click:Connect(function()
     ErrorText.Text = ""
 end)
 
--- ==========================================
--- SISTEMA DE CHAT (Oculto até logar)
--- ==========================================
+-- CHAT
 local ChatTopBar = Instance.new("Frame")
 ChatTopBar.Size = UDim2.new(1, 0, 0, 40)
 ChatTopBar.BackgroundColor3 = Colors.Panel
@@ -207,10 +241,10 @@ local ChatTitle = Instance.new("TextLabel")
 ChatTitle.Size = UDim2.new(1, -50, 1, 0)
 ChatTitle.Position = UDim2.new(0, 15, 0, 0)
 ChatTitle.BackgroundTransparency = 1
-ChatTitle.Text = "🤖 IA Shadow (SHADOW AI V1)"
+ChatTitle.Text = "🤖 IA Shadow (Aperte 'H' p/ Menu)"
 ChatTitle.TextColor3 = Colors.Text
 ChatTitle.Font = Enum.Font.GothamBold
-ChatTitle.TextSize = 14
+ChatTitle.TextSize = 13
 ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
 ChatTitle.Parent = ChatTopBar
 
@@ -246,7 +280,7 @@ ChatInput.Size = UDim2.new(1, -70, 0, 35)
 ChatInput.Position = UDim2.new(0, 10, 1, -45)
 ChatInput.BackgroundColor3 = Colors.Panel
 ChatInput.BorderSizePixel = 0
-ChatInput.PlaceholderText = "Digite sua mensagem..."
+ChatInput.PlaceholderText = "Digite 'choro', 'feliz', 'gato'..."
 ChatInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 ChatInput.Text = ""
 ChatInput.TextColor3 = Colors.Text
@@ -281,15 +315,7 @@ local function AddMessage(text, isUser)
     addCorner(msg, 6)
 end
 
--- ===== CLONE E MENU DE CARREGAR =====
-local CloneObj, CloneHumanoid, CloneRoot, CloneChatText, AI_Connection = nil, nil, nil, nil, nil
-local isCarrying = false
-local CarryWeld = nil
-local seguindo = false
-local lastMove = 0
-local tracksDoClone = {}
-local modoCarregar = nil
-
+-- MENU CARREGAR
 local CarryMenu = Instance.new("Frame")
 CarryMenu.Size = UDim2.new(0, 320, 0, 110)
 CarryMenu.Position = UDim2.new(0.5, -160, 0.5, -150)
@@ -332,17 +358,80 @@ local BtnOmbros = criarBotaoCarregar("Ombros", 0, Color3.fromRGB(0, 180, 255))
 local BtnMachucado = criarBotaoCarregar("Carregar Machucado", 112, Color3.fromRGB(255, 80, 80))
 local BtnCostas = criarBotaoCarregar("Apoio nas Costas", 224, Color3.fromRGB(0, 255, 150))
 
-local BtnFecharMenu = Instance.new("TextButton")
-BtnFecharMenu.Size = UDim2.new(0, 30, 0, 30)
-BtnFecharMenu.Position = UDim2.new(1, -15, 0, -10)
-BtnFecharMenu.BackgroundColor3 = Colors.Red
-BtnFecharMenu.Text = "✕"
-BtnFecharMenu.TextColor3 = Colors.Text
-BtnFecharMenu.ZIndex = 12
-BtnFecharMenu.Parent = CarryMenu
-addCorner(BtnFecharMenu, 15)
-BtnFecharMenu.MouseButton1Click:Connect(function() CarryMenu.Visible = false end)
+-- MENU PERSONALIDADE (H)
+local PersonalityMenu = Instance.new("Frame")
+PersonalityMenu.Size = UDim2.new(0, 320, 0, 320)
+PersonalityMenu.Position = UDim2.new(0.5, -160, 0.5, -160)
+PersonalityMenu.BackgroundColor3 = Colors.Background
+PersonalityMenu.BorderSizePixel = 0
+PersonalityMenu.Visible = false
+PersonalityMenu.ZIndex = 50
+PersonalityMenu.Parent = ScreenGui
+addCorner(PersonalityMenu, 12)
 
+local PersonaTitle = Instance.new("TextLabel")
+PersonaTitle.Size = UDim2.new(1, 0, 0, 40)
+PersonaTitle.BackgroundTransparency = 1
+PersonaTitle.Text = "🎭 Personalidade da IA"
+PersonaTitle.TextColor3 = Colors.Text
+PersonaTitle.Font = Enum.Font.GothamBold
+PersonaTitle.TextSize = 16
+PersonaTitle.ZIndex = 51
+PersonaTitle.Parent = PersonalityMenu
+
+local PersonaClose = Instance.new("TextButton")
+PersonaClose.Size = UDim2.new(0, 25, 0, 25)
+PersonaClose.Position = UDim2.new(1, -35, 0, 7)
+PersonaClose.BackgroundColor3 = Colors.Red
+PersonaClose.Text = "✕"
+PersonaClose.TextColor3 = Colors.Text
+PersonaClose.Font = Enum.Font.GothamBold
+PersonaClose.ZIndex = 51
+PersonaClose.Parent = PersonalityMenu
+addCorner(PersonaClose, 12)
+PersonaClose.MouseButton1Click:Connect(function() PersonalityMenu.Visible = false end)
+
+local function criarBotaoH(texto, posY, cor, animId, isSit, emoji)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.Position = UDim2.new(0.05, 0, 0, 45 + (posY * 45))
+    btn.BackgroundColor3 = cor
+    btn.Text = texto
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 13
+    btn.ZIndex = 51
+    btn.Parent = PersonalityMenu
+    addCorner(btn, 8)
+    
+    btn.MouseButton1Click:Connect(function()
+        if texto == "Parar Tudo 🛑" then
+            StopEmote()
+            if CloneHumanoid then CloneHumanoid.Sit = false end
+            CloneParado = false
+            if CloneChatText then CloneChatText.Text = "😎 Olá! Sou a IA Shadow." end
+        elseif isSit then
+            StopEmote()
+            CloneParado = true
+            if CloneHumanoid then CloneHumanoid.Sit = true end
+            if CloneChatText then CloneChatText.Text = emoji end
+        else
+            if CloneHumanoid then CloneHumanoid.Sit = false end
+            PlayCloneEmote(animId, emoji)
+        end
+    end)
+end
+
+criarBotaoH("Chorar 😭", 0, Color3.fromRGB(100, 150, 255), "rbxassetid://507770239", false, "😭")
+criarBotaoH("Ficar Feliz 😊", 1, Colors.Yellow, "rbxassetid://507770677", false, "😊")
+criarBotaoH("Sentar 🪑", 2, Color3.fromRGB(200, 200, 200), "rbxassetid://2506281703", false, "🪑")
+criarBotaoH("Imitar Gato 🐱", 3, Colors.Purple, "rbxassetid://507771019", false, "🐱")
+criarBotaoH("Imitar Cachorro 🐶", 4, Colors.Orange, "rbxassetid://5918726674", false, "🐶")
+criarBotaoH("Parar Tudo 🛑", 5, Colors.Red, nil, false, "")
+
+-- ==========================================
+-- FUNÇÕES DO CLONE
+-- ==========================================
 local function soltarClone()
     if CarryWeld then CarryWeld:Destroy() CarryWeld = nil end
     isCarrying = false
@@ -411,8 +500,13 @@ local function RemoveClone()
     if AI_Connection then AI_Connection:Disconnect() AI_Connection = nil end
     isCarrying = false
     seguindo = false
+    CloneParado = false
+    CloneDevagar = false
+    isPlayingEmote = false
     tracksDoClone = {}
     CarryMenu.Visible = false
+    PersonalityMenu.Visible = false
+    if CurrentEmote then CurrentEmote:Stop() CurrentEmote = nil end
 end
 
 local function SpawnClone()
@@ -444,20 +538,19 @@ local function SpawnClone()
         CloneHumanoid.PlatformStand = false
     end
 
-    -- Sistema de Animação
     local meuHumanoid = char:FindFirstChildOfClass("Humanoid")
     local meuAnimator = meuHumanoid and meuHumanoid:FindFirstChildOfClass("Animator")
-    local cloneAnimator = CloneHumanoid:FindFirstChildOfClass("Animator")
-    if not cloneAnimator then
-        cloneAnimator = Instance.new("Animator")
-        cloneAnimator.Parent = CloneHumanoid
+    CloneAnimator = CloneHumanoid:FindFirstChildOfClass("Animator")
+    if not CloneAnimator then
+        CloneAnimator = Instance.new("Animator")
+        CloneAnimator.Parent = CloneHumanoid
     end
 
     local function copiarAnimacao(animId)
         if tracksDoClone[animId] then return tracksDoClone[animId] end
         local anim = Instance.new("Animation")
         anim.AnimationId = animId
-        local track = cloneAnimator:LoadAnimation(anim)
+        local track = CloneAnimator:LoadAnimation(anim)
         track.Priority = Enum.AnimationPriority.Action
         track.Looped = true
         tracksDoClone[animId] = track
@@ -468,11 +561,13 @@ local function SpawnClone()
         meuAnimator.AnimationPlayed:Connect(function(track)
             if not CloneObj or not CloneObj.Parent then return end
             if not track or not track.Animation then return end
+            if isPlayingEmote then return end
+            
             local novo = copiarAnimacao(track.Animation.AnimationId)
             novo:Play(0.1)
             novo:AdjustSpeed(track.Speed)
             track.Stopped:Connect(function()
-                if novo.IsPlaying then novo:Stop(0.1) end
+                if novo.IsPlaying and not isPlayingEmote then novo:Stop(0.1) end
             end)
         end)
         for _, track in pairs(meuAnimator:GetPlayingAnimationTracks()) do
@@ -516,7 +611,6 @@ local function SpawnClone()
     clone:PivotTo(char.HumanoidRootPart.CFrame * CFrame.new(0, 0, 15))
     clone.Parent = Workspace
 
-    -- Loop de Seguir
     AI_Connection = RunService.Heartbeat:Connect(function()
         if not CloneObj or not CloneObj.Parent then return end
         if not LocalPlayer.Character then return end
@@ -526,9 +620,15 @@ local function SpawnClone()
         
         if not myRoot or not myHumanoid then return end 
         if isCarrying then return end
+        if isPlayingEmote or CloneParado or CloneHumanoid.Sit then return end
 
         local distance = (CloneRoot.Position - myRoot.Position).Magnitude
-        CloneHumanoid.WalkSpeed = myHumanoid.WalkSpeed + 4
+
+        if CloneDevagar then
+            CloneHumanoid.WalkSpeed = 8
+        else
+            CloneHumanoid.WalkSpeed = myHumanoid.WalkSpeed + 4
+        end
 
         if distance > 50 then
             CloneRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, 15)
@@ -536,11 +636,8 @@ local function SpawnClone()
             return
         end
 
-        if distance > 12 then 
-            seguindo = true 
-        elseif distance < 8 then 
-            seguindo = false 
-        end
+        if distance > 12 then seguindo = true 
+        elseif distance < 8 then seguindo = false end
 
         if seguindo then
             if tick() - lastMove > 0.1 then 
@@ -550,25 +647,64 @@ local function SpawnClone()
         else
             CloneHumanoid:MoveTo(CloneRoot.Position)
         end
-
-        local myState = myHumanoid:GetState()
-        local cloneState = CloneHumanoid:GetState()
-        if myState == Enum.HumanoidStateType.Jumping or myState == Enum.HumanoidStateType.Freefall then
-            if cloneState == Enum.HumanoidStateType.Running or cloneState == Enum.HumanoidStateType.Landed then
-                CloneHumanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end
     end)
 end
 
--- ===== IA =====
+-- ==========================================
+-- COMANDOS DE CHAT
+-- ==========================================
 local isThinking = false
 local function GetRequestFunction()
     return (syn and syn.request) or (http and http.request) or http_request or request
 end
 
+local function ProcessCommand(message)
+    local cmd = string.lower(string.gsub(message, "[^%a%s]", "")):gsub("^%s*(.-)%s*$", "%1")
+    
+    if cmd == "choro" or cmd == "chorar" then
+        PlayCloneEmote("rbxassetid://507770239", "😭")
+        AddMessage("Comando: Chorando.", true)
+        return true
+    elseif cmd == "feliz" or cmd == "comemorar" then
+        PlayCloneEmote("rbxassetid://507770677", "😊")
+        AddMessage("Comando: Feliz!", true)
+        return true
+    elseif cmd == "gato" or cmd == "imitargato" then
+        PlayCloneEmote("rbxassetid://507771019", "🐱")
+        AddMessage("Comando: Imitando gato.", true)
+        return true
+    elseif cmd == "cachorro" or cmd == "imitarcachorro" then
+        PlayCloneEmote("rbxassetid://5918726674", "🐶")
+        AddMessage("Comando: Imitando cachorro.", true)
+        return true
+    elseif cmd == "sentar" or cmd == "senta" then
+        StopEmote()
+        CloneParado = true
+        -- Colocando a animação de sentar em vez de forçar o Roblox
+        PlayCloneEmote("rbxassetid://2506281703", "🪑")
+        AddMessage("Comando: Sentando.", true)
+        return true
+    elseif cmd == "parar" or cmd == "normal" then
+        StopEmote()
+        if CloneChatText then CloneChatText.Text = "😎 Olá! Sou a IA Shadow." end
+        AddMessage("Comando: Voltando ao normal.", true)
+        return true
+    elseif cmd == "pula" or cmd == "pular" then
+        if CloneHumanoid then CloneHumanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+        AddMessage("Comando: Pulando!", true)
+        return true
+    end
+    
+    return false
+end
+
 local function AskAI(message)
     if isThinking then return end
+    if ProcessCommand(message) then
+        ChatInput.Text = ""
+        return 
+    end
+
     AddMessage(message, true)
     ChatInput.Text = ""
     if CloneChatText then CloneChatText.Text = "🤖 Pensando..." end
@@ -610,9 +746,7 @@ local function AskAI(message)
             local reply = decoded.choices[1].message.content
             reply = reply:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
             
-            if #reply > 1000 then 
-                reply = reply:sub(1, 1000) .. "..." 
-            end
+            if #reply > 1000 then reply = reply:sub(1, 1000) .. "..." end
             
             AddMessage(reply, false)
             if CloneChatText then CloneChatText.Text = "💬 " .. reply end
@@ -646,15 +780,13 @@ CarryBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Atalhos
+-- ===== ATALHOS =====
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if ChatInput:IsFocused() then return end
 
     if input.KeyCode == Enum.KeyCode.F then
-        if not LoginWindow.Visible then
-            ChatWindow.Visible = not ChatWindow.Visible
-        end
+        if not LoginWindow.Visible then ChatWindow.Visible = not ChatWindow.Visible end
     elseif input.KeyCode == Enum.KeyCode.M then
         if CloneObj and CloneObj.Parent then
             if isCarrying then return end
@@ -665,7 +797,11 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             soltarClone()
             if CarryBtn then CarryBtn.Text = "Pegar Clone" end
         end
+    elseif input.KeyCode == Enum.KeyCode.H then
+        if CloneObj and CloneObj.Parent then
+            PersonalityMenu.Visible = not PersonalityMenu.Visible
+        end
     end
 end)
 
-print("✅ Sistema de Key + Clone IA Carregado!")
+print("✅ Sistema de Emotes e Comandos Corrigido e Carregado!")
